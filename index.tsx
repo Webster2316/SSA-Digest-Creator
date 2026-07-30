@@ -566,7 +566,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold text-indigo-900">SSA Weekly Digest Builder</h1>
+          <h1 className="text-xl font-bold text-indigo-900">SSA Digest/Bulletin Builder</h1>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
