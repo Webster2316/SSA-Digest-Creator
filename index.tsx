@@ -573,7 +573,7 @@ export default function App() {
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
-          </div> src="Logo/"
+          </div>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
