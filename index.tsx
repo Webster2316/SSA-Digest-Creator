@@ -441,7 +441,7 @@ function parseHtmlToState(htmlStr) {
 
 export default function App() {
   const [tab, setTab] = useState("events");
-  const [issueRange, setIssueRange] = useState("Issue 28 Jun - 3 Jul 2026");
+  const [issueRange, setIssueRange] = useState("Issue: ");
   const [events, setEvents] = useState(defaultEvents);
   const [actionItems, setActionItems] = useState(defaultAction);
   const [notingItems, setNotingItems] = useState(defaultNoting);
