@@ -310,7 +310,7 @@ export default function WeeklyDigestBuilder() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/load-digest");
+        const res = await fetch("/api/load-digest?key=weekly-digest-data");
         if (res.ok) {
           const data = await res.json();
           if (data) {
@@ -343,7 +343,7 @@ export default function WeeklyDigestBuilder() {
     setSaveStatus("saving");
     const t = setTimeout(async () => {
       try {
-        const res = await fetch("/api/save-digest", {
+        const res = await fetch("/api/save-digest?key=weekly-digest-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit }),
