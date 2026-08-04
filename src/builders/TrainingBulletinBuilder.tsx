@@ -20,7 +20,7 @@ function makeCourse(overrides = {}) {
       id: uid(),
       title: "",
       dateRange: "",
-      dateMonth: "July 2026",
+      dateMonth: "MM YYYY",
       status: "confirmed",
       statusCustom: "",
       mode: "In-Person",
@@ -426,7 +426,7 @@ export default function TrainingBulletinBuilder() {
                     <input className={inputCls} placeholder="On-going, New" value={c.extraTags} onChange={(e) => updateCourse(c.id, { extraTags: e.target.value })} />
                   </Field>
 
-                  <Field label="Enrolment link (CTA button URL)">
+                  <Field label="Course link">
                     <input className={inputCls} value={c.ctaLink} onChange={(e) => updateCourse(c.id, { ctaLink: e.target.value })} />
                   </Field>
 
