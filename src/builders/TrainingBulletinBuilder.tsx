@@ -234,7 +234,7 @@ ${rowsHtml}
 
 export default function TrainingBulletinBuilder() {
   const [tab, setTab] = useState("courses");
-  const [greeting, setGreeting] = useState("<strong>Dear Member,</strong> below is the list of the upcoming training courses by SSA.");
+  const [greeting, setGreeting] = useState("Dear Member, below is the list of the upcoming training courses by SSA.");
   const [courses, setCourses] = useState(defaultCourses);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
