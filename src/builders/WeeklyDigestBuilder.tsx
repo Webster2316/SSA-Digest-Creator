@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Plus, Trash2, ChevronUp, ChevronDown, Copy, Check, Save, Eye, Code2, CalendarDays, FileText, Loader2, RotateCcw } from "lucide-react";
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import './index.css'
-const STORAGE_KEY = "ssa-digest-data";
+import { useState, useEffect } from "react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, FileText, Loader2, RotateCcw } from "lucide-react";
+import Field from "../shared/field";
+import MoveButtons from "../shared/moveButtons";
+import RichTextEditor from "../shared/richTextEditor";
+import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
 
 const badgePresets = {
   Review: "#d0a523",
@@ -12,9 +12,6 @@ const badgePresets = {
   UNCTAD: "#281e7e",
   Info: "#308acf",
 };
-
-
-const uid = () => Math.random().toString(36).slice(2, 10);
 
 const defaultEvents = [
   {
@@ -25,36 +22,10 @@ const defaultEvents = [
     venue: "Online",
     regText: "Registration here", regLink: "https://register.gotowebinar.com/",
     description: "Efficient and quiet technologies for ships are becoming increasingly important as the industry seeks to improve performance and reduce environmental impact. Join us for this insightful discussion highlighting the opportunities available to readily achieve reductions in underwater radiated noise as a co-benefit of efficiency improvements. The session will place particular emphasis on propeller design and operation, highlighting the care needed to improve efficiency while simultaneously reducing noise."
-  },
-  {
-    id: uid(), day: "23", month: "Jul",
-    title: "SNAMES and SMEEU and partners - Technical Talk @ One Marina Boulevard",
-    location: "Singapore", timeText: "Thursday, 7.30pm – 1.00pm",
-    tags: "All Members, In-Person",
-    venue: "NTUC Centre, Level 8, Room 801, One Marina Boulevard",
-    regText: "Technical Talk registration link", regLink: "https://tinyurl.com/TechnicalTalk260723",
-    description: "Registration required (No walk-in registrations)."
-  },
-  {
-    id: uid(), day: "23", month: "Jul",
-    title: "50th Shared Awareness Meeting (SAM) – Golden Jubilee Edition",
-    location: "Singapore", timeText: "2.30pm – 6.30pm (Registration from 2.00pm)",
-    tags: "Ordinary Members, In-Person",
-    venue: "Orchard Hotel, 442 Orchard Rd, Singapore 238879",
-    regText: "Register for 50th Shared Awareness Meeting – Golden Jubilee Edition", regLink: "https://go.gov.sg/sam-registration",
-    description: ""
-  },
-  {
-    id: uid(), day: "28", month: "Jul",
-    title: "Maritime AI Forum: The Next Wave",
-    location: "Singapore", timeText: "8.30am – 1.00pm",
-    tags: "All Members, In-Person",
-    venue: "Furama City Centre, 60 Eu Tong Sen St, Singapore 059804",
-    regText: "https://go.gov.sg/maritime-ai-forum-rsvp", regLink: "https://go.gov.sg/maritime-ai-forum-rsvp",
-    description: "Registration deadline: Monday, 13 July 2026."
-  },
+  }
 ];
 
+//NEVER CHANGE
 const defaultAction = [
   {
     id: uid(), badge: "Review", badgeColor: badgePresets.Review,
@@ -73,123 +44,8 @@ const defaultNoting = [
     tags: "Committee 1, Committee 2",
     docs: [{ label: "MC(26)78 - UNITED KINGDOM'S EMISSIONS TRADING SCHEME FOR SHIPPING.docx", url: "#" }],
     content: "<p><strong>Action Required:</strong> ACTION TO EDIT</p><p><strong>Background:</strong> Background details</p>"
-  },
-  {
-    id: uid(), badge: "ICS", badgeColor: badgePresets.ICS,
-    title: "MC(26)76 - WIDENING OF UNITED STATES FACILITATED TRANSIT CORRIDOR IN STRAIT OF HORMUZ",
-    tags: "Committee 1, Committee 2",
-    docs: [
-      { label: "MC(26)76 - WIDENING OF UNITED STATES FACILITATED TRANSIT CORRIDOR IN STRAIT OF HORMUZ.docx", url: "#" },
-      { label: "MC(26)76 -Annex A - JMIC Advisory Note 01126 Southern Route Widened.pdf", url: "#" }
-    ],
-    content: "<p><strong>Remarks:</strong></p><p>Remarks to edit</p>"
-  },
-  {
-    id: uid(), badge: "UNCTAD", badgeColor: badgePresets.UNCTAD,
-    title: "Straits of Hormuz Disruptions",
-    tags: "Committee 1, Committee 2",
-    docs: [{ label: "UNCTAD SOH Disruptions.pdf", url: "#" }],
-    content: "<p><strong>Remarks:</strong></p><p>Remarks to edit</p>"
-  },
-  {
-    id: uid(), badge: "ICS", badgeColor: badgePresets.ICS,
-    title: "Post-MSC 111 Industry Briefing",
-    tags: "Committee 1, Committee 2",
-    docs: [{ label: "Post-MSC 111 Industry Briefing.pdf", url: "#" }],
-    content: "<p><strong>Remarks:</strong></p><p>Remarks to edit</p>"
-  },
-];
-
-function RichTextEditor({ value, onChange }) {
-  const ref = useRef(null);
-  const init = useRef(false);
-
-  useEffect(() => {
-    if (ref.current && !init.current) {
-      ref.current.innerHTML = value || "";
-      init.current = true;
-    }
-  }, [value]);
-
-  const exec = (cmd, val = null) => {
-    ref.current.focus();
-    document.execCommand(cmd, false, val);
-    onChange(ref.current.innerHTML);
-  };
-
-  const insertTable = () => {
-    ref.current.focus();
-    const cell = 'style="border:1px solid #ccc;padding:6px;font-size:13px;"';
-    const html = `<table style="border-collapse:collapse;width:100%;margin:8px 0;"><tbody><tr><td ${cell}>Cell</td><td ${cell}>Cell</td></tr><tr><td ${cell}>Cell</td><td ${cell}>Cell</td></tr></tbody></table><p><br></p>`;
-    document.execCommand("insertHTML", false, html);
-    onChange(ref.current.innerHTML);
-  };
-
-  const btn = "px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-700";
-
-  return (
-    <div className="border border-gray-300 rounded overflow-hidden">
-      <div className="flex flex-wrap gap-1 border-b border-gray-200 p-1.5 bg-gray-50">
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("bold")} className={btn + " font-bold"}>B</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("underline")} className={btn + " underline"}>U</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertUnorderedList")} className={btn}>• List</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertOrderedList")} className={btn}>1. List</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={insertTable} className={btn}>Table</button>
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("removeFormat")} className={btn}>Clear</button>
-      </div>
-      <div
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={(e) => onChange(e.currentTarget.innerHTML)}
-        className="p-3 text-sm focus:outline-none"
-        style={{ minHeight: "90px" }}
-      />
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <label className="block mb-2">
-      <span className="block text-xs font-semibold text-gray-500 mb-1">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-const inputCls = "w-full border border-gray-300 rounded px-2 py-1.5 text-sm";
-
-function MoveButtons({ index, length, onMove, onRemove }) {
-  return (
-    <div className="flex items-center gap-1">
-      <button onClick={() => onMove(index, -1)} disabled={index === 0} className="p-1 rounded hover:bg-gray-100 disabled:opacity-30" title="Move up"><ChevronUp size={16} /></button>
-      <button onClick={() => onMove(index, 1)} disabled={index === length - 1} className="p-1 rounded hover:bg-gray-100 disabled:opacity-30" title="Move down"><ChevronDown size={16} /></button>
-      <button onClick={onRemove} className="p-1 rounded hover:bg-red-50 text-red-500" title="Remove"><Trash2 size={16} /></button>
-    </div>
-  );
-}
-
-function esc(s = "") {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function tagPills(tagStr) {
-  return (tagStr || "").split(",").map((t) => t.trim()).filter(Boolean)
-    .map((t) => `<span style="white-space:normal;word-wrap:break-word;word-break:break-word;background:#f4f1ec;border:1px solid #e8e3da;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#000000;padding:2px 8px;margin-right:6px;line-height:2.2;">${esc(t)}</span>`)
-    .join("");
-}
-
-function formatDeadline(dateStr) {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr + "T00:00:00");
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  } catch (e) {
-    return dateStr;
   }
-}
+];
 
 function buildEventBlock(ev) {
   return `
@@ -439,21 +295,18 @@ function parseHtmlToState(htmlStr) {
   return { issueRange, events, actionItems, notingItems };
 }
 
-export default function App() {
+export default function WeeklyDigestBuilder() {
   const [tab, setTab] = useState("events");
-  const [issueRange, setIssueRange] = useState("Issue 28 Jun - 3 Jul 2026");
+  const [issueRange, setIssueRange] = useState("Issue: ");
   const [events, setEvents] = useState(defaultEvents);
   const [actionItems, setActionItems] = useState(defaultAction);
   const [notingItems, setNotingItems] = useState(defaultNoting);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
-  // null = show auto-generated HTML from the form fields above.
-  // string = user has hand-edited the raw HTML; show/export that instead.
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
   const [syncMessage, setSyncMessage] = useState(null);
 
-  // ---- LOAD on mount: pulls the last-saved digest from the Neon DB via /api/load-digest ----
   useEffect(() => {
     (async () => {
       try {
@@ -464,7 +317,6 @@ export default function App() {
             if (data.issueRange) setIssueRange(data.issueRange);
             if (data.events) setEvents(data.events);
             if (data.actionItems) {
-              // migrate old single docLabel/docLink shape to docs[] + deadline if needed
               const migrated = data.actionItems.map((it) => {
                 if (it.docs) return { deadline: "", ...it };
                 return {
@@ -480,14 +332,12 @@ export default function App() {
           }
         }
       } catch (e) {
-        // no saved data yet, or API not reachable — keep presets
         console.error("Failed to load saved digest:", e);
       }
       setLoaded(true);
     })();
   }, []);
 
-  // ---- SAVE on change: debounced write to the Neon DB via /api/save-digest ----
   useEffect(() => {
     if (!loaded) return;
     setSaveStatus("saving");
@@ -566,10 +416,10 @@ export default function App() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-  <img src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png" alt="SSA Logo" className="h-8 w-auto" />
-  <h1 className="text-xl font-bold text-indigo-900">Digest/Bulletin Builder</h1>
-</div>
+          <div className="flex items-center gap-3">
+            <img src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png" alt="SSA Logo" className="h-8 w-auto" />
+            <h1 className="text-xl font-bold text-indigo-900">Digest/Bulletin Builder</h1>
+          </div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
@@ -748,8 +598,3 @@ export default function App() {
     </div>
   );
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
