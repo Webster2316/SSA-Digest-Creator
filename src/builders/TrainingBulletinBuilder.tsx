@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Loader2, RotateCcw, Files } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Archive, Loader2, RotateCcw, Files } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
+import RecordsPanel from "../shared/recordsPanel";
+import RecordViewer from "../shared/recordViewer";
 import { uid, esc, inputCls } from "../shared/utils";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
@@ -240,6 +242,7 @@ export default function TrainingBulletinBuilder() {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
   const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
+  const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -268,7 +271,7 @@ export default function TrainingBulletinBuilder() {
         const res = await fetch("/api/save-digest?key=training-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ greeting, courses, rawHtmlEdit }),
+          body: JSON.stringify({ greeting, courses, rawHtmlEdit, builtHtml: html }),
         });
         setSaveStatus(res.ok ? "saved" : "error");
       } catch (e) {
@@ -349,136 +352,168 @@ export default function TrainingBulletinBuilder() {
           </Field>
         </div>
 
-        <div className="flex border-b border-gray-200 bg-white rounded-t-lg px-2">
-          {tabBtn("courses", "Courses", BookOpen)}
-          {tabBtn("preview", "Preview & Export", Eye)}
-        </div>
+        {viewingRecordId === null ? (
+  <>
+    <div className="flex items-center justify-between border-b border-gray-200 bg-white rounded-t-lg px-2">
+      <div className="flex">
+        {tabBtn("courses", "Courses", BookOpen)}
+        {tabBtn("preview", "Preview & Export", Eye)}
+      </div>
+      <button
+        onClick={() => setViewingRecordId(-1)}
+        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
+      >
+        <Archive size={15} /> Issue Archive
+      </button>
+    </div>
 
-        <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
-          {tab === "courses" && (
-            <div className="space-y-4">
-              {courses.map((c, i) => (
-                <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-indigo-700">
-                      {c.title.trim() || `Course ${i + 1} (untitled)`}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setCourses([...courses.slice(0, i + 1), makeCourse({ ...c, id: uid() }), ...courses.slice(i + 1)])}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-500"
-                        title="Duplicate"
-                      >
-                        <Files size={16} />
-                      </button>
-                      <MoveButtons
-                        index={i}
-                        length={courses.length}
-                        onMove={move}
-                        onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
-                      />
-                    </div>
-                  </div>
-
-                  <Field label="Course title">
-                    <input className={inputCls} value={c.title} onChange={(e) => updateCourse(c.id, { title: e.target.value })} />
-                  </Field>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Date range">
-                      <input className={inputCls} placeholder="e.g. 8-9" value={c.dateRange} onChange={(e) => updateCourse(c.id, { dateRange: e.target.value })} />
-                    </Field>
-                    <Field label="Date month">
-                      <input className={inputCls} placeholder="e.g. July 2026" value={c.dateMonth} onChange={(e) => updateCourse(c.id, { dateMonth: e.target.value })} />
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Status badge">
-                      <select className={inputCls} value={c.status} onChange={(e) => updateCourse(c.id, { status: e.target.value })}>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="limited">Limited Seats</option>
-                        <option value="waitlist">Waitlist</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="custom">Custom…</option>
-                      </select>
-                    </Field>
-                    <Field label="Custom status text">
-                      <input className={inputCls} value={c.statusCustom} onChange={(e) => updateCourse(c.id, { statusCustom: e.target.value })} />
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Delivery mode badge">
-                      <select className={inputCls} value={c.mode} onChange={(e) => updateCourse(c.id, { mode: e.target.value })}>
-                        <option value="In-Person">In-Person</option>
-                        <option value="Online">Online</option>
-                        <option value="Hybrid">Hybrid</option>
-                        <option value="custom">Custom…</option>
-                      </select>
-                    </Field>
-                    <Field label="Custom mode text">
-                      <input className={inputCls} value={c.modeCustom} onChange={(e) => updateCourse(c.id, { modeCustom: e.target.value })} />
-                    </Field>
-                  </div>
-
-                  <Field label="Extra tags (comma-separated)">
-                    <input className={inputCls} placeholder="On-going, New" value={c.extraTags} onChange={(e) => updateCourse(c.id, { extraTags: e.target.value })} />
-                  </Field>
-
-                  <Field label="Course link">
-                    <input className={inputCls} value={c.ctaLink} onChange={(e) => updateCourse(c.id, { ctaLink: e.target.value })} />
-                  </Field>
-
-                  <Field label="Footnote under the button">
-                    <input className={inputCls} value={c.footnote} onChange={(e) => updateCourse(c.id, { footnote: e.target.value })} />
-                  </Field>
-                </div>
-              ))}
-              <button
-                onClick={() => setCourses([...courses, makeCourse()])}
-                className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-              >
-                <Plus size={16} /> Add course
-              </button>
-            </div>
-          )}
-
-          {tab === "preview" && (
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
-                  {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
-                </button>
-                {isEdited && (
+    <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
+      {tab === "courses" && (
+        <div className="space-y-4">
+          {courses.map((c, i) => (
+            <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-semibold text-indigo-700">
+                  {c.title.trim() || `Course ${i + 1} (untitled)`}
+                </span>
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setRawHtmlEdit(null)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
+                    onClick={() => setCourses([...courses.slice(0, i + 1), makeCourse({ ...c, id: uid() }), ...courses.slice(i + 1)])}
+                    className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                    title="Duplicate"
                   >
-                    <RotateCcw size={15} /> Discard edits
+                    <Files size={16} />
                   </button>
-                )}
+                  <MoveButtons
+                    index={i}
+                    length={courses.length}
+                    onMove={move}
+                    onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
+                  />
+                </div>
               </div>
-              {isEdited && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
-                  Showing your manual edits. The Courses tab won't reflect this — hand edits are export-only. Click <strong>Discard edits</strong> to go back to the generated version.
-                </p>
-              )}
-              <p className="text-xs text-gray-500 mb-2">Live preview:</p>
-              <iframe title="preview" srcDoc={html} className="w-full border border-gray-300 rounded" style={{ height: "500px" }} />
-              <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1">
-                <Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):
-              </p>
-              <textarea
-                className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
-                style={{ height: "220px" }}
-                value={html}
-                onChange={(e) => setRawHtmlEdit(e.target.value)}
-                spellCheck={false}
-              />
+
+              <Field label="Course title">
+                <input className={inputCls} value={c.title} onChange={(e) => updateCourse(c.id, { title: e.target.value })} />
+              </Field>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Date range">
+                  <input className={inputCls} placeholder="e.g. 8-9" value={c.dateRange} onChange={(e) => updateCourse(c.id, { dateRange: e.target.value })} />
+                </Field>
+                <Field label="Date month">
+                  <input className={inputCls} placeholder="e.g. July 2026" value={c.dateMonth} onChange={(e) => updateCourse(c.id, { dateMonth: e.target.value })} />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Status badge">
+                  <select className={inputCls} value={c.status} onChange={(e) => updateCourse(c.id, { status: e.target.value })}>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="limited">Limited Seats</option>
+                    <option value="waitlist">Waitlist</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </Field>
+                <Field label="Custom status text">
+                  <input className={inputCls} value={c.statusCustom} onChange={(e) => updateCourse(c.id, { statusCustom: e.target.value })} />
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Delivery mode badge">
+                  <select className={inputCls} value={c.mode} onChange={(e) => updateCourse(c.id, { mode: e.target.value })}>
+                    <option value="In-Person">In-Person</option>
+                    <option value="Online">Online</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="custom">Custom…</option>
+                  </select>
+                </Field>
+                <Field label="Custom mode text">
+                  <input className={inputCls} value={c.modeCustom} onChange={(e) => updateCourse(c.id, { modeCustom: e.target.value })} />
+                </Field>
+              </div>
+
+              <Field label="Extra tags (comma-separated)">
+                <input className={inputCls} placeholder="On-going, New" value={c.extraTags} onChange={(e) => updateCourse(c.id, { extraTags: e.target.value })} />
+              </Field>
+
+              <Field label="Course link">
+                <input className={inputCls} value={c.ctaLink} onChange={(e) => updateCourse(c.id, { ctaLink: e.target.value })} />
+              </Field>
+
+              <Field label="Footnote under the button">
+                <input className={inputCls} value={c.footnote} onChange={(e) => updateCourse(c.id, { footnote: e.target.value })} />
+              </Field>
             </div>
-          )}
+          ))}
+          <button
+            onClick={() => setCourses([...courses, makeCourse()])}
+            className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+          >
+            <Plus size={16} /> Add course
+          </button>
         </div>
+      )}
+
+      {tab === "preview" && (
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
+              {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
+            </button>
+            {isEdited && (
+              <button
+                onClick={() => setRawHtmlEdit(null)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
+              >
+                <RotateCcw size={15} /> Discard edits
+              </button>
+            )}
+          </div>
+          {isEdited && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
+              Showing your manual edits. The Courses tab won't reflect this — hand edits are export-only. Click <strong>Discard edits</strong> to go back to the generated version.
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mb-2">Live preview:</p>
+          <iframe title="preview" srcDoc={html} className="w-full border border-gray-300 rounded" style={{ height: "500px" }} />
+          <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1">
+            <Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):
+          </p>
+          <textarea
+            className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
+            style={{ height: "220px" }}
+            value={html}
+            onChange={(e) => setRawHtmlEdit(e.target.value)}
+            spellCheck={false}
+          />
+        </div>
+      )}
+    </div>
+  </>
+) : viewingRecordId === -1 ? (
+  <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <RecordsPanel
+      builderKey="training-bulletin-data"
+      onSelect={(id) => setViewingRecordId(id)}
+    />
+    <button
+      onClick={() => setViewingRecordId(null)}
+      className="mt-3 text-sm text-gray-500 hover:text-indigo-700"
+    >
+      ← Back to builder
+    </button>
+  </div>
+) : (
+  <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <RecordViewer
+      recordId={viewingRecordId}
+      onBack={() => setViewingRecordId(null)}
+    />
+  </div>
+)}
       </div>
     </div>
   );

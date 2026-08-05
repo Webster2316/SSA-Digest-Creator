@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, FileText, Loader2, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays,Archive,  FileText, Loader2, RotateCcw } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RichTextEditor from "../shared/richTextEditor";
+import RecordsPanel from "../shared/recordsPanel";
+import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
 
 const badgePresets = {
@@ -306,6 +308,7 @@ export default function WeeklyDigestBuilder() {
   const [copied, setCopied] = useState(false);
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
   const [syncMessage, setSyncMessage] = useState(null);
+  const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -346,7 +349,7 @@ export default function WeeklyDigestBuilder() {
         const res = await fetch("/api/save-digest?key=ssa-digest-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit }),
+          body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit, builtHtml: html }),
         });
         setSaveStatus(res.ok ? "saved" : "error");
       } catch (e) {
@@ -420,6 +423,7 @@ export default function WeeklyDigestBuilder() {
             <img src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png" alt="SSA Logo" className="h-8 w-auto" />
             <h1 className="text-xl font-bold text-indigo-900">Weekly Digest Builder</h1>
           </div>
+          
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
@@ -432,168 +436,201 @@ export default function WeeklyDigestBuilder() {
           </Field>
         </div>
 
-        <div className="flex border-b border-gray-200 bg-white rounded-t-lg px-2">
-          {tabBtn("events", "Events", CalendarDays)}
-          {tabBtn("action", "For Action", FileText)}
-          {tabBtn("noting", "For Noting", FileText)}
-          {tabBtn("preview", "Preview & Export", Eye)}
-        </div>
+        {viewingRecordId === null ? (
+  <>
+    <div className="flex items-center justify-between border-b border-gray-200 bg-white rounded-t-lg px-2">
+      <div className="flex">
+        {tabBtn("events", "Events", CalendarDays)}
+        {tabBtn("action", "For Action", FileText)}
+        {tabBtn("noting", "For Noting", FileText)}
+        {tabBtn("preview", "Preview & Export", Eye)}
+      </div>
+      <button
+        onClick={() => setViewingRecordId(-1)}
+        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
+      >
+        <Archive size={15} /> Issue Archive
+      </button>
+    </div>
 
-        <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
-          {tab === "events" && (
-            <div className="space-y-4">
-              {events.map((ev, i) => (
-                <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
-                    <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() => setEvents(events.filter((e) => e.id !== ev.id))} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
-                    <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
-                  </div>
-                  <Field label="Title"><input className={inputCls} value={ev.title} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, title: e.target.value } : x))} /></Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Location"><input className={inputCls} value={ev.location} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, location: e.target.value } : x))} /></Field>
-                    <Field label="Time"><input className={inputCls} value={ev.timeText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, timeText: e.target.value } : x))} /></Field>
-                  </div>
-                  <Field label="Tags (comma separated)"><input className={inputCls} value={ev.tags} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, tags: e.target.value } : x))} /></Field>
-                  <Field label="Venue"><input className={inputCls} value={ev.venue} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, venue: e.target.value } : x))} /></Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Registration Link Text"><input className={inputCls} value={ev.regText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regText: e.target.value } : x))} /></Field>
-                    <Field label="Registration Link URL"><input className={inputCls} value={ev.regLink} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regLink: e.target.value } : x))} /></Field>
-                  </div>
-                  <Field label="Description"><textarea className={inputCls} rows={3} value={ev.description} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, description: e.target.value } : x))} /></Field>
-                </div>
-              ))}
-              <button onClick={() => setEvents([...events, { id: uid(), day: "1", month: "Jan", title: "New Event", location: "", timeText: "", tags: "All Members", venue: "", regText: "", regLink: "", description: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
-                <Plus size={16} /> Add Event
-              </button>
-            </div>
-          )}
-
-          {tab === "action" && (
-            <div className="space-y-4">
-              {actionItems.map((it, i) => (
-                <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
-                    <MoveButtons index={i} length={actionItems.length} onMove={move(actionItems, setActionItems)} onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
-                    <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
-                  </div>
-                  <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
-                  <Field label="Deadline (optional)">
-                    <div className="flex items-center gap-2">
-                      <input type="date" className={inputCls} value={it.deadline || ""} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, deadline: e.target.value } : x))} />
-                      {it.deadline && (
-                        <button type="button" onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, deadline: "" } : x))} className="text-xs text-gray-500 hover:text-red-600 whitespace-nowrap">Clear</button>
-                      )}
-                    </div>
-                  </Field>
-                  <Field label="Documents">
-                    <div className="space-y-2">
-                      {(it.docs || []).map((d, di) => (
-                        <div key={di} className="flex gap-2">
-                          <input className={inputCls} placeholder="Link text" value={d.label} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, label: e.target.value } : dd) } : x))} />
-                          <input className={inputCls} placeholder="URL" value={d.url} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, url: e.target.value } : dd) } : x))} />
-                          <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
-                        </div>
-                      ))}
-                      <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: [...(x.docs || []), { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
-                    </div>
-                  </Field>
-                  <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
-                  <Field label="Content">
-                    <RichTextEditor value={it.content} onChange={(html) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
-                  </Field>
-                </div>
-              ))}
-              <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Review", badgeColor: badgePresets.Review, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
-                <Plus size={16} /> Add Action Item
-              </button>
-            </div>
-          )}
-
-          {tab === "noting" && (
-            <div className="space-y-4">
-              {notingItems.map((it, i) => (
-                <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
-                    <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
-                    <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
-                  </div>
-                  <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
-                  <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
-                  <Field label="Documents">
-                    <div className="space-y-2">
-                      {it.docs.map((d, di) => (
-                        <div key={di} className="flex gap-2">
-                          <input className={inputCls} placeholder="Link text" value={d.label} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, label: e.target.value } : dd) } : x))} />
-                          <input className={inputCls} placeholder="URL" value={d.url} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, url: e.target.value } : dd) } : x))} />
-                          <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
-                        </div>
-                      ))}
-                      <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: [...x.docs, { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
-                    </div>
-                  </Field>
-                  <Field label="Content">
-                    <RichTextEditor value={it.content} onChange={(html) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
-                  </Field>
-                </div>
-              ))}
-              <button onClick={() => setNotingItems([...notingItems, { id: uid(), badge: "ICS", badgeColor: badgePresets.ICS, title: "New Noting Item", tags: "Committee 1, Committee 2", docs: [], content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
-                <Plus size={16} /> Add Noting Item
-              </button>
-            </div>
-          )}
-
-          {tab === "preview" && (
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
-                  {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
-                </button>
-                {isEdited && (
-                  <button onClick={handleApplyHtmlToFields} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white text-sm rounded font-medium hover:bg-emerald-800">
-                    <Save size={15} /> Apply HTML changes to fields
-                  </button>
-                )}
-                {isEdited && (
-                  <button onClick={handleResetHtml} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50">
-                    <RotateCcw size={15} /> Discard edits
-                  </button>
-                )}
+    <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
+      {tab === "events" && (
+        <div className="space-y-4">
+          {events.map((ev, i) => (
+            <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
+                <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() => setEvents(events.filter((e) => e.id !== ev.id))} />
               </div>
-              {isEdited && !syncMessage && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
-                  Showing your manual edits. The Events / For Action / For Noting tabs won't reflect this until you click <strong>Apply HTML changes to fields</strong> — text edits inside existing fields sync fine, but new blocks you hand-write from scratch won't be recognized.
-                </p>
-              )}
-              {syncMessage && (
-                <p className={`text-xs rounded px-2 py-1.5 mb-3 border ${syncMessage.type === "success" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-red-700 bg-red-50 border-red-200"}`}>
-                  {syncMessage.text}
-                </p>
-              )}
-              <p className="text-xs text-gray-500 mb-2">Live preview:</p>
-              <iframe title="preview" srcDoc={html} className="w-full border border-gray-300 rounded" style={{ height: "500px" }} />
-              <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1"><Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):</p>
-              <textarea
-                className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
-                style={{ height: "220px" }}
-                value={html}
-                onChange={(e) => { setRawHtmlEdit(e.target.value); setSyncMessage(null); }}
-                spellCheck={false}
-              />
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
+                <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
+              </div>
+              <Field label="Title"><input className={inputCls} value={ev.title} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Location"><input className={inputCls} value={ev.location} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, location: e.target.value } : x))} /></Field>
+                <Field label="Time"><input className={inputCls} value={ev.timeText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, timeText: e.target.value } : x))} /></Field>
+              </div>
+              <Field label="Tags (comma separated)"><input className={inputCls} value={ev.tags} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, tags: e.target.value } : x))} /></Field>
+              <Field label="Venue"><input className={inputCls} value={ev.venue} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, venue: e.target.value } : x))} /></Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Registration Link Text"><input className={inputCls} value={ev.regText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regText: e.target.value } : x))} /></Field>
+                <Field label="Registration Link URL"><input className={inputCls} value={ev.regLink} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regLink: e.target.value } : x))} /></Field>
+              </div>
+              <Field label="Description"><textarea className={inputCls} rows={3} value={ev.description} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, description: e.target.value } : x))} /></Field>
             </div>
-          )}
+          ))}
+          <button onClick={() => setEvents([...events, { id: uid(), day: "1", month: "Jan", title: "New Event", location: "", timeText: "", tags: "All Members", venue: "", regText: "", regLink: "", description: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
+            <Plus size={16} /> Add Event
+          </button>
         </div>
+      )}
+
+      {tab === "action" && (
+        <div className="space-y-4">
+          {actionItems.map((it, i) => (
+            <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+                <MoveButtons index={i} length={actionItems.length} onMove={move(actionItems, setActionItems)} onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
+                <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
+              </div>
+              <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <Field label="Deadline (optional)">
+                <div className="flex items-center gap-2">
+                  <input type="date" className={inputCls} value={it.deadline || ""} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, deadline: e.target.value } : x))} />
+                  {it.deadline && (
+                    <button type="button" onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, deadline: "" } : x))} className="text-xs text-gray-500 hover:text-red-600 whitespace-nowrap">Clear</button>
+                  )}
+                </div>
+              </Field>
+              <Field label="Documents">
+                <div className="space-y-2">
+                  {(it.docs || []).map((d, di) => (
+                    <div key={di} className="flex gap-2">
+                      <input className={inputCls} placeholder="Link text" value={d.label} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, label: e.target.value } : dd) } : x))} />
+                      <input className={inputCls} placeholder="URL" value={d.url} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, url: e.target.value } : dd) } : x))} />
+                      <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
+                    </div>
+                  ))}
+                  <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: [...(x.docs || []), { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
+                </div>
+              </Field>
+              <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
+              <Field label="Content">
+                <RichTextEditor value={it.content} onChange={(html) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
+              </Field>
+            </div>
+          ))}
+          <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Review", badgeColor: badgePresets.Review, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
+            <Plus size={16} /> Add Action Item
+          </button>
+        </div>
+      )}
+
+      {tab === "noting" && (
+        <div className="space-y-4">
+          {notingItems.map((it, i) => (
+            <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+                <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
+                <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
+              </div>
+              <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
+              <Field label="Documents">
+                <div className="space-y-2">
+                  {it.docs.map((d, di) => (
+                    <div key={di} className="flex gap-2">
+                      <input className={inputCls} placeholder="Link text" value={d.label} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, label: e.target.value } : dd) } : x))} />
+                      <input className={inputCls} placeholder="URL" value={d.url} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.map((dd, ddi) => ddi === di ? { ...dd, url: e.target.value } : dd) } : x))} />
+                      <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
+                    </div>
+                  ))}
+                  <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: [...x.docs, { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
+                </div>
+              </Field>
+              <Field label="Content">
+                <RichTextEditor value={it.content} onChange={(html) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
+              </Field>
+            </div>
+          ))}
+          <button onClick={() => setNotingItems([...notingItems, { id: uid(), badge: "ICS", badgeColor: badgePresets.ICS, title: "New Noting Item", tags: "Committee 1, Committee 2", docs: [], content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
+            <Plus size={16} /> Add Noting Item
+          </button>
+        </div>
+      )}
+
+      {tab === "preview" && (
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
+              {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
+            </button>
+            {isEdited && (
+              <button onClick={handleApplyHtmlToFields} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white text-sm rounded font-medium hover:bg-emerald-800">
+                <Save size={15} /> Apply HTML changes to fields
+              </button>
+            )}
+            {isEdited && (
+              <button onClick={handleResetHtml} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50">
+                <RotateCcw size={15} /> Discard edits
+              </button>
+            )}
+          </div>
+          {isEdited && !syncMessage && (
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
+              Showing your manual edits. The Events / For Action / For Noting tabs won't reflect this until you click <strong>Apply HTML changes to fields</strong> — text edits inside existing fields sync fine, but new blocks you hand-write from scratch won't be recognized.
+            </p>
+          )}
+          {syncMessage && (
+            <p className={`text-xs rounded px-2 py-1.5 mb-3 border ${syncMessage.type === "success" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-red-700 bg-red-50 border-red-200"}`}>
+              {syncMessage.text}
+            </p>
+          )}
+          <p className="text-xs text-gray-500 mb-2">Live preview:</p>
+          <iframe title="preview" srcDoc={html} className="w-full border border-gray-300 rounded" style={{ height: "500px" }} />
+          <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1"><Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):</p>
+          <textarea
+            className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
+            style={{ height: "220px" }}
+            value={html}
+            onChange={(e) => { setRawHtmlEdit(e.target.value); setSyncMessage(null); }}
+            spellCheck={false}
+          />
+        </div>
+      )}
+    </div>
+  </>
+) : viewingRecordId === -1 ? (
+  <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <RecordsPanel
+      builderKey="ssa-digest-data"
+      onSelect={(id) => setViewingRecordId(id)}
+    />
+    <button
+      onClick={() => setViewingRecordId(null)}
+      className="mt-3 text-sm text-gray-500 hover:text-indigo-700"
+    >
+      ← Back to builder
+    </button>
+  </div>
+) : (
+  <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <RecordViewer
+      recordId={viewingRecordId}
+      onBack={() => setViewingRecordId(null)}
+    />
+  </div>
+)}
+
       </div>
     </div>
   );
