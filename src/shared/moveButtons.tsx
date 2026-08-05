@@ -1,7 +1,8 @@
 import { ChevronUp, ChevronDown, Trash2 } from "lucide-react";
 
 export default function MoveButtons({ index, length, onMove, onRemove }: {
-  index: number; length: number;
+  index: number; 
+  length: number;
   onMove: (index: number, dir: number) => void;
   onRemove: () => void;
 }) {

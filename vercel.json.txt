@@ -1,0 +1,7 @@
+//ensures archiving only haves at end of the week
+{
+    "crons": [
+      { "path": "/api/archive-digest", "schedule": "0 16 * * 5" }
+    ]
+  }
+/*   Timing is in UTC */
