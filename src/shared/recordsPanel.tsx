@@ -38,7 +38,7 @@ export default function RecordsPanel({ builderKey, onSelect }: RecordsPanelProps
     <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
       <div className="flex items-center gap-1.5 mb-2">
         <Archive size={14} className="text-gray-500" />
-        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Past Issues</span>
+        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Past Issues (Auto saved)</span>
       </div>
 
       {loading && <p className="text-xs text-gray-400">Loading…</p>}
