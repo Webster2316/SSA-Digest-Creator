@@ -83,14 +83,14 @@ function buildCourseRow(course: any) {
           <td class="course-content-cell" valign="middle">
             <p data-f="title" style="margin:0 0 8px;font-family:${FONT};font-size:15px;font-weight:700;color:#1a1464;line-height:1.3;"> ${esc(title)}</p>
 
-${course.description.trim() ? `
+${(course.description|| "").trim() ? `
 <p data-f="description"
    style="margin:0 0 8px;
           font-family:${FONT};
           font-size:13px;
           color:#4b5563;
           line-height:1.45;">
-  ${esc(course.description)}
+  ${esc(course.description || "")}
 </p>` : ""}
 
 ${badgesHtml}
