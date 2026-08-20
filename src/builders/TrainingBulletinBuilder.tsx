@@ -487,12 +487,12 @@ export default function TrainingBulletinBuilder() {
 >
   <ArrowRightLeft size={16} />
 </button>
-                  <MoveButtons
-                    index={i}
-                    length={courses.length}
-                    onMove={move}
-                    onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
-                  />
+                 <MoveButtons
+  index={i}
+  length={courses.length}
+  onMove={(index, dir) => move(courses, setCourses, index, dir)}
+  onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
+/>
                 </div>
               </div>
 
@@ -614,16 +614,12 @@ export default function TrainingBulletinBuilder() {
   <ArrowRightLeft size={16} />
 </button>
 
-            <MoveButtons
-              index={i}
-              length={eobItems.length}
-              onMove={(list, setList, index, dir) =>
-                move(eobItems, setEobItems, index, dir)
-              }
-              onRemove={() =>
-                setEobItems(eobItems.filter((x) => x.id !== c.id))
-              }
-            />
+          <MoveButtons
+  index={i}
+  length={eobItems.length}
+  onMove={(index, dir) => move(eobItems, setEobItems, index, dir)}
+  onRemove={() => setEobItems(eobItems.filter((x) => x.id !== c.id))}
+/>
           </div>
         </div>
 
