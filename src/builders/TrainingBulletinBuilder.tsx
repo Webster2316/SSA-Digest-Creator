@@ -206,11 +206,11 @@ ${eobRowsHtml}` : "";
     </table>
     <tr>
   <tr>
-  <td style="background:#2e468c;padding:14px 24px;">
-    <p data-f="greeting" style="margin:0;font-family:${FONT};font-size:14px;color:#ffffff;line-height:1.5;text-align:left;">
-      ${greeting}
-    </p>
-  </td>
+<td style="background:#ffffff;padding:14px 24px;border:1px solid #2e468c;">
+  <p data-f="greeting" style="margin:0;font-family:${FONT};font-size:14px;color:#1f3b7a;line-height:1.5;text-align:left;">
+    ${greeting}
+  </p>
+</td>
 </tr>
     </div>
   </td>
