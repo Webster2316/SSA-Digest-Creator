@@ -264,7 +264,9 @@ export default function TrainingBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.greeting) setGreeting(data.greeting);
-            if (data.courses) setCourses(data.courses);
+           if (data.courses) {
+  setCourses(data.courses.map((c: any) => ({ ...makeCourse(), ...c })));
+}
             if (typeof data.rawHtmlEdit === "string") setRawHtmlEdit(data.rawHtmlEdit);
           }
         }
@@ -412,7 +414,7 @@ export default function TrainingBulletinBuilder() {
   <textarea
     className={inputCls}
     rows={2}
-    value={c.description}
+    value={c.description || ""}
     onChange={(e) =>
       updateCourse(c.id, { description: e.target.value })
     }
