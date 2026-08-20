@@ -220,11 +220,11 @@ ${rowsHtml}
         <tr>
           <td align="center">
             <p style="margin:0 0 8px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:12px;color:#ffffff;line-height:1.7;">
-             You are receiving the SSA Member Learning Calendar because you have previously enrolled in SSA courses.
+             You are receiving the SSA Member Learning Calendar because you have previously enrolled in SSA courses. <br>
  
 As part of our learning community, you are on a shared learning journey with SSA. The Member Learning Calendar brings together upcoming SSA training, learning opportunities and professional development activities to support your continued learning and development.
  
-We look forward to continuing this learning journey with you.
+We look forward to continuing this learning journey with you. <br>
  
 If you wish to unsubscribe from the Member Learning Calendar, please email ariel@ssa.org.sg 
               with the subject line <strong>"Unsubscribe"</strong>.
