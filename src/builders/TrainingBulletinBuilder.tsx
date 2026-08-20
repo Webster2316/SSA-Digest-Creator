@@ -21,6 +21,7 @@ function makeCourse(overrides = {}) {
     {
       id: uid(),
       title: "",
+      description: "", 
       dateRange: "",
       dateMonth: "MM YYYY",
       status: "confirmed",
@@ -80,8 +81,19 @@ function buildCourseRow(course: any) {
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
           <td class="course-content-cell" valign="middle">
-            <p data-f="title" style="margin:0 0 8px;font-family:${FONT};font-size:15px;font-weight:700;color:#1a1464;line-height:1.3;">${esc(title)}</p>
-            ${badgesHtml}
+            <p data-f="title" style="margin:0 0 8px;font-family:${FONT};font-size:15px;font-weight:700;color:#1a1464;line-height:1.3;"> ${esc(title)}</p>
+
+${course.description.trim() ? `
+<p data-f="description"
+   style="margin:0 0 8px;
+          font-family:${FONT};
+          font-size:13px;
+          color:#4b5563;
+          line-height:1.45;">
+  ${esc(course.description)}
+</p>` : ""}
+
+${badgesHtml}
           </td>
 
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
@@ -396,6 +408,16 @@ export default function TrainingBulletinBuilder() {
               <Field label="Course title">
                 <input className={inputCls} value={c.title} onChange={(e) => updateCourse(c.id, { title: e.target.value })} />
               </Field>
+              <Field label="Description">
+  <textarea
+    className={inputCls}
+    rows={2}
+    value={c.description}
+    onChange={(e) =>
+      updateCourse(c.id, { description: e.target.value })
+    }
+  />
+</Field>
 
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Date range">
