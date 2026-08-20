@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Archive, Loader2, RotateCcw, Files } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Archive, Megaphone, Loader2, RotateCcw, Files, ArrowRightLeft } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RecordsPanel from "../shared/recordsPanel";
@@ -13,6 +13,7 @@ const badgeStyles: Record<string, { text: string; bg: string; color: string; bor
   limited: { text: "Limited Seats", bg: "#fff3f3", color: "#993c1d", border: "#f0997b" },
   waitlist: { text: "Waitlist", bg: "#fff8e6", color: "#8a6d1d", border: "#eecf7a" },
   cancelled: { text: "Cancelled", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4" },
+  highDemand: {text: "High Demand", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4"},
 };
 const neutralBadge = { bg: "#f7f9fc", color: "#5f6a7d", border: "#dde4ec" };
 
@@ -23,14 +24,16 @@ function makeCourse(overrides = {}) {
       title: "",
       description: "", 
       dateRange: "",
-      dateMonth: "MM YYYY",
+      dateMonth: "MONTH YYYY",
       status: "confirmed",
       statusCustom: "",
+      statusCustomColor: "#331bbf",
       mode: "In-Person",
       modeCustom: "",
+      modeCustomColor: "#331bbf",
       extraTags: "",
       ctaLink: "https://www.ssa.org.sg/courses-calendar/",
-      footnote: "Fee, venue &amp; enquiry options on the SSA Training page.",
+      footnote: "Contact ariel@ssa.org.sg for details",
     },
     overrides
   );
@@ -39,7 +42,9 @@ function makeCourse(overrides = {}) {
 const defaultCourses = [
 
 ];
-
+function escWithBreaks(text: string) {
+  return esc(text).replace(/\n/g, "<br>");
+}
 function buildBadgeSpan(badge: { text: string; bg: string; color: string; border: string }) {
   return `<span style="display:inline-block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};margin-right:6px;">${esc(badge.text)}</span>`;
 }
@@ -48,14 +53,26 @@ function buildCourseRow(course: any) {
   const title = course.title.trim() || "Untitled Course";
   const dateRange = course.dateRange.trim() || "TBC";
   const dateMonth = course.dateMonth.trim();
+  const isNewCourse = /NEW/i.test(title);
+  const dateBoxColor = isNewCourse ? "#4f0615" : "#281e7e";
 
   const statusBadge = course.status === "custom"
-    ? Object.assign({ text: course.statusCustom.trim() || "Status" }, neutralBadge)
+    ?  {
+      text: course.statusCustom.trim() || "Status",
+      bg: course.statusCustomColor || "#331bbf",
+      color: "#ffffff",
+      border: course.statusCustomColor || "#331bbf",
+    } 
     : badgeStyles[course.status];
 
   const modeBadge = course.mode === "custom"
-    ? Object.assign({ text: course.modeCustom.trim() || "Mode" }, neutralBadge)
-    : Object.assign({ text: course.mode }, neutralBadge);
+    ?{
+      text: course.modeCustom.trim() || "Mode",
+      bg: course.modeCustomColor || "#331bbf",
+      color: "#ffffff",
+      border: course.modeCustomColor || "#331bbf",
+    }
+   : Object.assign({ text: course.mode }, neutralBadge);
 
   const extraBadges = course.extraTags
     .split(",")
@@ -66,14 +83,14 @@ function buildCourseRow(course: any) {
   const badgesHtml = [statusBadge, modeBadge, ...extraBadges].map(buildBadgeSpan).join("\n            ");
 
   const ctaLink = course.ctaLink.trim() || "https://www.ssa.org.sg/courses-calendar/";
-  const footnote = course.footnote.trim() || "Fee, venue &amp; enquiry options on the SSA Training page.";
+  const footnote = course.footnote.trim() || "Contact ariel@ssa.org.sg for details";
 
   return `  <!-- ── COURSE ROW ── -->
   <tr data-block="course" data-id="${esc(course.id)}">
     <td class="pad-sides" style="border-bottom:1px solid #e2e8f0;padding:16px 24px;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
-          <td class="course-date-cell" width="90" valign="middle" align="center" style="background-color:#281e7e;text-align:center;padding:10px 6px;width:90px;">
+          <td class="course-date-cell" width="90" valign="middle" align="center"style="background-color:${dateBoxColor};text-align:center;padding:10px 6px;width:90px;">
             <span data-f="date-range" style="display:block;font-family:${FONT};font-size:14px;font-weight:700;color:#ffffff;line-height:1.25;">${esc(dateRange)}</span>
             <span data-f="date-month" style="display:block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9ecfb;margin-top:2px;">${esc(dateMonth)}</span>
           </td>
@@ -90,7 +107,7 @@ ${(course.description|| "").trim() ? `
           font-size:13px;
           color:#4b5563;
           line-height:1.45;">
-  ${esc(course.description || "")}
+  ${escWithBreaks(course.description || "")}
 </p>` : ""}
 
 ${badgesHtml}
@@ -115,8 +132,15 @@ ${badgesHtml}
   <!-- ── END COURSE ROW ── -->`;
 }
 
-function buildFullHTML({ greeting, courses }: { greeting: string; courses: any[] }) {
+function buildFullHTML({ issueRange, greeting, courses, eobItems}: { issueRange: string; greeting: string; courses: any[]; eobItems: any[] }) {
   const rowsHtml = courses.map(buildCourseRow).join("\n\n");
+  const eobRowsHtml = eobItems.map(buildCourseRow).join("\n\n");
+  const eobSectionHtml = eobItems.length > 0 ? `<tr>
+  <td class="pad-sides" style="padding:12px 24px;background:#2e468c;border-bottom:1px solid #0098ce;">
+    <p style="margin:0;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">EOB</p>
+  </td>
+</tr>
+${eobRowsHtml}` : "";
   return `<!doctype html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -174,18 +198,20 @@ function buildFullHTML({ greeting, courses }: { greeting: string; courses: any[]
 <tr>
   <td style="padding:0;font-size:0;line-height:0;">
     <div style="position:relative;">
-      <img class="header-img" src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner2.png" width="680" alt="SSA Training Bulletin" style="display:block;width:100%;max-width:680px;border:0;height:auto;">
-      <!--[if !mso]><!-->
-      <div style="position:absolute;left:0;left:24px;right:24px;bottom:-20px;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-          <tr>
-            <td style="background:#ffffff;border-left:4px solid #1b76bc;padding:14px 18px;">
-              <p data-f="greeting" style="margin:0;font-family:${FONT};font-size:14px;color:#2d3748;line-height:1.5;text-align:left;">${greeting}</p>
-            </td>
-          </tr>
-        </table>
-      </div>
-      <!--<![endif]-->
+    <img class="header-img" src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner2.png" width="680" alt="SSA Training Bulletin" style="display:block;width:100%;max-width:680px;border:0;height:auto;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+      <tr>
+        <td data-f="issue-range" style="background-color:#0098ce;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td>
+      </tr>
+    </table>
+    <tr>
+  <tr>
+  <td style="background:#2e468c;padding:14px 24px;">
+    <p data-f="greeting" style="margin:0;font-family:${FONT};font-size:14px;color:#ffffff;line-height:1.5;text-align:left;">
+      ${greeting}
+    </p>
+  </td>
+</tr>
     </div>
   </td>
 </tr>
@@ -213,6 +239,7 @@ function buildFullHTML({ greeting, courses }: { greeting: string; courses: any[]
   </tr>
 
 ${rowsHtml}
+${eobSectionHtml}
 
   <tr>
     <td class="footer-cell" style="background-color:#281e7e;padding:24px 28px;">
@@ -225,6 +252,7 @@ ${rowsHtml}
 As part of our learning community, you are on a shared learning journey with SSA. The Member Learning Calendar brings together upcoming SSA training, learning opportunities and professional development activities to support your continued learning and development.
  
 We look forward to continuing this learning journey with you. <br>
+ 
  
 If you wish to unsubscribe from the Member Learning Calendar, please email ariel@ssa.org.sg 
               with the subject line <strong>"Unsubscribe"</strong>.
@@ -254,10 +282,12 @@ If you wish to unsubscribe from the Member Learning Calendar, please email ariel
 export default function TrainingBulletinBuilder() {
   const [tab, setTab] = useState("courses");
   const [greeting, setGreeting] = useState("Dear Member, below is the list of the upcoming training courses by SSA.");
+  const[eobItems, setEobItems] = useState<any[]>([]);
   const [courses, setCourses] = useState(defaultCourses);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
+  const [issueRange, setIssueRange] = useState("Issue: ");
   const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
 
@@ -269,6 +299,10 @@ export default function TrainingBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.greeting) setGreeting(data.greeting);
+            if (data.issueRange) setIssueRange(data.issueRange);
+            if (data.eobItems) {
+              setEobItems(data.eobItems.map((c: any) => ({...makeCourse(), ...c})));
+            }
            if (data.courses) {
   setCourses(data.courses.map((c: any) => ({ ...makeCourse(), ...c })));
 }
@@ -290,7 +324,7 @@ export default function TrainingBulletinBuilder() {
         const res = await fetch("/api/save-digest?key=training-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ greeting, courses, rawHtmlEdit, builtHtml: html }),
+          body: JSON.stringify({ greeting, issueRange, courses, eobItems, rawHtmlEdit, builtHtml: html }),
         });
         setSaveStatus(res.ok ? "saved" : "error");
       } catch (e) {
@@ -299,21 +333,55 @@ export default function TrainingBulletinBuilder() {
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [greeting, courses, rawHtmlEdit, loaded]);
+  }, [greeting, issueRange, courses, eobItems, rawHtmlEdit, loaded]);
 
-  const move = (index: number, dir: number) => {
-    const arr = [...courses];
+  const move = (list: any[], setList: (v: any[]) => void, index: number, dir: number) => {
+    const arr = [...list];
     const target = index + dir;
     if (target < 0 || target >= arr.length) return;
     [arr[index], arr[target]] = [arr[target], arr[index]];
-    setCourses(arr);
+    setList(arr);
+  };
+  
+  const updateItem = (list: any[], setList: (v: any[]) => void, id: string, patch: any) => {
+    setList(list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
 
   const updateCourse = (id: string, patch: Partial<(typeof defaultCourses)[0]>) => {
     setCourses(courses.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
 
-  const generatedHtml = buildFullHTML({ greeting, courses });
+  const copyItem = (item: any, target: "here" | "other") => {
+    const copy = { ...item, id: uid() };
+  
+    const inCourses = tab === "courses";
+  
+    if (target === "here") {
+      // Duplicate within the current tab
+      const list = inCourses ? courses : eobItems;
+      const setList = inCourses ? setCourses : setEobItems;
+  
+      const index = list.findIndex((x) => x.id === item.id);
+  
+      setList([
+        ...list.slice(0, index + 1),
+        copy,
+        ...list.slice(index + 1),
+      ]);
+    } else {
+      // MOVE to the other tab
+      if (inCourses) {
+        // Courses → EOB
+        setEobItems([...eobItems, copy]);
+        setCourses(courses.filter((x) => x.id !== item.id));
+      } else {
+        // EOB → Courses shift
+        setCourses([...courses, copy]);
+        setEobItems(eobItems.filter((x) => x.id !== item.id));
+      }
+    }
+  };
+  const generatedHtml = buildFullHTML({ issueRange, greeting, courses, eobItems  });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
 
@@ -369,6 +437,13 @@ export default function TrainingBulletinBuilder() {
           <Field label="Header greeting (HTML like <strong> is fine)">
             <input className={inputCls} value={greeting} onChange={(e) => setGreeting(e.target.value)} />
           </Field>
+          <Field label="Issue date range ">
+  <input
+    className={inputCls}
+    value={issueRange}
+    onChange={(e) => setIssueRange(e.target.value)}
+  />
+</Field>
         </div>
 
         {viewingRecordId === null ? (
@@ -376,6 +451,7 @@ export default function TrainingBulletinBuilder() {
     <div className="flex items-center justify-between border-b border-gray-200 bg-white rounded-t-lg px-2">
       <div className="flex">
         {tabBtn("courses", "Courses", BookOpen)}
+        {tabBtn("eob", "EOB", Megaphone)}
         {tabBtn("preview", "Preview & Export", Eye)}
       </div>
       <button
@@ -396,13 +472,21 @@ export default function TrainingBulletinBuilder() {
                   {c.title.trim() || `Course ${i + 1} (untitled)`}
                 </span>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCourses([...courses.slice(0, i + 1), makeCourse({ ...c, id: uid() }), ...courses.slice(i + 1)])}
-                    className="p-1 rounded hover:bg-gray-100 text-gray-500"
-                    title="Duplicate"
-                  >
-                    <Files size={16} />
-                  </button>
+                <button
+  onClick={() => copyItem(c, "here")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy here"
+>
+  <Files size={16} />
+</button>
+
+<button
+  onClick={() => copyItem(c, "other")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy to EOB"
+>
+  <ArrowRightLeft size={16} />
+</button>
                   <MoveButtons
                     index={i}
                     length={courses.length}
@@ -446,7 +530,16 @@ export default function TrainingBulletinBuilder() {
                   </select>
                 </Field>
                 <Field label="Custom status text">
+                  <div className="flex gap-2">
                   <input className={inputCls} value={c.statusCustom} onChange={(e) => updateCourse(c.id, { statusCustom: e.target.value })} />
+    <input
+      type="color"
+      value={c.statusCustomColor}
+      onChange={(e) => updateCourse(c.id, { statusCustomColor: e.target.value })}
+      className="h-9 w-12 rounded border border-gray-300 cursor-pointer shrink-0"
+      title="Badge color"
+    /> 
+                  </div>
                 </Field>
               </div>
 
@@ -460,7 +553,16 @@ export default function TrainingBulletinBuilder() {
                   </select>
                 </Field>
                 <Field label="Custom mode text">
+                  <div className="flex gap-2">
                   <input className={inputCls} value={c.modeCustom} onChange={(e) => updateCourse(c.id, { modeCustom: e.target.value })} />
+                  <input
+      type="color"
+      value={c.modeCustomColor}
+      onChange={(e) => updateCourse(c.id, { modeCustomColor: e.target.value })}
+      className="h-9 w-12 rounded border border-gray-300 cursor-pointer shrink-0"
+      title="Badge color"
+    /> 
+                  </div>
                 </Field>
               </div>
 
@@ -485,6 +587,228 @@ export default function TrainingBulletinBuilder() {
           </button>
         </div>
       )}
+
+{tab === "eob" && (
+  <div className="space-y-4">
+    {eobItems.map((c, i) => (
+      <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-semibold text-indigo-700">
+            {c.title.trim() || `EOB Item ${i + 1} (untitled)`}
+          </span>
+
+          <div className="flex items-center gap-1">
+          <button
+  onClick={() => copyItem(c, "here")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy here"
+>
+  <Files size={16} />
+</button>
+
+<button
+  onClick={() => copyItem(c, "other")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy to Courses"
+>
+  <ArrowRightLeft size={16} />
+</button>
+
+            <MoveButtons
+              index={i}
+              length={eobItems.length}
+              onMove={(list, setList, index, dir) =>
+                move(eobItems, setEobItems, index, dir)
+              }
+              onRemove={() =>
+                setEobItems(eobItems.filter((x) => x.id !== c.id))
+              }
+            />
+          </div>
+        </div>
+
+        <Field label="Course title">
+          <input
+            className={inputCls}
+            value={c.title}
+            onChange={(e) =>
+              updateItem(eobItems, setEobItems, c.id, { title: e.target.value })
+            }
+          />
+        </Field>
+
+        <Field label="Description">
+          <textarea
+            className={inputCls}
+            rows={2}
+            value={c.description || ""}
+            onChange={(e) =>
+              updateItem(eobItems, setEobItems, c.id, {
+                description: e.target.value,
+              })
+            }
+          />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Date range">
+            <input
+              className={inputCls}
+              value={c.dateRange}
+              onChange={(e) =>
+                updateItem(eobItems, setEobItems, c.id, {
+                  dateRange: e.target.value,
+                })
+              }
+            />
+          </Field>
+
+          <Field label="Date month">
+            <input
+              className={inputCls}
+              value={c.dateMonth}
+              onChange={(e) =>
+                updateItem(eobItems, setEobItems, c.id, {
+                  dateMonth: e.target.value,
+                })
+              }
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Status badge">
+            <select
+              className={inputCls}
+              value={c.status}
+              onChange={(e) =>
+                updateItem(eobItems, setEobItems, c.id, {
+                  status: e.target.value,
+                })
+              }
+            >
+              <option value="confirmed">Confirmed</option>
+              <option value="limited">Limited Seats</option>
+              <option value="waitlist">Waitlist</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </Field>
+
+          <Field label="Custom status text">
+            <div className="flex gap-2">
+              <input
+                className={inputCls}
+                value={c.statusCustom}
+                onChange={(e) =>
+                  updateItem(eobItems, setEobItems, c.id, {
+                    statusCustom: e.target.value,
+                  })
+                }
+              />
+              <input
+                type="color"
+                value={c.statusCustomColor}
+                onChange={(e) =>
+                  updateItem(eobItems, setEobItems, c.id, {
+                    statusCustomColor: e.target.value,
+                  })
+                }
+                className="h-9 w-12 rounded border border-gray-300 cursor-pointer shrink-0"
+              />
+            </div>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Delivery mode badge">
+            <select
+              className={inputCls}
+              value={c.mode}
+              onChange={(e) =>
+                updateItem(eobItems, setEobItems, c.id, {
+                  mode: e.target.value,
+                })
+              }
+            >
+              <option value="In-Person">In-Person</option>
+              <option value="Online">Online</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </Field>
+
+          <Field label="Custom mode text">
+            <div className="flex gap-2">
+              <input
+                className={inputCls}
+                value={c.modeCustom}
+                onChange={(e) =>
+                  updateItem(eobItems, setEobItems, c.id, {
+                    modeCustom: e.target.value,
+                  })
+                }
+              />
+              <input
+                type="color"
+                value={c.modeCustomColor}
+                onChange={(e) =>
+                  updateItem(eobItems, setEobItems, c.id, {
+                    modeCustomColor: e.target.value,
+                  })
+                }
+                className="h-9 w-12 rounded border border-gray-300 cursor-pointer shrink-0"
+              />
+            </div>
+          </Field>
+        </div>
+
+        <Field label="Extra tags (comma-separated)">
+          <input
+            className={inputCls}
+            value={c.extraTags}
+            onChange={(e) =>
+              updateItem(eobItems, setEobItems, c.id, {
+                extraTags: e.target.value,
+              })
+            }
+          />
+        </Field>
+
+        <Field label="Course link">
+          <input
+            className={inputCls}
+            value={c.ctaLink}
+            onChange={(e) =>
+              updateItem(eobItems, setEobItems, c.id, {
+                ctaLink: e.target.value,
+              })
+            }
+          />
+        </Field>
+
+        <Field label="Footnote under the button">
+          <input
+            className={inputCls}
+            value={c.footnote}
+            onChange={(e) =>
+              updateItem(eobItems, setEobItems, c.id, {
+                footnote: e.target.value,
+              })
+            }
+          />
+        </Field>
+      </div>
+    ))}
+
+    <button
+      onClick={() => setEobItems([...eobItems, makeCourse()])}
+      className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+    >
+      <Plus size={16} /> Add EOB item
+    </button>
+  </div>
+)}
 
       {tab === "preview" && (
         <div>
