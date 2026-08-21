@@ -201,7 +201,7 @@ ${eobRowsHtml}` : "";
     <img class="header-img" src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner2.png" width="680" alt="SSA Training Bulletin" style="display:block;width:100%;max-width:680px;border:0;height:auto;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
       <tr>
-        <td data-f="issue-range" style="background-color:#0098ce;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td>
+        <td data-f="issue-range" style="background-color:#0098ce;padding:12px 24px;text-align:center;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td>
       </tr>
     </table>
     <tr>
