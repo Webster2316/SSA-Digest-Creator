@@ -115,7 +115,7 @@ ${badgesHtml}
 
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
-                   <td class="course-cta-cell" width="176" valign="middle" align="right">
+                             <td class="course-cta-cell" width="176" valign="middle" align="right">
 ${hideCta ? "" : `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
               <tr>
                 <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
