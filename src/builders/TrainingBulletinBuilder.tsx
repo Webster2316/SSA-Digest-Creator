@@ -426,9 +426,14 @@ export default function TrainingBulletinBuilder() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
-          <Field label="Header greeting ">
-            <input className={inputCls} value={greeting} onChange={(e) => setGreeting(e.target.value)} />
-          </Field>
+<Field label="Header greeting ">
+  <textarea
+    className={inputCls}
+    rows={3}
+    value={greeting}
+    onChange={(e) => setGreeting(e.target.value)}
+  />
+</Field>
           <Field label="Issue date range ">
   <input
     className={inputCls}
