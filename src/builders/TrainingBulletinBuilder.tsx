@@ -49,7 +49,7 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
   return `<span style="display:inline-block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};margin-right:6px;">${esc(badge.text)}</span>`;
 }
 
-function buildCourseRow(course: any, hideCta = false) {
+function buildCourseRow(course: any) {
   const title = course.title.trim() || "Untitled Course";
   const dateRange = course.dateRange.trim() || "TBC";
   const dateMonth = course.dateMonth.trim();
@@ -82,7 +82,9 @@ function buildCourseRow(course: any, hideCta = false) {
 
   const badgesHtml = [statusBadge, modeBadge, ...extraBadges].map(buildBadgeSpan).join("\n            ");
 
-  const ctaLink = course.ctaLink.trim() || "https://www.ssa.org.sg/courses-calendar/";
+  // Only show the button if this item actually has a link filled in
+  const ctaLink = course.ctaLink.trim();
+  const showCta = ctaLink.length > 0;
   const footnote = course.footnote.trim() || "Contact ariel@ssa.org.sg for details";
 
   return `  <!-- ── COURSE ROW ── -->
@@ -115,15 +117,15 @@ ${badgesHtml}
 
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
-                             <td class="course-cta-cell" width="176" valign="middle" align="right">
-${hideCta ? "" : `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
+          <td class="course-cta-cell" width="176" valign="middle" align="right">
+${showCta ? `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
               <tr>
                 <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
                   <a data-f="cta-link" href="${esc(ctaLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">View Details &amp; Enrol</a><br>
                 </td>
               </tr>
             </table><br>
-            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>`}
+            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>` : ""}
           </td>
         </tr>
       </table>
@@ -133,8 +135,8 @@ ${hideCta ? "" : `            <table cellpadding="0" cellspacing="0" border="0" 
 }
 
 function buildFullHTML({ issueRange, greeting, courses, eobItems}: { issueRange: string; greeting: string; courses: any[]; eobItems: any[] }) {
-  const rowsHtml = courses.map((c) => buildCourseRow(c, true)).join("\n\n");
-    const eobRowsHtml = eobItems.map((c) => buildCourseRow(c, true)).join("\n\n");
+  const rowsHtml = courses.map(buildCourseRow).join("\n\n");
+  const eobRowsHtml = eobItems.map(buildCourseRow).join("\n\n");
   const eobSectionHtml = eobItems.length > 0 ? `<tr>
   <td class="pad-sides" style="padding:12px 24px;background:#2e468c;border-bottom:1px solid #0098ce;">
     <p style="margin:0;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">EOB Programme for Support Staffs</p>
