@@ -133,8 +133,8 @@ ${hideCta ? "" : `            <table cellpadding="0" cellspacing="0" border="0" 
 }
 
 function buildFullHTML({ issueRange, greeting, courses, eobItems}: { issueRange: string; greeting: string; courses: any[]; eobItems: any[] }) {
-  const rowsHtml = courses.map(buildCourseRow).join("\n\n");
-  const eobRowsHtml = eobItems.map(buildCourseRow).join("\n\n");
+  const rowsHtml = courses.map((c) => buildCourseRow(c, true)).join("\n\n");
+    const eobRowsHtml = eobItems.map((c) => buildCourseRow(c, true)).join("\n\n");
   const eobSectionHtml = eobItems.length > 0 ? `<tr>
   <td class="pad-sides" style="padding:12px 24px;background:#2e468c;border-bottom:1px solid #0098ce;">
     <p style="margin:0;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">EOB Programme for Support Staffs</p>
