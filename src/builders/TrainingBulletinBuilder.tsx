@@ -49,7 +49,7 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
   return `<span style="display:inline-block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};margin-right:6px;">${esc(badge.text)}</span>`;
 }
 
-function buildCourseRow(course: any) {
+function buildCourseRow(course: any, hideCta = false) {
   const title = course.title.trim() || "Untitled Course";
   const dateRange = course.dateRange.trim() || "TBC";
   const dateMonth = course.dateMonth.trim();
@@ -115,15 +115,15 @@ ${badgesHtml}
 
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
-          <td class="course-cta-cell" width="176" valign="middle" align="right">
-            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
+                   <td class="course-cta-cell" width="176" valign="middle" align="right">
+${hideCta ? "" : `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
               <tr>
                 <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
                   <a data-f="cta-link" href="${esc(ctaLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">View Details &amp; Enrol</a><br>
                 </td>
               </tr>
             </table><br>
-            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>
+            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>`}
           </td>
         </tr>
       </table>
