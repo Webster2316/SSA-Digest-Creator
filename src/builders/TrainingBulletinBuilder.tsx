@@ -208,21 +208,13 @@ ${eobRowsHtml}` : "";
   <tr>
 <td style="background:#ffffff;padding:14px 24px;border:1px solid #2e468c;">
   <p data-f="greeting" style="margin:0;font-family:${FONT};font-size:14px;color:#1f3b7a;line-height:1.5;text-align:left;">
-    ${greeting}
+    ${escWithBreaks(greeting)}
   </p>
 </td>
 </tr>
     </div>
   </td>
 </tr>
-
-<!--[if mso]>
-<tr>
-  <td class="pad-sides" style="padding:16px 24px;background:#1b76bc;">
-    <p style="margin:0;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:13px;color:#ffffff;line-height:1.4;text-align:left;">${greeting.replace(/<\/?strong>/g, "")}</p>
-  </td>
-</tr>
-<![endif]-->
 
   <tr>
     <td class="pad-sides" style="padding:34px 24px 10px;background:#f7f9fc;border-bottom:1px solid #e2e8f0;">
@@ -434,7 +426,7 @@ export default function TrainingBulletinBuilder() {
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
-          <Field label="Header greeting (HTML like <strong> is fine)">
+          <Field label="Header greeting ">
             <input className={inputCls} value={greeting} onChange={(e) => setGreeting(e.target.value)} />
           </Field>
           <Field label="Issue date range ">
