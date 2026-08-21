@@ -137,7 +137,7 @@ function buildFullHTML({ issueRange, greeting, courses, eobItems}: { issueRange:
   const eobRowsHtml = eobItems.map(buildCourseRow).join("\n\n");
   const eobSectionHtml = eobItems.length > 0 ? `<tr>
   <td class="pad-sides" style="padding:12px 24px;background:#2e468c;border-bottom:1px solid #0098ce;">
-    <p style="margin:0;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">EOB</p>
+    <p style="margin:0;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">EOB Programme for Support Staffs</p>
   </td>
 </tr>
 ${eobRowsHtml}` : "";
