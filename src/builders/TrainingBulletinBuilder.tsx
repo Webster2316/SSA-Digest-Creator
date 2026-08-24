@@ -54,6 +54,7 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
 function getSortDate(course: any) {
   const firstDay = course.dateRange.split("-")[0];
   const dateStr =  `${firstDay} ${course.dateMonth}` ;
+  console.log(dateStr);
   return new Date(dateStr);
 }
 
