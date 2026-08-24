@@ -104,6 +104,7 @@ function buildCourseRow(course: any) {
   const showCta = ctaLink.length > 0;
   const footnote = course.footnote.trim();
   const showFootnote = footnote.length > 0;
+  const emailLink = `mailto:Ariel@ssa.org.sg?subject=Enquiry on ${encodeURIComponent(course.title)}`;
 
   return `  <!-- ── COURSE ROW ── -->
   <tr data-block="course" data-id="${esc(course.id)}">
@@ -136,14 +137,23 @@ ${badgesHtml}
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
           <td class="course-cta-cell" width="176" valign="middle" align="right">
-${showCta ? `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
+${showCta ? `           
+ <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
               <tr>
                 <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
                   <a data-f="cta-link" href="${esc(ctaLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">View Details &amp; Enrol</a><br>
                 </td>
               </tr>
-            </table><br>` : ""}${showFootnote ? `
-            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>` : ""}
+            </table><br>` : ""}
+
+            ${showCta ? `           
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right" style="margin-top:8px;padding-right:10px">
+                         <tr>
+                           <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
+                           <a data-f="email-link" href="${esc(emailLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">Email For Details</a><br>
+                           </td>
+                         </tr>
+                       </table><br>` : ""}
           </td>
         </tr>
       </table>
