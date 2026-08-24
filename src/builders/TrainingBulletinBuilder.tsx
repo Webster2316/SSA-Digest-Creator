@@ -431,6 +431,7 @@ export default function TrainingBulletinBuilder() {
       {label}
     </button>
   );
+  
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -519,7 +520,13 @@ export default function TrainingBulletinBuilder() {
           >
             <Pin size={16} />
           </button>
-
+<button
+  onClick={() => setCourses(courses.filter((x) => x.id !== c.id))}
+  className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+  title="Delete course"
+>
+  <Trash2 size={16} />
+</button>
                 </div>
               </div>
 
