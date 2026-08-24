@@ -63,6 +63,10 @@ function sortWithPinned(list: any[]) {
     .filter((c) => !c.customOrder)
     .sort((a, b) => getSortDate(a) - getSortDate(b));
 
+  list.forEach((c) => {
+    console.log(c.title, c.dateRange, c.dateMonth, getSortDate(c));
+  });
+  
   let i = 0;
   return list.map((c) => (c.customOrder ? c : sortedRest[i++]));
 }
