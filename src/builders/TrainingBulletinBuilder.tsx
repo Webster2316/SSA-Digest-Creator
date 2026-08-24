@@ -59,16 +59,15 @@ function getSortDate(course: any) {
 
 // non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
 function sortWithPinned(list: any[]) {
-  const sortedRest = list
-    .filter((c) => !c.customOrder)
-    .sort((a, b) => getSortDate(a) - getSortDate(b));
+  const pinned = list.filter(c => c.customOrder);
 
-  list.forEach((c) => {
-    console.log(c.title, c.dateRange, c.dateMonth, getSortDate(c));
-  });
-  
-  let i = 0;
-  return list.map((c) => (c.customOrder ? c : sortedRest[i++]));
+  const normal = list
+    .filter(c => !c.customOrder)
+    .sort((a, b) =>
+      getSortDate(a).getTime() - getSortDate(b).getTime()
+    );
+
+  return [...pinned, ...normal];
 }
 function buildCourseRow(course: any) {
   const title = course.title.trim() || "Untitled Course";
