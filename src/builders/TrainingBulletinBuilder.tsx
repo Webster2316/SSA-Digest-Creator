@@ -140,22 +140,41 @@ ${badgesHtml}
 
           <td class="course-cta-cell" width="176" valign="middle" align="right">
 ${showCta ? `           
- <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
-              <tr>
-                <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
-                  <a data-f="cta-link" href="${esc(ctaLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">View Details &amp; Enrol</a><br>
-                </td>
-              </tr>
-            </table><br>` : ""}
+  <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
+    <tr>
+      <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
+        <a
+          data-f="cta-link"
+          href="${esc(ctaLink)}"
+          target="_blank"
+          class="cta-link"
+          style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;"
+        >View Details &amp; Enrol</a><br>
+      </td>
+    </tr>
+  </table><br>` : ""}
 
-            ${showCta ? `           
-            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right" style="margin-top:8px;padding-right:10px">
-                         <tr>
-                           <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
-                           <a data-f="email-link" href="${esc(emailLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">Email For Details</a><br>
-                           </td>
-                         </tr>
-                       </table><br>` : ""}
+<table
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  role="presentation"
+  class="cta-table"
+  align="right"
+  style="margin-top:8px;padding-right:10px"
+>
+  <tr>
+    <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
+      <a
+        data-f="email-link"
+        href="${esc(emailLink)}"
+        target="_blank"
+        class="cta-link"
+        style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;"
+      >Email For Details</a><br>
+    </td>
+  </tr>
+</table><br>
           </td>
         </tr>
       </table>
@@ -521,21 +540,13 @@ export default function TrainingBulletinBuilder() {
             <Pin size={16} />
           </button>
  <MoveButtons
-  index={i}
-  length={sortedCourses.length}
-  onMove={(index, dir) => {
-    if (!c.customOrder) return;
-
-    const arr = [...sortedCourses];
-    const target = index + dir;
-    if (target < 0 || target >= arr.length) return;
-
-    [arr[index], arr[target]] = [arr[target], arr[index]];
-    setCourses(arr);
-  }}
-  onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
-/>
-
+  <button
+    onClick={() => setCourses(courses.filter((x) => x.id !== c.id))}
+    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+    title="Delete course"
+  >
+    <Trash2 size={16} />
+  </button>
                 </div>
               </div>
 
