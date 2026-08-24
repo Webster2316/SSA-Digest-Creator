@@ -539,7 +539,6 @@ export default function TrainingBulletinBuilder() {
           >
             <Pin size={16} />
           </button>
- <MoveButtons
   <button
     onClick={() => setCourses(courses.filter((x) => x.id !== c.id))}
     className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
