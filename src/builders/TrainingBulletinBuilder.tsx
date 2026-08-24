@@ -64,11 +64,6 @@ function sortWithPinned(list: any[]) {
       getSortDate(a).getTime() - getSortDate(b).getTime()
     ).filter(c => !c.customOrder);
 console.log(normal)
-  const date = getSortDate(course);
-
-console.log(date);           // Wed Oct 07 2026...
-console.log(typeof date);    // "object"
-console.log(date.getTime()); // 1791331200000
   return [...pinned, ...normal];
 }
 function buildCourseRow(course: any) {
