@@ -60,9 +60,9 @@ function getSortDate(course: any) {
 // non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
 function sortWithPinned(list: any[]) {
   const pinned = list.filter(c => c.customOrder);
-
+console.log(getSortDate.getTime())
   const normal = list.sort((a, b) =>
-      getSortDate(a).getDate() - getSortDate(b).getDate()
+      getSortDate(a).getTime() - getSortDate(b).getTime()
     ).filter(c => !c.customOrder);
 console.log(normal)
   return [...pinned, ...normal];
