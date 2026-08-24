@@ -57,7 +57,7 @@ function getSortDate(course: any) {
   return new Date(dateStr);
 }
 
-// non-pinned items sort by date; pinned - NEW items/ (customOrder) items keep their exact slot
+// non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
 function sortWithPinned(list: any[]) {
   const sortedRest = list
     .filter((c) => !c.customOrder)
