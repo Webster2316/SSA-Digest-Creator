@@ -520,13 +520,22 @@ export default function TrainingBulletinBuilder() {
           >
             <Pin size={16} />
           </button>
-<button
-  onClick={() => setCourses(courses.filter((x) => x.id !== c.id))}
-  className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
-  title="Delete course"
->
-  <Trash2 size={16} />
-</button>
+ <MoveButtons
+  index={i}
+  length={sortedCourses.length}
+  onMove={(index, dir) => {
+    if (!c.customOrder) return;
+
+    const arr = [...sortedCourses];
+    const target = index + dir;
+    if (target < 0 || target >= arr.length) return;
+
+    [arr[index], arr[target]] = [arr[target], arr[index]];
+    setCourses(arr);
+  }}
+  onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
+/>
+
                 </div>
               </div>
 
