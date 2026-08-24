@@ -62,10 +62,8 @@ function getSortDate(course: any) {
 function sortWithPinned(list: any[]) {
   const pinned = list.filter(c => c.customOrder);
 
-  const normal = list
-    .filter(c => !c.customOrder)
-    .sort((a, b) =>
-      getSortDate(a).getTime() - getSortDate(b).getTime()
+  const normal = list.filter(c => !c.customOrder).sort((a, b) =>
+      getSortDate(a).dateStr() - getSortDate(b).dateStr()
     );
 
   return [...pinned, ...normal];
