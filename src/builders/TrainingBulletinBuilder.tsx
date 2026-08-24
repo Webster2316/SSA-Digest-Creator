@@ -59,11 +59,13 @@ function getSortDate(course: any) {
 
 // non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
 function sortWithPinned(list: any[]) {
-  const pinned = list.filter(c => c.customOrder);
-  const normal = list.sort((a, b) =>
-      getSortDate(a).getTime() - getSortDate(b).getTime()
-    ).filter(c => !c.customOrder);
-console.log(normal)
+  const sorted = [...list].sort((a, b) =>
+    getSortDate(a).getTime() - getSortDate(b).getTime()
+  );
+
+  const pinned = sorted.filter(c => c.customOrder);
+  const normal = sorted.filter(c => !c.customOrder);
+
   return [...pinned, ...normal];
 }
 function buildCourseRow(course: any) {
