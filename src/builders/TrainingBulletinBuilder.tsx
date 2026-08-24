@@ -519,21 +519,7 @@ export default function TrainingBulletinBuilder() {
           >
             <Pin size={16} />
           </button>
- <MoveButtons
-  index={i}
-  length={sortedCourses.length}
-  onMove={(index, dir) => {
-    if (!c.customOrder) return;
 
-    const arr = [...sortedCourses];
-    const target = index + dir;
-    if (target < 0 || target >= arr.length) return;
-
-    [arr[index], arr[target]] = [arr[target], arr[index]];
-    setCourses(arr);
-  }}
-  onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
-/>
                 </div>
               </div>
 
