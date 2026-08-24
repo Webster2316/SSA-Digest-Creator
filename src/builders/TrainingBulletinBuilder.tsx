@@ -54,7 +54,6 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
 function getSortDate(course: any) {
   const firstDay = course.dateRange.split("-")[0];
   const dateStr =  `${firstDay} ${course.dateMonth}` ;
-  console.log(dateStr);
   return new Date(dateStr);
 }
 
@@ -65,7 +64,7 @@ function sortWithPinned(list: any[]) {
   const normal = list.filter(c => !c.customOrder).sort((a, b) =>
       getSortDate(a).getTime() - getSortDate(b).getTime()
     );
-
+console.log(normal)
   return [...pinned, ...normal];
 }
 function buildCourseRow(course: any) {
