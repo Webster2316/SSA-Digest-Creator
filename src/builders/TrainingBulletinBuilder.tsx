@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Archive, Megaphone, Loader2, RotateCcw, Files, ArrowRightLeft } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, BookOpen, Archive, Megaphone, Loader2, RotateCcw, Files, ArrowRightLeft, Pin } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RecordsPanel from "../shared/recordsPanel";
@@ -31,6 +31,7 @@ function makeCourse(overrides = {}) {
       mode: "In-Person",
       modeCustom: "",
       modeCustomColor: "#331bbf",
+      customOrder: false,
       extraTags: "",
       ctaLink: "https://www.ssa.org.sg/courses-calendar/",
       footnote: "Contact ariel@ssa.org.sg for details",
@@ -49,6 +50,22 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
   return `<span style="display:inline-block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};margin-right:6px;">${esc(badge.text)}</span>`;
 }
 
+//concats dates 
+function getSortDate(course: any) {
+  const firstDay = course.dateRange.split("-")[0];
+  const dateStr =  `${firstDay} ${course.dateMonth}` ;
+  return new Date(dateStr);
+}
+
+// non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
+function sortWithPinned(list: any[]) {
+  const sortedRest = list
+    .filter((c) => !c.customOrder)
+    .sort((a, b) => getSortDate(a) - getSortDate(b));
+
+  let i = 0;
+  return list.map((c) => (c.customOrder ? c : sortedRest[i++]));
+}
 function buildCourseRow(course: any) {
   const title = course.title.trim() || "Untitled Course";
   const dateRange = course.dateRange.trim() || "TBC";
@@ -87,6 +104,7 @@ function buildCourseRow(course: any) {
   const showCta = ctaLink.length > 0;
   const footnote = course.footnote.trim();
   const showFootnote = footnote.length > 0;
+  const emailLink = `mailto:Ariel@ssa.org.sg?subject=Enquiry on ${encodeURIComponent(course.title)}`;
 
   return `  <!-- ── COURSE ROW ── -->
   <tr data-block="course" data-id="${esc(course.id)}">
@@ -119,14 +137,23 @@ ${badgesHtml}
           <td width="16" style="font-size:0;line-height:0;">&nbsp;</td>
 
           <td class="course-cta-cell" width="176" valign="middle" align="right">
-${showCta ? `            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
+${showCta ? `           
+ <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right">
               <tr>
                 <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
                   <a data-f="cta-link" href="${esc(ctaLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">View Details &amp; Enrol</a><br>
                 </td>
               </tr>
-            </table><br>` : ""}${showFootnote ? `
-            <p data-f="footnote" style="margin:8px 0 0;font-family:${FONT};font-size:10px;color:#8492a6;line-height:1.5;text-align:right;">${footnote}</p>` : ""}
+            </table><br>` : ""}
+
+            ${showCta ? `           
+            <table cellpadding="0" cellspacing="0" border="0" role="presentation" class="cta-table" align="right" style="margin-top:8px;padding-right:10px">
+                         <tr>
+                           <td style="border-radius:3px;background-color:#1b76bc;" bgcolor="#1b76bc">
+                           <a data-f="email-link" href="${esc(emailLink)}" target="_blank" class="cta-link" style="display:inline-block;padding:5px 8px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;text-decoration:none;border-radius:3px;white-space:nowrap;">Email For Details</a><br>
+                           </td>
+                         </tr>
+                       </table><br>` : ""}
           </td>
         </tr>
       </table>
@@ -134,6 +161,7 @@ ${showCta ? `            <table cellpadding="0" cellspacing="0" border="0" role=
   </tr>
   <!-- ── END COURSE ROW ── -->`;
 }
+
 function buildFullHTML({ issueRange, greeting, courses, eobItems}: { issueRange: string; greeting: string; courses: any[]; eobItems: any[] }) {
   const rowsHtml = courses.map(buildCourseRow).join("\n\n");
   const eobRowsHtml = eobItems.map(buildCourseRow).join("\n\n");
@@ -375,7 +403,8 @@ export default function TrainingBulletinBuilder() {
       }
     }
   };
-  const generatedHtml = buildFullHTML({ issueRange, greeting, courses, eobItems  });
+  const sortedCourses = sortWithPinned(courses);
+  const generatedHtml = buildFullHTML({ issueRange, greeting, courses: sortedCourses, eobItems });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
 
@@ -462,36 +491,41 @@ export default function TrainingBulletinBuilder() {
     </div>
 
     <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
+
+      {/* courses tab */}
       {tab === "courses" && (
         <div className="space-y-4">
-          {courses.map((c, i) => (
-            <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold text-indigo-700">
-                  {c.title.trim() || `Course ${i + 1} (untitled)`}
-                </span>
-                <div className="flex items-center gap-1">
-                <button
-  onClick={() => copyItem(c, "here")}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy here"
->
-  <Files size={16} />
-</button>
-
-<button
-  onClick={() => copyItem(c, "other")}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy to EOB"
->
-  <ArrowRightLeft size={16} />
-</button>
-                 <MoveButtons
-  index={i}
-  length={courses.length}
-  onMove={(index, dir) => move(courses, setCourses, index, dir)}
-  onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
-/>
+          {sortedCourses.map((c) => {
+  const i = courses.findIndex((x) => x.id === c.id);
+  return (
+    <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-xs font-semibold text-indigo-700">
+          {c.title.trim() || `Course ${i + 1} (untitled)`}
+        </span>
+        <div className="flex items-center gap-1">
+          <button onClick={() => copyItem(c, "here")} className="p-1 rounded hover:bg-gray-100 text-gray-500" title="Copy here">
+            <Files size={16} />
+          </button>
+          <button onClick={() => copyItem(c, "other")} className="p-1 rounded hover:bg-gray-100 text-gray-500" title="Copy to EOB">
+            <ArrowRightLeft size={16} />
+          </button>
+          <button
+            onClick={() => updateCourse(c.id, { customOrder: !c.customOrder })}
+            className={`p-1 rounded hover:bg-gray-100 ${c.customOrder ? "text-indigo-700" : "text-gray-400"}`}
+            title={c.customOrder ? "Locked in place — click to auto-sort by date" : "Auto-sorted — click to lock position"}
+          >
+            <Pin size={16} />
+          </button>
+          <MoveButtons
+            index={i}
+            length={courses.length}
+            onMove={(index, dir) => {
+              if (!c.customOrder) return; // must unlock (pin) before manual reorder works
+              move(courses, setCourses, index, dir);
+            }}
+            onRemove={() => setCourses(courses.filter((x) => x.id !== c.id))}
+          />
                 </div>
               </div>
 
@@ -577,7 +611,7 @@ export default function TrainingBulletinBuilder() {
                 <input className={inputCls} value={c.footnote} onChange={(e) => updateCourse(c.id, { footnote: e.target.value })} />
               </Field>
             </div>
-          ))}
+          )})}
           <button
             onClick={() => setCourses([...courses, makeCourse()])}
             className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
@@ -585,7 +619,7 @@ export default function TrainingBulletinBuilder() {
             <Plus size={16} /> Add course
           </button>
         </div>
-      )}
+   )}
 
 {tab === "eob" && (
   <div className="space-y-4">
