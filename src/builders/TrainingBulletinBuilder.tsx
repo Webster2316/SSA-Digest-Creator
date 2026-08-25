@@ -22,6 +22,7 @@ function makeCourse(overrides = {}) {
     {
       id: uid(),
       title: "",
+      dateColor:"",
       description: "", 
       dateRange: "",
       dateMonth: "MONTH YYYY",
@@ -73,7 +74,7 @@ function buildCourseRow(course: any) {
   const dateRange = course.dateRange.trim() || "TBC";
   const dateMonth = course.dateMonth.trim();
   const isNewCourse = /NEW/i.test(title);
-  const dateBoxColor = isNewCourse ? "#4f0615" : "#281e7e";
+  const dateBoxColor = course.dateColor?.trim() ? course.dateColor: (isNewCourse ? "#a30b2b" : "#281e7e");
 
   const statusBadge = course.status === "custom"
     ?  {
@@ -522,8 +523,16 @@ export default function TrainingBulletinBuilder() {
   return (
     <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs font-semibold text-indigo-700">
-          {c.title.trim() || `Course ${i + 1} (untitled)`}
+        <span className="text-xs font-semibold text-indigo-700 flex items-center gap-2.5">
+        <input
+      type="color"
+      value={c.dateColor || (/NEW/i.test(c.title) ? "#4f0615" : "#281e7e")}
+      onChange={(e) => updateCourse(c.id, { dateColor: e.target.value })}
+      className="h-3.5 w-3.5 rounded-full border border-gray-300 cursor-pointer p-0 shrink-0"
+      title={c.dateColor ? "Custom date box color — click to reset" : "Auto date box color (based on NEW) — click to override"}
+      onDoubleClick={() => updateCourse(c.id, { dateColor: "" })}
+    />
+    {c.title.trim() || `Course ${i + 1} (untitled)`}
         </span>
         <div className="flex items-center gap-1">
           <button onClick={() => copyItem(c, "here")} className="p-1 rounded hover:bg-gray-100 text-gray-500" title="Copy here">
@@ -646,7 +655,15 @@ export default function TrainingBulletinBuilder() {
     {eobItems.map((c, i) => (
       <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
         <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-semibold text-indigo-700">
+          <span className="text-xs font-semibold text-indigo-700 flex items-center gap-2.5">
+          <input
+      type="color"
+      value={c.dateColor || (/NEW/i.test(c.title) ? "#4f0615" : "#281e7e")}
+      onChange={(e) => updateCourse(c.id, { dateColor: e.target.value })}
+      className="h-3.5 w-3.5 rounded-full border border-gray-300 cursor-pointer p-0 shrink-0"
+      title={c.dateColor ? "Custom date box color — click to reset" : "Auto date box color (based on NEW) — click to override"}
+      onDoubleClick={() => updateCourse(c.id, { dateColor: "" })}
+    />
             {c.title.trim() || `EOB Item ${i + 1} (untitled)`}
           </span>
 
