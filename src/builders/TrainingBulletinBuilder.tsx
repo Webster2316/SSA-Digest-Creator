@@ -657,13 +657,17 @@ export default function TrainingBulletinBuilder() {
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-indigo-700 flex items-center gap-2.5">
           <input
-      type="color"
-      value={c.dateColor || (/NEW/i.test(c.title) ? "#4f0615" : "#281e7e")}
-      onChange={(e) => updateCourse(c.id, { dateColor: e.target.value })}
-      className="h-3.5 w-3.5 rounded-full border border-gray-300 cursor-pointer p-0 shrink-0"
-      title={c.dateColor ? "Custom date box color — click to reset" : "Auto date box color (based on NEW) — click to override"}
-      onDoubleClick={() => updateCourse(c.id, { dateColor: "" })}
-    />
+  type="color"
+  value={c.dateColor || (/NEW/i.test(c.title) ? "#4f0615" : "#281e7e")}
+  onChange={(e) =>
+    updateItem(eobItems, setEobItems, c.id, { dateColor: e.target.value })
+  }
+  className="h-3.5 w-3.5 rounded-full border border-gray-300 cursor-pointer p-0 shrink-0"
+  title={c.dateColor ? "Custom date box color — click to reset" : "Auto date box color (based on NEW) — click to override"}
+  onDoubleClick={() =>
+    updateItem(eobItems, setEobItems, c.id, { dateColor: "" })
+  }
+/>
             {c.title.trim() || `EOB Item ${i + 1} (untitled)`}
           </span>
 
