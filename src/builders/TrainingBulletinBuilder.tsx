@@ -13,7 +13,7 @@ const badgeStyles: Record<string, { text: string; bg: string; color: string; bor
   limited: { text: "Limited Seats", bg: "#fff3f3", color: "#993c1d", border: "#f0997b" },
   waitlist: { text: "Waitlist", bg: "#fff8e6", color: "#8a6d1d", border: "#eecf7a" },
   cancelled: { text: "Cancelled", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4" },
-  open: {text: "open", bg: "#cad6e6", color: "#5dc75a", border: "#1f821b"},
+  open: {text: "open", bg: "#bee8cc", color: "#5dc75a", border: "#1f821b"},
   highDemand: {text: "High Demand", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4"},
 };
 const neutralBadge = { bg: "#f7f9fc", color: "#5f6a7d", border: "#dde4ec" };
