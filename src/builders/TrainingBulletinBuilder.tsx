@@ -13,6 +13,7 @@ const badgeStyles: Record<string, { text: string; bg: string; color: string; bor
   limited: { text: "Limited Seats", bg: "#fff3f3", color: "#993c1d", border: "#f0997b" },
   waitlist: { text: "Waitlist", bg: "#fff8e6", color: "#8a6d1d", border: "#eecf7a" },
   cancelled: { text: "Cancelled", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4" },
+  open: {text: "open", bg: "fbeaea", color: "#5dc75a", border: "#1f821b"},
   highDemand: {text: "High Demand", bg: "#fbeaea", color: "#a12a2a", border: "#eeb4b4"},
 };
 const neutralBadge = { bg: "#f7f9fc", color: "#5f6a7d", border: "#dde4ec" };
@@ -585,9 +586,11 @@ export default function TrainingBulletinBuilder() {
                 <Field label="Status badge">
                   <select className={inputCls} value={c.status} onChange={(e) => updateCourse(c.id, { status: e.target.value })}>
                     <option value="confirmed">Confirmed</option>
+                    <option value="open">Open</option>
                     <option value="limited">Limited Seats</option>
                     <option value="waitlist">Waitlist</option>
                     <option value="cancelled">Cancelled</option>
+                    <option value="highDemand">High Demand</option>
                     <option value="custom">Custom…</option>
                   </select>
                 </Field>
@@ -758,9 +761,11 @@ export default function TrainingBulletinBuilder() {
               }
             >
               <option value="confirmed">Confirmed</option>
+              <option value="open">Open</option>
               <option value="limited">Limited Seats</option>
               <option value="waitlist">Waitlist</option>
               <option value="cancelled">Cancelled</option>
+              <option value="highDemand">High Demand</option>
               <option value="custom">Custom…</option>
             </select>
           </Field>
