@@ -80,6 +80,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
           };
 
           return (
+            //returning UI
             <div
             onDragOver={(e) => {
               e.preventDefault();
