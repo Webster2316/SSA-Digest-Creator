@@ -6,6 +6,7 @@ import RichTextEditor from "../shared/richTextEditor";
 import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
+import DocumentUploadModal from "../shared/DocumentUploadModal";
 
 const badgePresets = {
   Review: "#d0a523",
@@ -309,6 +310,7 @@ export default function WeeklyDigestBuilder() {
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
   const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
+  const [docModalTarget, setDocModalTarget] = useState<{ type: "action" | "noting"; id: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -379,6 +381,17 @@ export default function WeeklyDigestBuilder() {
       setTimeout(() => setCopied(false), 1800);
     } catch (e) {
       setCopied(false);
+    }
+  };
+
+  const handleAddDocs = (newDocs: { label: string; url: string }[]) => {
+    if (!docModalTarget) return;
+    const {type, id } = docModalTarget;
+
+    if (type === "action") {
+      setActionItems(actionItems.map((x) => (x.id === id ? { ...x, docs: [...(x.docs || []), ...newDocs]} : x)));
+    } else {
+      setNotingItems(notingItems.map((x) => (x.id === id ? { ...x, docs: [...(x.docs || []), ...newDocs]} : x)));
     }
   };
 
@@ -516,7 +529,7 @@ export default function WeeklyDigestBuilder() {
                       <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
                     </div>
                   ))}
-                  <button onClick={() => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, docs: [...(x.docs || []), { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
+                <button onClick={() => setDocModalTarget({ type: "action", id: it.id })} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
                 </div>
               </Field>
               <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
@@ -554,7 +567,7 @@ export default function WeeklyDigestBuilder() {
                       <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: x.docs.filter((_, ddi) => ddi !== di) } : x))} className="p-1.5 text-red-500 hover:bg-red-50 rounded"><Trash2 size={15} /></button>
                     </div>
                   ))}
-                  <button onClick={() => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, docs: [...x.docs, { label: "", url: "" }] } : x))} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
+                <button onClick={() => setDocModalTarget({ type: "noting", id: it.id })} className="text-xs text-indigo-700 font-medium flex items-center gap-1"><Plus size={13} /> Add Document</button>
                 </div>
               </Field>
               <Field label="Content">
@@ -608,6 +621,11 @@ export default function WeeklyDigestBuilder() {
         </div>
       )}
     </div>
+    <DocumentUploadModal
+  isOpen={docModalTarget !== null}
+  onClose={() => setDocModalTarget(null)}
+  onAdd={handleAddDocs}
+/>
   </>
 ) : viewingRecordId === -1 ? (
   <div className="bg-white rounded-lg border border-gray-200 p-4">
