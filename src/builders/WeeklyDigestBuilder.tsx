@@ -6,7 +6,7 @@ import RichTextEditor from "../shared/richTextEditor";
 import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
-import DocumentUploadModal from "../shared/DocumentUploadModal";
+import DocumentUploadModal from "../shared/documentUploadModal";
 
 const badgePresets = {
   Review: "#d0a523",
