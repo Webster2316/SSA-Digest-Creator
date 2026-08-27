@@ -111,10 +111,10 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
               <ul className="text-left space-y-1 mt-2">
                 {fileStatuses.map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm">
-    {f.status === "uploading" && <Loader2 size={28} className="animate-spin text-indigo-600" />}
-    {f.status === "uploaded" && <CheckCircle2 size={28} className="text-emerald-600" />}
-    {f.status === "duplicate" && <AlertTriangle size={28} className="text-amber-600" />}
-    {f.status === "error" && <XCircle size={28} className="text-red-600" />}
+    {f.status === "uploading" && <Loader2 size={40} className="animate-spin text-indigo-600" />}
+    {f.status === "uploaded" && <CheckCircle2 size={40} className="text-emerald-600" />}
+    {f.status === "duplicate" && <AlertTriangle size={40} className="text-amber-600" />}
+    {f.status === "error" && <XCircle size={40} className="text-red-600" />}
     <span>{f.filename}</span>
   </li>
                 ))}
