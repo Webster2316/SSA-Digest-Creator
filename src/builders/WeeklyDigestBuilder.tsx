@@ -371,6 +371,36 @@ export default function WeeklyDigestBuilder() {
     setList(arr);
   };
 
+  const copyItem = (item: any, target: "here" | "other") => {
+    const copy = { ...item, id: uid() };
+  
+    const inAction = tab === "action";
+  
+    if (target === "here") {
+      // Duplicate within the current tab
+      const list = inAction ? actionItems : notingItems;
+      const setList = inAction ? setActionItems : setNotingItems;
+  
+      const index = list.findIndex((x) => x.id === item.id);
+  
+      setList([
+        ...list.slice(0, index + 1),
+        copy,
+        ...list.slice(index + 1),
+      ]);
+    } else {
+      // MOVE to the other tab
+      if (inAction) {
+        // Courses → EOB
+        setNotingItems([...actionItems, copy]);
+        setActionItems(actionItems.filter((x) => x.id !== item.id));
+      } else {
+        // EOB → Courses shift
+        setActionItems([...actionItems, copy]);
+        setNotingItems(notingItems.filter((x) => x.id !== item.id));
+      }
+    }
+  };
   const generatedHtml = buildFullHTML({ issueRange, events, actionItems, notingItems });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
@@ -506,6 +536,19 @@ export default function WeeklyDigestBuilder() {
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+                <button
+  onClick={() => copyItem(it, "here")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy here"
+>
+  <Files size={16} />
+</button>
+
+<button
+  onClick={() => copyItem(it, "other")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy to Noting"
+></button>
                 <MoveButtons index={i} length={actionItems.length} onMove={move(actionItems, setActionItems)} onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -551,6 +594,19 @@ export default function WeeklyDigestBuilder() {
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+                <button
+  onClick={() => copyItem(it, "here")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy here"
+>
+  <Files size={16} />
+</button>
+
+<button
+  onClick={() => copyItem(it, "other")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy to Action"
+></button>
                 <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
               </div>
               <div className="grid grid-cols-2 gap-3">
