@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { Loader2, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 
 export type UploadStatus = "uploading" | "uploaded" | "duplicate" | "error";
 
