@@ -377,25 +377,18 @@ export default function WeeklyDigestBuilder() {
     const inAction = tab === "action";
   
     if (target === "here") {
-      // Duplicate within the current tab
       const list = inAction ? actionItems : notingItems;
       const setList = inAction ? setActionItems : setNotingItems;
-  
       const index = list.findIndex((x) => x.id === item.id);
-  
-      setList([
-        ...list.slice(0, index + 1),
-        copy,
-        ...list.slice(index + 1),
-      ]);
+      setList([...list.slice(0, index + 1), copy, ...list.slice(index + 1)]);
     } else {
       // MOVE to the other tab
       if (inAction) {
-        // Courses → EOB
-        setNotingItems([...actionItems, copy]);
+        //action -> noting
+        setNotingItems([...notingItems, copy]);
         setActionItems(actionItems.filter((x) => x.id !== item.id));
       } else {
-        // EOB → Courses shift
+        // noting -> action
         setActionItems([...actionItems, copy]);
         setNotingItems(notingItems.filter((x) => x.id !== item.id));
       }
