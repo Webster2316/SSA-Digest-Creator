@@ -19,7 +19,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd }: Document
 
     if (!isOpen) return null;
 
-    const handleLinkReady = (uploaded: FileUploadResult[]) => {
+    const handleLinksReady = (uploaded: FileUploadResult[]) => {
         const docs = uploaded.filter((u) => u.link).map((u) => ({label: u.filename, url: u.link as string}));
 
         if (docs.length > 0) {
