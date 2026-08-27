@@ -34,9 +34,9 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
 
             try {
                 const payload = await Promise.all(
-                    files.map(async (file) = ({
-                        filename: fileList.name,
-                        contentType: fileList.type,
+                    files.map(async (file) => ({
+                        filename: file.name,
+                        contentType: file.type,
                         contentBytes: await fileToBase64(file),
                     }))
                 );
