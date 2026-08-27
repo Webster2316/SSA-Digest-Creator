@@ -10,6 +10,7 @@ import DocumentUploadModal from "../shared/documentUploadModal";
 
 const badgePresets = {
   Review: "#d0a523",
+  PublicComments: "#81bce9",
   Advisory: "#730303",
   ICS: "#281e7e",
   UNCTAD: "#281e7e",
@@ -538,7 +539,7 @@ export default function WeeklyDigestBuilder() {
               </Field>
             </div>
           ))}
-          <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Review", badgeColor: badgePresets.Review, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
+          <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Public Comments", badgeColor: badgePresets.PublicComments, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
             <Plus size={16} /> Add Action Item
           </button>
         </div>
