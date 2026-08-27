@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
