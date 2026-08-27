@@ -58,7 +58,7 @@ export default function App() {
       <div className="flex-1">
         {builder === "weeklyDigest" && <WeeklyDigestBuilder />}
         {builder === "trainingBulletin" && <TrainingBulletinBuilder />}
-        {builder === "AIBulletin" && <TrainingBulletinBuilder />}
+        {builder === "AIBulletin" && <AIBulletinBuilder/>}
       </div>
     </div>
   );
