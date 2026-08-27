@@ -15,7 +15,7 @@ interface DocumentUploadModalProps {
 
 export default function DocumentUploadModal({ isOpen, onClose, onAdd }: DocumentUploadModalProps) {
     const [manualLabel, setManualLabel] = useState("");
-    const [manualUrl, setManualUrl] = usestate("");
+    const [manualUrl, setManualUrl] = useState("");
 
     if (!isOpen) return null;
 
