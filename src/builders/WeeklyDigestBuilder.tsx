@@ -619,7 +619,8 @@ export default function WeeklyDigestBuilder() {
   onClick={() => copyItem(it, "other")}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy to Action"
-></button>
+>  <ArrowRightLeft size={16} />
+    </button>
 
     <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
   </div>
