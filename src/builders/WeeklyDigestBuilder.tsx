@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays,Archive,  FileText, Loader2, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays,Archive,  FileText, Loader2, RotateCcw, Files } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RichTextEditor from "../shared/richTextEditor";
