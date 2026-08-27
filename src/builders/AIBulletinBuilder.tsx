@@ -1,1 +1,3 @@
-console.log("Hello World!");
+export default function AIBulletinBuilder() {
+  return <div>Work in progress</div>;
+}
