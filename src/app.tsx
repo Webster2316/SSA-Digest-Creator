@@ -9,7 +9,7 @@ type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
-  { key: "AIBulletin", Label: "AI Bulletin", icon:BotMessageSquare },
+  { key: "AIBulletin", label: "AI Bulletin", icon:BotMessageSquare },
 ];
 
 export default function App() {
