@@ -7,12 +7,12 @@ export default async function handler(req, res) {
 
     const { files } = req.body;
 
-    const response = await fetch(process.enc.POWER_AUTOMATE_FLOW_URL, {
+    const response = await fetch(process.env.POWER_AUTOMATE_FLOW_URL, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({ files }),
     });
     
-    const results = await response.json();
+    const result = await response.json();
     res.status(response.status).json(result);
   }

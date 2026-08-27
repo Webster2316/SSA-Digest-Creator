@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Link as LinkIcon } from "lucide-react";
-import DigestDropZone, { FIleUploadResult } from "./dragAndDrop";
+import DigestDropZone, { FileUploadResult } from "./dragAndDrop";
 
 interface DocRow {
     label: string;
@@ -29,7 +29,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd }: Document
     }
 
     const handleManualAdd = () => {
-        if (!manualLabel.trim() || !!manualUrl.trim()) return;
+        if (!manualLabel.trim() || !manualUrl.trim()) return;
         onAdd([{ label: manualLabel.trim(), url: manualUrl.trim()}]);
         setManualLabel("");
         setManualUrl("");

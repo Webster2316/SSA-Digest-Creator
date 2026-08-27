@@ -9,7 +9,7 @@ export interface FileUploadResult {
 }
 
 interface DigestDropZoneProps {
-    onLinksReady?: (uploaded: FileUploadResults[]) => void;
+    onLinksReady?: (uploaded: FileUploadResult[]) => void;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -26,7 +26,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
     const [fileStatuses, setFileStatuses] = useState<FileUploadResult[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
-    const handlesFiles = useCallback(
+    const handleFiles = useCallback(
         async (fileList: FileList) => {
             const files = Array.from(fileList);
             setIsUploading(true);
@@ -69,13 +69,13 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
             [onLinksReady]
           );
 
-          const handleDrop = (e: React.DragEvent<HTMLDiveElemnts>) => {
+          const handleDrop = (e: React.DragEvent<HTMLDivElemnts>) => {
             e.preventDefault();
             setIsDragging(false);
-            handlesFiles(e.dataTranser.files);
+            handleFiles(e.dataTransfer.files);
           };
 
-          const handleInputChange = (e: React.ChangeEven<HTMLInputElement>) => {
+          const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             if (e.target.files) handleFiles(e.target.files);
           };
 
