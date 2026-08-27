@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare } from "lucide-react";
+import { CalendarDays, GraduationCap } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin";
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin";
 
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
@@ -58,7 +58,7 @@ export default function App() {
       <div className="flex-1">
         {builder === "weeklyDigest" && <WeeklyDigestBuilder />}
         {builder === "trainingBulletin" && <TrainingBulletinBuilder />}
-        {builder === "AIBulletin" && <TrainingBulletinBuilder />}
+        {builder === "AIBulletin" && <AIBulletinBuilder/>}
       </div>
     </div>
   );
