@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays,Archive,  FileText, Loader2, RotateCcw, Files } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive,  FileText, Loader2, RotateCcw, Files,  ArrowRightLeft, } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RichTextEditor from "../shared/richTextEditor";
@@ -535,22 +535,33 @@ export default function WeeklyDigestBuilder() {
           {actionItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
-                <button
-  onClick={() => copyItem(it, "here")}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy here"
->
-  <Files size={16} />
-</button>
+  <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
 
-<button
-  onClick={() => copyItem(it, "other")}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy to Noting"
-></button>
-                <MoveButtons index={i} length={actionItems.length} onMove={move(actionItems, setActionItems)} onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))} />
-              </div>
+  <div className="flex items-center gap-1">
+    <button
+      onClick={() => copyItem(it, "here")}
+      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+      title="Copy here"
+    >
+      <Copy size={16} />
+    </button>
+
+    <button
+      onClick={() => copyItem(it, "other")}
+      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+      title="Copy to Noting"
+    >
+      <ArrowRightLeft size={16} />
+    </button>
+
+    <MoveButtons
+      index={i}
+      length={actionItems.length}
+      onMove={move(actionItems, setActionItems)}
+      onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))}
+    />
+  </div>
+</div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
@@ -593,8 +604,10 @@ export default function WeeklyDigestBuilder() {
           {notingItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
-                <button
+  <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+
+  <div className="flex items-center gap-1">
+  <button
   onClick={() => copyItem(it, "here")}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy here"
@@ -607,8 +620,10 @@ export default function WeeklyDigestBuilder() {
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy to Action"
 ></button>
-                <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
-              </div>
+
+    <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
+  </div>
+</div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
