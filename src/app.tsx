@@ -4,7 +4,7 @@ import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin";
+type BuilderKey = "weeklyDigest" | "trainingBulletin" |"AIBulletin";
 
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
