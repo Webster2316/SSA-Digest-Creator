@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
+
+
 export default function RichTextEditor ({ value, onChange }) {
     const ref = useRef(null);
     const init = useRef(false);
+    const savedRange = useRef
   
     useEffect(() => {
       if (ref.current && !init.current) {
@@ -23,7 +26,44 @@ export default function RichTextEditor ({ value, onChange }) {
       document.execCommand("insertHTML", false, html);
       onChange(ref.current.innerHTML);
     };
-  
+
+   const saveselection = (str) => {
+   const sel = window.getSelection();
+
+   if (sel && sel.rangeCount > 0 && ref.current && ref.current.contained(sel.anchorNode)) {
+    savedRange.current = sel.getRangeAt(0).cloneRange();
+   }
+   };
+
+   const escapeHtml = (str) => {
+    str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+   };
+
+   const insertLink = () => {
+    const sel = window.getSelection();
+    ref.current.focus;
+    if(savedRange.current) {
+      sel.removeAllRanges();
+      sel?.addRange(savedRange.current);
+    }
+
+    const selectedText = sel.toString();
+
+    const url = window.prompt("Enter Link URL:", "https://");
+    if (!url) return;
+    ref.current.focus();
+    sel.removeAllRanges();
+    if (savedRange.current) {
+      sel.addRange(savedRange.current);
+    } 
+
+    const linkTest = selectedText || url;
+    const html = `<a href="${url}" target="_blank" style="color:#1b75bc;text-decoration:underline;font-weight:bold;">${escapeHtml(linkText)}</a>`;
+    document.execCommand("insertHTML", false, html);
+    onChange(ref.current.innerHTML);
+   };
+
+
     const btn = "px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-700";
   
     return (
@@ -34,6 +74,15 @@ export default function RichTextEditor ({ value, onChange }) {
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertUnorderedList")} className={btn}>• List</button>
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("insertOrderedList")} className={btn}>1. List</button>
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={insertTable} className={btn}>Table</button>
+          <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); saveSelection(); }}
+            onClick={insertLink}
+            className={btn}
+          >
+            Link
+          </button>
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("unlink")} className={btn}>Unlink</button>
           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => exec("removeFormat")} className={btn}>Clear</button>
         </div>
         <div
@@ -47,4 +96,3 @@ export default function RichTextEditor ({ value, onChange }) {
       </div>
     );
   }
-  
