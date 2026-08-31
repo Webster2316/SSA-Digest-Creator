@@ -738,18 +738,52 @@ export default function AIBulletinBuilder() {
 
 {tab === "adoption" && (
   <div className="space-y-4">
-    {adoptionItems.map((item, i) => (
+    {ADOPTION_SECTIONS.map(({ key, header, color }) => (
+      <div key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+        <div className="mb-2">
+          <span className="text-xs font-semibold text-indigo-700">
+            {header}
+          </span>
+        </div>
+
+        <Field label="Body">
+          <RichTextEditor
+            value={adoption[key].body}
+            onChange={(html) =>
+              setAdoption({
+                ...adoption,
+                [key]: { ...adoption[key], body: html },
+              })
+            }
+          />
+        </Field>
+
+        <TagBlock
+          value={adoption[key].tag}
+          onChange={(html) =>
+            setAdoption({
+              ...adoption,
+              [key]: { ...adoption[key], tag: html },
+            })
+          }
+          color={color}
+          label="Add optional tag block"
+        />
+      </div>
+    ))}
+
+    {/* Extra custom sections */}
+    {adoption.extraItems.map((item, i) => (
       <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-indigo-700">
-            {item.header.trim() || `Item ${i + 1} (untitled)`}
-            {item.isPreset && <span className="ml-2 text-gray-400 font-normal">(preset)</span>}
+            {item.header || `Extra Item ${i + 1}`}
           </span>
           <MoveButtons
             index={i}
-            length={adoptionItems.length}
-            onMove={(index, dir) => move(adoptionItems, setAdoptionItems, index, dir)}
-            onRemove={() => setAdoptionItems(adoptionItems.filter((x) => x.id !== item.id))}
+            length={adoption.extraItems.length}
+            onMove={moveExtraItem}
+            onRemove={() => removeExtraItem(item.id)}
           />
         </div>
 
@@ -757,27 +791,39 @@ export default function AIBulletinBuilder() {
           <input
             className={inputCls}
             value={item.header}
-            onChange={(e) => updateItem(adoptionItems, setAdoptionItems, item.id, { header: e.target.value })}
+            onChange={(e) =>
+              updateExtraItem(item.id, { header: e.target.value })
+            }
           />
         </Field>
 
         <Field label="Body">
           <RichTextEditor
             value={item.body}
-            onChange={(htmlVal) => updateItem(adoptionItems, setAdoptionItems, item.id, { body: htmlVal })}
+            onChange={(html) =>
+              updateExtraItem(item.id, { body: html })
+            }
           />
         </Field>
 
         <TagBlock
           value={item.tag}
-          onChange={(htmlVal) => updateItem(adoptionItems, setAdoptionItems, item.id, { tag: htmlVal })}
-          color={item.color}
+          onChange={(html) =>
+            updateExtraItem(item.id, { tag: html })
+          }
+          color="navy"
           label="Add optional tag block"
         />
       </div>
     ))}
+
     <button
-      onClick={() => setAdoptionItems([...adoptionItems, makeAdoptionItem()])}
+      onClick={() =>
+        setAdoption({
+          ...adoption,
+          extraItems: [...adoption.extraItems, makeAdoptionItem()],
+        })
+      }
       className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
     >
       <Plus size={16} /> Add adoption item
