@@ -34,11 +34,33 @@ function makeAdoptionItem(overrides = {}) {
 }
 
 // ---------- seed data ----------
+// ---------- seed data ----------
 
 const defaultAwarenessItems = () => [
   makeAwarenessItem({
     header: "Emerging AI Use Cases Across the Maritime Industry",
-    body: "<p>As organisations move beyond early AI adoption, attention is increasingly shifting towards implementing practical, scalable use cases across maritime operations.</p><p><strong>Examples of AI applications currently being explored across the maritime sector include:</strong></p><ul><li>Regulatory compliance and policy summarisation</li><li>Voyage and operational reporting assistance</li><li>Safety and incident report analysis</li></ul>",
+    body: "<p>As organisations move beyond early AI adoption, attention is increasingly shifting towards implementing practical, scalable use cases across maritime operations. Rather than viewing AI as a standalone technology, companies are exploring how it can be embedded into existing workflows to improve productivity, reduce repetitive tasks, strengthen governance and support more informed decision-making.</p><p><strong>Examples of AI applications currently being explored across the maritime sector include:</strong></p><ul><li>Regulatory compliance and policy summarisation</li><li>Voyage and operational reporting assistance</li><li>Safety and incident report analysis</li><li>Procurement and quotation comparisons</li><li>Internal knowledge management and document search</li><li>Meeting minutes and action tracking</li><li>Workflow automation for routine administrative processes</li></ul>",
+    isPreset: true,
+  }),
+  makeAwarenessItem({
+    header: "Maritime AI Readiness Assessment Ongoing",
+    body: "<p>The Maritime and Port Authority of Singapore (MPA) is currently conducting the Maritime AI Readiness Assessment for the sea transport sector using the AI Readiness Index framework developed by AI Singapore.</p><p><strong>The assessment aims to help companies:</strong></p><ul><li>Understand their current AI readiness level</li><li>Identify gaps in digital and AI capabilities</li><li>Support future industry programme development</li></ul>",
+    tag: "<p><strong>Call for Participation</strong></p><p>Companies are encouraged to nominate a representative familiar with the organisation's technology adoption status (e.g. CTO, CIO, digital lead, or senior management representative).</p><p>Maritime AI Readiness Assessment: <a href=\"https://go.gov.sg/maritime-airi\" target=\"_blank\" style=\"color:#1b75bc;text-decoration:underline;font-weight:bold;\">go.gov.sg/maritime-airi</a></p>",
+    isPreset: true,
+  }),
+  makeAwarenessItem({
+    header: "Building a Structured Maritime AI Learning Journey",
+    body: "<p>SSA is currently curating a more structured AI learning journey to help maritime companies navigate the growing number of AI tools, concepts, and training programmes available in the market through:</p><ol><li>Whitelisting AI Service Providers (Ongoing)</li><li>Formalising the Use Cases Management Framework (Ongoing)</li></ol>",
+    isPreset: true,
+  }),
+  makeAwarenessItem({
+    header: "Whitelisting AI Service Providers Exercise",
+    body: "<p>SSA is continuing its evaluation of AI service providers with the aim of establishing a pool of vendors that can support members in starting their AI adoption journey. The assessment process includes a structured review of vendor capabilities, relevant experience, proposed solutions and customer references, supported by vendor interviews and standardised evaluation criteria to ensure a consistent and transparent selection process.</p><p>Further information on the recommended or whitelisted service providers is expected to be available in the early fourth quarter of 2026.</p>",
+    isPreset: true,
+  }),
+  makeAwarenessItem({
+    header: "Formalising the Use Case Management Framework",
+    body: "<p>SSA is also developing a structured framework to guide the identification, development, assessment and publication of AI use cases. Under the proposed approach, whitelisted implementation partners will work with participating companies to establish relevant use cases and assess opportunities for broader industry adoption.</p><p>The framework is being developed alongside the AI service provider whitelisting exercise. Further guidance on the use case submission, assessment and publication process is expected to be shared progressively from the fourth quarter of 2026.</p>",
     isPreset: true,
   }),
 ];
@@ -47,19 +69,30 @@ const defaultTrainingItems = () => [
   makeTrainingItem({
     name: "Anchoring AI: Transforming Shipping with GenAI",
     partnershipLine: "Conducted in partnership with PwC",
-    body: "<p>The programme focuses on:</p><ul><li>Understanding GenAI fundamentals</li><li>Maritime AI use cases</li></ul>",
+    body: "<p>The programme focuses on:</p><ul><li>Understanding GenAI fundamentals</li><li>Maritime AI use cases</li><li>Prompt engineering</li><li>AI implementation considerations</li><li>Change management</li></ul>",
+    summaryTag: "<p>The training programme is designed to help maritime professionals better understand how AI tools can be applied practically within shipping operations and business workflows.</p>",
   }),
   makeTrainingItem({
     name: "Navigating the Journey: Managing AI-Related Risk",
     partnershipLine: "Conducted in partnership with PwC",
-    body: "<p>The programme focuses on:</p><ul><li>Explore principles of responsible AI adoption</li></ul>",
+    body: "<p>The programme focuses on:</p><ul><li>Explore principles of responsible AI adoption</li><li>Understand AI and GenAI risks</li><li>Learn practical AI risk mitigation techniques</li><li>Identify AI-related cyber threats and security measures</li><li>Gain insights into AI governance frameworks</li></ul><p>For more information, please reach out to <a href=\"mailto:ariel@ssa.org.sg\" style=\"color:#10147e;\">ariel@ssa.org.sg</a>.</p>",
+    summaryTag: "<p>The training programme is designed to help maritime professionals and their teams to adopt AI safely and responsibly.</p>",
   }),
 ];
 
 const defaultAdoption = () => ({
-  funding: { body: "<p>Various grants and funding schemes are available to support companies exploring digitalisation and AI adoption initiatives.</p>", tag: null },
-  challenges: { body: "<p>As organisations progress beyond pilot projects, several operational challenges are emerging.</p>", tag: null },
-  suggestedAction: { body: "<p>Practical priorities identified through ongoing industry engagement.</p>", tag: null },
+  funding: {
+    body: "<p>Various grants and funding schemes are available to support companies exploring digitalisation and AI adoption initiatives.</p><p><strong>Funding may support:</strong></p><ul><li>Digital transformation projects</li><li>AI solution implementation</li><li>Workforce upskilling</li><li>Innovation and capability development</li></ul><p>To better understand members' AI adoption journeys, SSA representatives may reach out to discuss your organisation's current AI initiatives, challenges and areas of interest.</p>",
+    tag: "<p>Kindly refer to the attached grants summary for detailed funding information.</p>",
+  },
+  challenges: {
+    body: "<p>As organisations progress beyond pilot projects, several operational challenges are emerging:</p><ul><li>Scaling successful pilots across multiple business functions</li><li>Ensuring data quality and consistency for reliable AI outputs</li><li>Defining governance, accountability and human oversight</li><li>Integrating AI tools into existing workflows without adding complexity</li><li>Measuring long-term business impact beyond initial productivity gains</li></ul>",
+    tag: null,
+  },
+  suggestedAction: {
+    body: "<p>Practical priorities identified through ongoing industry engagement include:</p><ul><li>Prioritise low-risk, high-impact AI use cases</li><li>Map cross-departmental data dependencies</li><li>Establish governance for AI-generated outputs</li><li>Strengthen data quality and accessibility</li><li>Standardise AI workflows and best practices across teams</li></ul>",
+    tag: "<p>Small, well-defined pilot projects often provide the strongest foundation for broader AI adoption across the organisation.</p>",
+  },
   extraItems: [],
 });
 
@@ -366,8 +399,8 @@ export default function AIBulletinBuilder() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
         <img
               src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
               alt="SSA Logo"
