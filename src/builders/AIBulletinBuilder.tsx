@@ -12,71 +12,62 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 // ---------- factories ----------
 
-export type ContentBlock =
-  | { type: "paragraph"; html: string }
-  | { type: "heading"; text: string }
-  | { type: "bullet"; html: string }
-  | { type: "numbered"; html: string }
-  | { type: "highlight"; html: string; color: "navy" | "blue" | "cyan" };
-
-export interface AwarenessItemV2 {
-  id: string;
-  title: string;
-  blocks: ContentBlock[];
-  isPreset?: boolean;
+function makeAwarenessItem(overrides = {}) {
+  return Object.assign(
+    { id: uid(), header: "", body: "", tag: null, isPreset: false },
+    overrides
+  );
 }
 
-export interface TrainingItemV2 {
-  id: string;
-  name: string;
-  partnershipLine: string;
-  blocks: ContentBlock[];
+function makeTrainingItem(overrides = {}) {
+  return Object.assign(
+    { id: uid(), name: "", partnershipLine: "", body: "", summaryTag: null },
+    overrides
+  );
 }
 
-export interface AdoptionItemV2 {
-  id: string;
-  title: string;
-  blocks: ContentBlock[];
+function makeAdoptionItem(overrides = {}) {
+  return Object.assign(
+    { id: uid(), header: "", body: "", tag: null },
+    overrides
+  );
 }
 
-function renderBlock(block: ContentBlock): string {
-  switch (block.type) {
-    case "heading":
-      return `<p style="margin:26px 0 10px;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(block.text)}</p>`;
+// ---------- seed data ----------
 
-    case "paragraph":
-      return `<div style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(block.html)}</div>`;
+const defaultAwarenessItems = () => [
+  makeAwarenessItem({
+    header: "Emerging AI Use Cases Across the Maritime Industry",
+    body: "<p>As organisations move beyond early AI adoption, attention is increasingly shifting towards implementing practical, scalable use cases across maritime operations.</p><p><strong>Examples of AI applications currently being explored across the maritime sector include:</strong></p><ul><li>Regulatory compliance and policy summarisation</li><li>Voyage and operational reporting assistance</li><li>Safety and incident report analysis</li></ul>",
+    isPreset: true,
+  }),
+];
 
-    case "bullet":
-      return `<div>${convertBulletsForEmail(block.html)}</div>`;
+const defaultTrainingItems = () => [
+  makeTrainingItem({
+    name: "Anchoring AI: Transforming Shipping with GenAI",
+    partnershipLine: "Conducted in partnership with PwC",
+    body: "<p>The programme focuses on:</p><ul><li>Understanding GenAI fundamentals</li><li>Maritime AI use cases</li></ul>",
+  }),
+  makeTrainingItem({
+    name: "Navigating the Journey: Managing AI-Related Risk",
+    partnershipLine: "Conducted in partnership with PwC",
+    body: "<p>The programme focuses on:</p><ul><li>Explore principles of responsible AI adoption</li></ul>",
+  }),
+];
 
-    case "numbered":
-      return `<div style="margin:8px 0;">${convertBulletsForEmail(block.html)}</div>`;
+const defaultAdoption = () => ({
+  funding: { body: "<p>Various grants and funding schemes are available to support companies exploring digitalisation and AI adoption initiatives.</p>", tag: null },
+  challenges: { body: "<p>As organisations progress beyond pilot projects, several operational challenges are emerging.</p>", tag: null },
+  suggestedAction: { body: "<p>Practical priorities identified through ongoing industry engagement.</p>", tag: null },
+  extraItems: [],
+});
 
-    case "highlight": {
-      const map = {
-        navy: { bg:"#f4f7fb", border:"#262261" },
-        blue: { bg:"#eaf4fb", border:"#1b75bc" },
-        cyan: { bg:"#eafaff", border:"#00aeef" }
-      };
-      const c = map[block.color];
-      return `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td style="padding:18px;background:${c.bg};border-left:4px solid ${c.border};">
-            <div style="font-family:${FONT};font-size:14px;line-height:22px;color:#2d3748;">
-              ${convertBulletsForEmail(block.html)}
-            </div>
-          </td>
-        </tr>
-      </table>`;
-    }
-  }
-}
-
-function renderBlocks(blocks: ContentBlock[] = []) {
-  return blocks.map(renderBlock).join("\n");
-}
+const ADOPTION_SECTIONS = [
+  { key: "funding", header: "Funding Support for AI Adoption", color: "navy" },
+  { key: "challenges", header: "Common AI Adoption Challenges Observed", color: "navy" },
+  { key: "suggestedAction", header: "Suggested Action This Month", color: "cyan" },
+];
 
 // ---------- email-safe bullet conversion ----------
 // RichTextEditor's toolbar produces plain <ul>/<ol><li>, which Outlook desktop
@@ -382,7 +373,6 @@ export default function AIBulletinBuilder() {
               alt="SSA Logo"
               className="h-8 w-auto"
             />
-            <h1 className="text-xl font-bold text-indigo-900">Training Calendar Builder</h1>
           <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
