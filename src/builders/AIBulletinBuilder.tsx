@@ -8,8 +8,8 @@ import RecordViewer from "../shared/recordViewer";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 
-// matches the actual AI Bulletin template — NOT the Training Bulletin's Yu Gothic stack
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+
 // ---------- factories ----------
 
 function makeAwarenessItem(overrides = {}) {
@@ -149,8 +149,6 @@ function buildFullHTML({
   trainingSectionTitle,
   trainingItems,
   adoption,
-  footerLine1,
-  footerLine2,
 }) {
   const awarenessHtml = awarenessItems.map(buildAwarenessItemHTML).join("\n\n");
   const trainingItemsHtml = trainingItems.map(buildTrainingItemHTML).join("\n\n");
@@ -164,13 +162,6 @@ function buildFullHTML({
   ).join("\n\n");
   const adoptionExtraHtml = (adoption.extraItems || []).map(buildAdoptionExtraItemHTML).join("\n\n");
   const adoptionHtml = [adoptionFixedHtml, adoptionExtraHtml].filter(Boolean).join("\n\n");
-
-  const footerLine1Html = (footerLine1 || "").trim()
-    ? `<p data-f="footer-line1" style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">${esc(footerLine1)}</p>`
-    : "";
-  const footerLine2Html = (footerLine2 || "").trim()
-    ? `<p data-f="footer-line2" style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">${esc(footerLine2)}</p>`
-    : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -226,8 +217,8 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
-${footerLine1Html}
-${footerLine2Html}
+<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">footer</p>
+<p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">footerrrrr.</p>
 </td></tr>
 
 </table>
@@ -247,8 +238,6 @@ export default function AIBulletinBuilder() {
   const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
   const [adoption, setAdoption] = useState(defaultAdoption);
-  const [footerLine1, setFooterLine1] = useState("");
-  const [footerLine2, setFooterLine2] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
@@ -274,8 +263,6 @@ export default function AIBulletinBuilder() {
                 extraItems: (data.adoption.extraItems || []).map((it) => makeAdoptionItem(it)),
               });
             }
-            if (typeof data.footerLine1 === "string") setFooterLine1(data.footerLine1);
-            if (typeof data.footerLine2 === "string") setFooterLine2(data.footerLine2);
             if (typeof data.rawHtmlEdit === "string") setRawHtmlEdit(data.rawHtmlEdit);
           }
         }
@@ -301,8 +288,6 @@ export default function AIBulletinBuilder() {
             trainingSectionTitle,
             trainingItems,
             adoption,
-            footerLine1,
-            footerLine2,
             rawHtmlEdit,
             builtHtml: html,
           }),
@@ -315,7 +300,7 @@ export default function AIBulletinBuilder() {
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issueTag, issueSubtitle, awarenessItems, trainingSectionTitle, trainingItems, adoption, footerLine1, footerLine2, rawHtmlEdit, loaded]);
+  }, [issueTag, issueSubtitle, awarenessItems, trainingSectionTitle, trainingItems, adoption, rawHtmlEdit, loaded]);
 
   const move = (list, setList, index, dir) => {
     const arr = [...list];
@@ -353,8 +338,6 @@ export default function AIBulletinBuilder() {
     trainingSectionTitle,
     trainingItems,
     adoption,
-    footerLine1,
-    footerLine2,
   });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
@@ -611,16 +594,6 @@ export default function AIBulletinBuilder() {
 
               {tab === "preview" && (
                 <div>
-                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 mb-4">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Footer (org name is fixed; these two lines are optional)</p>
-                    <Field label="Footer line 1 (optional)">
-                      <input className={inputCls} value={footerLine1} onChange={(e) => setFooterLine1(e.target.value)} />
-                    </Field>
-                    <Field label="Footer line 2 (optional)">
-                      <input className={inputCls} value={footerLine2} onChange={(e) => setFooterLine2(e.target.value)} />
-                    </Field>
-                  </div>
-
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
                       {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
