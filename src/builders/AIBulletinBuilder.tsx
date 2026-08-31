@@ -8,8 +8,8 @@ import RecordViewer from "../shared/recordViewer";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 
+// matches the actual AI Bulletin template — NOT the Training Bulletin's Yu Gothic stack
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
-
 // ---------- factories ----------
 
 function makeAwarenessItem(overrides = {}) {
@@ -38,12 +38,7 @@ function makeAdoptionItem(overrides = {}) {
 const defaultAwarenessItems = () => [
   makeAwarenessItem({
     header: "Emerging AI Use Cases Across the Maritime Industry",
-    body: "<p>As organisations move beyond early AI adoption, attention is increasingly shifting towards implementing practical, scalable use cases across maritime operations.</p>",
-    isPreset: true,
-  }),
-  makeAwarenessItem({
-    header: "Examples of AI Applications Currently Being Explored",
-    body: "<ul><li>Regulatory compliance and policy summarisation</li><li>Voyage and operational reporting assistance</li></ul>",
+    body: "<p>As organisations move beyond early AI adoption, attention is increasingly shifting towards implementing practical, scalable use cases across maritime operations.</p><p><strong>Examples of AI applications currently being explored across the maritime sector include:</strong></p><ul><li>Regulatory compliance and policy summarisation</li><li>Voyage and operational reporting assistance</li><li>Safety and incident report analysis</li></ul>",
     isPreset: true,
   }),
 ];
@@ -52,12 +47,12 @@ const defaultTrainingItems = () => [
   makeTrainingItem({
     name: "Anchoring AI: Transforming Shipping with GenAI",
     partnershipLine: "Conducted in partnership with PwC",
-    body: "<ul><li>Understanding GenAI fundamentals</li><li>Maritime AI use cases</li></ul>",
+    body: "<p>The programme focuses on:</p><ul><li>Understanding GenAI fundamentals</li><li>Maritime AI use cases</li></ul>",
   }),
   makeTrainingItem({
     name: "Navigating the Journey: Managing AI-Related Risk",
     partnershipLine: "Conducted in partnership with PwC",
-    body: "<ul><li>Explore principles of responsible AI adoption</li></ul>",
+    body: "<p>The programme focuses on:</p><ul><li>Explore principles of responsible AI adoption</li></ul>",
   }),
 ];
 
@@ -74,6 +69,29 @@ const ADOPTION_SECTIONS = [
   { key: "suggestedAction", header: "Suggested Action This Month", color: "cyan" },
 ];
 
+// ---------- email-safe bullet conversion ----------
+// RichTextEditor's toolbar produces plain <ul>/<ol><li>, which Outlook desktop
+// renders inconsistently. The template uses a two-column bulletproof table
+// instead, so convert at export time — never touch what's stored in state.
+function convertBulletsForEmail(html) {
+  if (!html) return html;
+  return html.replace(/<(ul|ol)>([\s\S]*?)<\/\1>/gi, (match, tag, inner) => {
+    const items = [...inner.matchAll(/<li>([\s\S]*?)<\/li>/gi)].map((m) => m[1].trim());
+    const isOrdered = tag.toLowerCase() === "ol";
+    const rows = items
+      .map((text, i) => {
+        const marker = isOrdered ? `${i + 1}.` : "&bull;";
+        return `<tr><td valign="top" width="20" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${marker}</td><td valign="top" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;padding-bottom:5px;">${text}</td></tr>`;
+      })
+      .join("\n");
+    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`;
+  });
+}
+
+function dividerRow() {
+  return `<tr><td style="padding:0 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="32" style="height:32px;border-bottom:1px solid #e5e7eb;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>`;
+}
+
 // ---------- HTML builders ----------
 
 function buildAwarenessItemHTML(item) {
@@ -81,7 +99,7 @@ function buildAwarenessItemHTML(item) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}">
 <tr><td style="padding:0 0 14px 0">
 <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${item.body}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -96,7 +114,7 @@ function buildTrainingItemHTML(item) {
 <tr><td style="padding:0 0 14px 0">
 <p data-f="name" style="margin:0 0 10px 0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.name)}</p>
 ${partnershipHtml}
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${item.body}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -107,7 +125,7 @@ function buildAdoptionSectionHTML(key, header, color, data) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-section" data-key="${key}">
 <tr><td style="padding:0 0 20px 0">
 <p style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${data.body}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(data.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -118,20 +136,41 @@ function buildAdoptionExtraItemHTML(item) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-extra-item" data-id="${esc(item.id)}">
 <tr><td style="padding:0 0 20px 0">
 <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${item.body}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
 }
 
-function buildFullHTML({ issueTag, awarenessItems, trainingItems, adoption }) {
+function buildFullHTML({
+  issueTag,
+  issueSubtitle,
+  awarenessItems,
+  trainingSectionTitle,
+  trainingItems,
+  adoption,
+  footerLine1,
+  footerLine2,
+}) {
   const awarenessHtml = awarenessItems.map(buildAwarenessItemHTML).join("\n\n");
-  const trainingHtml = trainingItems.map(buildTrainingItemHTML).join("\n\n");
+  const trainingItemsHtml = trainingItems.map(buildTrainingItemHTML).join("\n\n");
+  const trainingSectionTitleHtml = (trainingSectionTitle || "").trim()
+    ? `<p data-f="training-section-title" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(trainingSectionTitle)}</p>`
+    : "";
+  const trainingHtml = `${trainingSectionTitleHtml}\n${trainingItemsHtml}`;
+
   const adoptionFixedHtml = ADOPTION_SECTIONS.map(({ key, header, color }) =>
     buildAdoptionSectionHTML(key, header, color, adoption[key])
   ).join("\n\n");
   const adoptionExtraHtml = (adoption.extraItems || []).map(buildAdoptionExtraItemHTML).join("\n\n");
   const adoptionHtml = [adoptionFixedHtml, adoptionExtraHtml].filter(Boolean).join("\n\n");
+
+  const footerLine1Html = (footerLine1 || "").trim()
+    ? `<p data-f="footer-line1" style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">${esc(footerLine1)}</p>`
+    : "";
+  const footerLine2Html = (footerLine2 || "").trim()
+    ? `<p data-f="footer-line2" style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">${esc(footerLine2)}</p>`
+    : "";
 
   return `<!doctype html>
 <html lang="en">
@@ -165,17 +204,20 @@ a{text-decoration:none;}
 
 <tr><td align="left" valign="top" bgcolor="#262261" class="issue-padding" style="padding:22px 24px;background-color:#262261">
 <p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:28px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
+<p data-f="issue-subtitle" style="margin:8px 0 0 0;font-family:${FONT};font-size:14px;line-height:20px;color:#ffffff;">${esc(issueSubtitle)}</p>
 </td></tr>
 
 <tr><td bgcolor="#262261" align="center" style="padding:10px 16px;background-color:#262261;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
 <tr><td align="left" valign="top" bgcolor="#ffffff" class="content-padding" style="padding:22px 24px 0 24px;background-color:#ffffff" data-section="awareness">
 ${awarenessHtml}
 </td></tr>
+${dividerRow()}
 
 <tr><td bgcolor="#1b75bc" align="center" style="padding:10px 16px;background-color:#1b75bc;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Training</td></tr>
 <tr><td align="left" valign="top" bgcolor="#ffffff" class="content-padding" style="padding:22px 24px 0 24px;background-color:#ffffff" data-section="training">
 ${trainingHtml}
 </td></tr>
+${dividerRow()}
 
 <tr><td bgcolor="#810e17" align="center" style="padding:10px 16px;background-color:#810e17;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Adoption</td></tr>
 <tr><td align="left" valign="top" bgcolor="#ffffff" class="content-padding" style="padding:22px 24px 28px 24px;background-color:#ffffff" data-section="adoption">
@@ -184,6 +226,8 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
+${footerLine1Html}
+${footerLine2Html}
 </td></tr>
 
 </table>
@@ -198,9 +242,13 @@ ${adoptionHtml}
 export default function AIBulletinBuilder() {
   const [tab, setTab] = useState("awareness");
   const [issueTag, setIssueTag] = useState("Issue 04 | Sep 2026");
+  const [issueSubtitle, setIssueSubtitle] = useState("Accelerating Maritime AI Through Use Cases, Governance and Collaboration");
   const [awarenessItems, setAwarenessItems] = useState(defaultAwarenessItems);
+  const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
   const [adoption, setAdoption] = useState(defaultAdoption);
+  const [footerLine1, setFooterLine1] = useState("");
+  const [footerLine2, setFooterLine2] = useState("");
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
@@ -215,7 +263,9 @@ export default function AIBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueTag) setIssueTag(data.issueTag);
+            if (typeof data.issueSubtitle === "string") setIssueSubtitle(data.issueSubtitle);
             if (data.awarenessItems) setAwarenessItems(data.awarenessItems.map((it) => makeAwarenessItem(it)));
+            if (typeof data.trainingSectionTitle === "string") setTrainingSectionTitle(data.trainingSectionTitle);
             if (data.trainingItems) setTrainingItems(data.trainingItems.map((it) => makeTrainingItem(it)));
             if (data.adoption) {
               setAdoption({
@@ -224,6 +274,8 @@ export default function AIBulletinBuilder() {
                 extraItems: (data.adoption.extraItems || []).map((it) => makeAdoptionItem(it)),
               });
             }
+            if (typeof data.footerLine1 === "string") setFooterLine1(data.footerLine1);
+            if (typeof data.footerLine2 === "string") setFooterLine2(data.footerLine2);
             if (typeof data.rawHtmlEdit === "string") setRawHtmlEdit(data.rawHtmlEdit);
           }
         }
@@ -242,7 +294,18 @@ export default function AIBulletinBuilder() {
         const res = await fetch("/api/save-digest?key=ai-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueTag, awarenessItems, trainingItems, adoption, rawHtmlEdit, builtHtml: html }),
+          body: JSON.stringify({
+            issueTag,
+            issueSubtitle,
+            awarenessItems,
+            trainingSectionTitle,
+            trainingItems,
+            adoption,
+            footerLine1,
+            footerLine2,
+            rawHtmlEdit,
+            builtHtml: html,
+          }),
         });
         setSaveStatus(res.ok ? "saved" : "error");
       } catch (e) {
@@ -252,7 +315,7 @@ export default function AIBulletinBuilder() {
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issueTag, awarenessItems, trainingItems, adoption, rawHtmlEdit, loaded]);
+  }, [issueTag, issueSubtitle, awarenessItems, trainingSectionTitle, trainingItems, adoption, footerLine1, footerLine2, rawHtmlEdit, loaded]);
 
   const move = (list, setList, index, dir) => {
     const arr = [...list];
@@ -266,7 +329,6 @@ export default function AIBulletinBuilder() {
     setList(list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
-  // helpers scoped to adoption.extraItems, since it's nested one level inside `adoption`
   const updateExtraItem = (id, patch) => {
     setAdoption({
       ...adoption,
@@ -284,7 +346,16 @@ export default function AIBulletinBuilder() {
     setAdoption({ ...adoption, extraItems: adoption.extraItems.filter((x) => x.id !== id) });
   };
 
-  const generatedHtml = buildFullHTML({ issueTag, awarenessItems, trainingItems, adoption });
+  const generatedHtml = buildFullHTML({
+    issueTag,
+    issueSubtitle,
+    awarenessItems,
+    trainingSectionTitle,
+    trainingItems,
+    adoption,
+    footerLine1,
+    footerLine2,
+  });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
 
@@ -314,12 +385,7 @@ export default function AIBulletinBuilder() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex items-center justify-between mb-3">
-        <img
-              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-              alt="SSA Logo"
-              className="h-8 w-auto"
-            />
-            <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
+          <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
@@ -329,6 +395,14 @@ export default function AIBulletinBuilder() {
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
           <Field label="Issue tag">
             <input className={inputCls} value={issueTag} onChange={(e) => setIssueTag(e.target.value)} placeholder="Issue 04 | Sep 2026" />
+          </Field>
+          <Field label="Issue subtitle">
+            <input
+              className={inputCls}
+              value={issueSubtitle}
+              onChange={(e) => setIssueSubtitle(e.target.value)}
+              placeholder="Accelerating Maritime AI Through Use Cases, Governance and Collaboration"
+            />
           </Field>
         </div>
 
@@ -402,6 +476,17 @@ export default function AIBulletinBuilder() {
 
               {tab === "training" && (
                 <div className="space-y-4">
+                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                    <Field label="Training section title">
+                      <input
+                        className={inputCls}
+                        value={trainingSectionTitle}
+                        onChange={(e) => setTrainingSectionTitle(e.target.value)}
+                        placeholder="SSA AI Training & Industry Activities"
+                      />
+                    </Field>
+                  </div>
+
                   {trainingItems.map((item, i) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                       <div className="flex justify-between items-center mb-2">
@@ -477,7 +562,6 @@ export default function AIBulletinBuilder() {
                     </div>
                   ))}
 
-                  {/* extra, non-fixed items */}
                   {(adoption.extraItems || []).map((item, i) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                       <div className="flex justify-between items-center mb-2">
@@ -527,6 +611,16 @@ export default function AIBulletinBuilder() {
 
               {tab === "preview" && (
                 <div>
+                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 mb-4">
+                    <p className="text-xs font-semibold text-gray-600 mb-2">Footer (org name is fixed; these two lines are optional)</p>
+                    <Field label="Footer line 1 (optional)">
+                      <input className={inputCls} value={footerLine1} onChange={(e) => setFooterLine1(e.target.value)} />
+                    </Field>
+                    <Field label="Footer line 2 (optional)">
+                      <input className={inputCls} value={footerLine2} onChange={(e) => setFooterLine2(e.target.value)} />
+                    </Field>
+                  </div>
+
                   <div className="flex flex-wrap items-center gap-2 mb-3">
                     <button onClick={handleCopy} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900">
                       {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
