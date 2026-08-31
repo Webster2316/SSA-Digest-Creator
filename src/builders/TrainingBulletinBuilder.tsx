@@ -464,7 +464,7 @@ export default function TrainingBulletinBuilder() {
               alt="SSA Logo"
               className="h-8 w-auto"
             />
-            <h1 className="text-xl font-bold text-indigo-900">Training Bulletin Builder</h1>
+            <h1 className="text-xl font-bold text-indigo-900">Training Calendar Builder</h1>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (

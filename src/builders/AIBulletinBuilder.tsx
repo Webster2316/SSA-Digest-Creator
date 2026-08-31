@@ -314,7 +314,12 @@ export default function AIBulletinBuilder() {
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
+        <img
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+              alt="SSA Logo"
+              className="h-8 w-auto"
+            />
+            <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus === "saved" && <><Save size={13} /> Saved</>}
