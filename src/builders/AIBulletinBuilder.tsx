@@ -389,7 +389,7 @@ export default function AIBulletinBuilder() {
   const [awarenessItems, setAwarenessItems] = useState(defaultAwarenessItems);
   const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
-  const [adoptionItems, setAdoptionItems] = useState(() => ADOPTION_SECTIONS.map(({ header, color }) => makeAdoptionItem({ header, color, isPreset: true })));
+  const [adoption, setAdoption] = useState(defaultAdoption);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
