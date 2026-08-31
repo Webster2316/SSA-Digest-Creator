@@ -28,7 +28,7 @@ function makeTrainingItem(overrides = {}) {
 
 function makeAdoptionItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null },
+    { id: uid(), header: "", body: "", tag: null, color: "navy", isPreset: false },
     overrides
   );
 }
@@ -389,7 +389,7 @@ export default function AIBulletinBuilder() {
   const [awarenessItems, setAwarenessItems] = useState(defaultAwarenessItems);
   const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
-  const [adoption, setAdoption] = useState(defaultAdoption);
+  const [adoptionItems, setAdoptionItems] = useState(() => ADOPTION_SECTIONS.map(({ header, color }) => makeAdoptionItem({ header, color, isPreset: true })));
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
@@ -736,72 +736,54 @@ export default function AIBulletinBuilder() {
                 </div>
               )}
 
-              {tab === "adoption" && (
-                <div className="space-y-4">
-                  {ADOPTION_SECTIONS.map(({ key, header, color }) => (
-                    <div key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                      <p className="text-sm font-semibold text-gray-800 mb-2">{header}</p>
-                      <Field label="Body">
-                        <RichTextEditor
-                          value={adoption[key].body}
-                          onChange={(htmlVal) => setAdoption({ ...adoption, [key]: { ...adoption[key], body: htmlVal } })}
-                        />
-                      </Field>
-                      <TagBlock
-                        value={adoption[key].tag}
-                        onChange={(htmlVal) => setAdoption({ ...adoption, [key]: { ...adoption[key], tag: htmlVal } })}
-                        color={color}
-                        label="Add optional tag block"
-                      />
-                    </div>
-                  ))}
+{tab === "adoption" && (
+  <div className="space-y-4">
+    {adoptionItems.map((item, i) => (
+      <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-semibold text-indigo-700">
+            {item.header.trim() || `Item ${i + 1} (untitled)`}
+            {item.isPreset && <span className="ml-2 text-gray-400 font-normal">(preset)</span>}
+          </span>
+          <MoveButtons
+            index={i}
+            length={adoptionItems.length}
+            onMove={(index, dir) => move(adoptionItems, setAdoptionItems, index, dir)}
+            onRemove={() => setAdoptionItems(adoptionItems.filter((x) => x.id !== item.id))}
+          />
+        </div>
 
-                  {(adoption.extraItems || []).map((item, i) => (
-                    <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-semibold text-indigo-700">
-                          {item.header.trim() || `Extra item ${i + 1} (untitled)`}
-                        </span>
-                        <MoveButtons
-                          index={i}
-                          length={adoption.extraItems.length}
-                          onMove={moveExtraItem}
-                          onRemove={() => removeExtraItem(item.id)}
-                        />
-                      </div>
+        <Field label="Item block header">
+          <input
+            className={inputCls}
+            value={item.header}
+            onChange={(e) => updateItem(adoptionItems, setAdoptionItems, item.id, { header: e.target.value })}
+          />
+        </Field>
 
-                      <Field label="Item block header">
-                        <input
-                          className={inputCls}
-                          value={item.header}
-                          onChange={(e) => updateExtraItem(item.id, { header: e.target.value })}
-                        />
-                      </Field>
+        <Field label="Body">
+          <RichTextEditor
+            value={item.body}
+            onChange={(htmlVal) => updateItem(adoptionItems, setAdoptionItems, item.id, { body: htmlVal })}
+          />
+        </Field>
 
-                      <Field label="Body">
-                        <RichTextEditor
-                          value={item.body}
-                          onChange={(htmlVal) => updateExtraItem(item.id, { body: htmlVal })}
-                        />
-                      </Field>
-
-                      <TagBlock
-                        value={item.tag}
-                        onChange={(htmlVal) => updateExtraItem(item.id, { tag: htmlVal })}
-                        color="navy"
-                        label="Add optional tag block"
-                      />
-                    </div>
-                  ))}
-
-                  <button
-                    onClick={() => setAdoption({ ...adoption, extraItems: [...(adoption.extraItems || []), makeAdoptionItem()] })}
-                    className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-                  >
-                    <Plus size={16} /> Add adoption item
-                  </button>
-                </div>
-              )}
+        <TagBlock
+          value={item.tag}
+          onChange={(htmlVal) => updateItem(adoptionItems, setAdoptionItems, item.id, { tag: htmlVal })}
+          color={item.color}
+          label="Add optional tag block"
+        />
+      </div>
+    ))}
+    <button
+      onClick={() => setAdoptionItems([...adoptionItems, makeAdoptionItem()])}
+      className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+    >
+      <Plus size={16} /> Add adoption item
+    </button>
+  </div>
+)}
 
               {tab === "preview" && (
                 <div>
