@@ -12,6 +12,104 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 // ---------- factories ----------
 
+export type ContentBlock =
+  | { type: "paragraph"; html: string }
+  | { type: "heading"; text: string }
+  | { type: "bullet"; html: string }
+  | { type: "numbered"; html: string }
+  | { type: "highlight"; html: string; color: "navy" | "blue" | "cyan" };
+
+export interface AwarenessItemV2 {
+  id: string;
+  title: string;
+  blocks: ContentBlock[];
+  isPreset?: boolean;
+}
+
+export interface TrainingItemV2 {
+  id: string;
+  name: string;
+  partnershipLine: string;
+  blocks: ContentBlock[];
+}
+
+export interface AdoptionItemV2 {
+  id: string;
+  title: string;
+  blocks: ContentBlock[];
+}
+
+function renderBlock(block: ContentBlock): string {
+  switch (block.type) {
+    case "heading":
+      return `<p style="margin:26px 0 10px;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(block.text)}</p>`;
+
+    case "paragraph":
+      return `<div style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(block.html)}</div>`;
+
+    case "bullet":
+      return `<div>${convertBulletsForEmail(block.html)}</div>`;
+
+    case "numbered":
+      return `<div style="margin:8px 0;">${convertBulletsForEmail(block.html)}</div>`;
+
+    case "highlight": {
+      const map = {
+        navy: { bg:"#f4f7fb", border:"#262261" },
+        blue: { bg:"#eaf4fb", border:"#1b75bc" },
+        cyan: { bg:"#eafaff", border:"#00aeef" }
+      };
+      const c = map[block.color];
+      return `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding:18px;background:${c.bg};border-left:4px solid ${c.border};">
+            <div style="font-family:${FONT};font-size:14px;line-height:22px;color:#2d3748;">
+              ${convertBulletsForEmail(block.html)}
+            </div>
+          </td>
+        </tr>
+      </table>`;
+    }
+  }
+}
+
+function renderBlocks(blocks: ContentBlock[] = []) {
+  return blocks.map(renderBlock).join("\n");
+}
+
+/* Example renderer
+
+function buildAwarenessItemHTML(item: AwarenessItemV2){
+  return `
+    <table role="presentation" width="100%">
+      <tr><td style="padding:0 0 14px">
+        <p style="margin:0 0 14px;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">
+          ${esc(item.title)}
+        </p>
+        ${renderBlocks(item.blocks)}
+      </td></tr>
+    </table>`;
+}
+*/
+
+
+/* ===== Original Builder (reference) ===== */
+
+import { useState, useEffect } from "react";
+import { Plus, Copy, Check, Save, Eye, Code2, BookOpen, GraduationCap, TrendingUp, Archive, Loader2, RotateCcw } from "lucide-react";
+import Field from "../shared/field";
+import TagBlock, { renderTagBlockHTML } from "../shared/tagBlock";
+import MoveButtons from "../shared/moveButtons";
+import RecordsPanel from "../shared/recordsPanel";
+import RecordViewer from "../shared/recordViewer";
+import RichTextEditor from "../shared/richTextEditor";
+import { uid, esc, inputCls } from "../shared/utils";
+
+const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+
+// ---------- factories ----------
+
 function makeAwarenessItem(overrides = {}) {
   return Object.assign(
     { id: uid(), header: "", body: "", tag: null, isPreset: false },
