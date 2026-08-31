@@ -34,7 +34,6 @@ function makeAdoptionItem(overrides = {}) {
 }
 
 // ---------- seed data ----------
-// ---------- seed data ----------
 
 const defaultAwarenessItems = () => [
   makeAwarenessItem({
@@ -118,6 +117,50 @@ function convertBulletsForEmail(html) {
       })
       .join("\n");
     return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`;
+  });
+}
+
+// ---------- reverse of the above, for pulling hand-edited HTML back into the editor ----------
+// Detects the specific two-column bulletproof tables produced by convertBulletsForEmail
+// and turns them back into <ul>/<ol><li> so RichTextEditor's toolbar keeps working on them.
+function convertEmailTablesToBullets(containerEl) {
+  const tables = Array.from(containerEl.querySelectorAll("table"));
+  tables.forEach((table) => {
+    const rows = Array.from(table.querySelectorAll("tr"));
+    if (!rows.length) return;
+    let isOrdered = null;
+    const items = [];
+    for (const row of rows) {
+      const tds = row.querySelectorAll("td");
+      if (tds.length !== 2) {
+        items.length = 0;
+        break;
+      }
+      const marker = tds[0].textContent.trim();
+      if (marker === "•" || marker === "\u2022") {
+        if (isOrdered === true) {
+          items.length = 0;
+          break;
+        }
+        isOrdered = false;
+      } else if (/^\d+\.$/.test(marker)) {
+        if (isOrdered === false) {
+          items.length = 0;
+          break;
+        }
+        isOrdered = true;
+      } else {
+        items.length = 0;
+        break;
+      }
+      items.push(tds[1].innerHTML.trim());
+    }
+    if (items.length && isOrdered !== null) {
+      const tag = isOrdered ? "ol" : "ul";
+      const wrapper = table.ownerDocument.createElement("div");
+      wrapper.innerHTML = `<${tag}>${items.map((it) => `<li>${it}</li>`).join("")}</${tag}>`;
+      table.replaceWith(...Array.from(wrapper.childNodes));
+    }
   });
 }
 
@@ -261,6 +304,82 @@ ${adoptionHtml}
 </html>`;
 }
 
+// ---------- parse hand-edited HTML back into state ----------
+
+function parseAwarenessItems(doc) {
+  return Array.from(doc.querySelectorAll('[data-block="awareness-item"]')).map((block) => {
+    const id = block.getAttribute("data-id") || uid();
+    const header = block.querySelector('[data-f="header"]')?.textContent.trim() || "";
+    const bodyEl = block.querySelector('[data-f="body"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = block.querySelector(`[data-field="awareness-tag-${id}"]`);
+    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    return { id, header, body, tag, isPreset: false };
+  });
+}
+
+function parseTrainingItems(doc) {
+  return Array.from(doc.querySelectorAll('[data-block="training-item"]')).map((block) => {
+    const id = block.getAttribute("data-id") || uid();
+    const name = block.querySelector('[data-f="name"]')?.textContent.trim() || "";
+    const partnershipLine = block.querySelector('[data-f="partnership"]')?.textContent.trim() || "";
+    const bodyEl = block.querySelector('[data-f="body"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = block.querySelector(`[data-field="training-tag-${id}"]`);
+    const summaryTag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    return { id, name, partnershipLine, body, summaryTag };
+  });
+}
+
+function parseAdoption(doc) {
+  const adoption = { funding: { body: "", tag: null }, challenges: { body: "", tag: null }, suggestedAction: { body: "", tag: null }, extraItems: [] };
+
+  ADOPTION_SECTIONS.forEach(({ key }) => {
+    const block = doc.querySelector(`[data-block="adoption-section"][data-key="${key}"]`);
+    if (!block) return;
+    const bodyEl = block.querySelector('[data-f="body"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = doc.querySelector(`[data-field="adoption-${key}-tag"]`);
+    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    adoption[key] = { body, tag };
+  });
+
+  adoption.extraItems = Array.from(doc.querySelectorAll('[data-block="adoption-extra-item"]')).map((block) => {
+    const id = block.getAttribute("data-id") || uid();
+    const header = block.querySelector('[data-f="header"]')?.textContent.trim() || "";
+    const bodyEl = block.querySelector('[data-f="body"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = block.querySelector(`[data-field="adoption-extra-tag-${id}"]`);
+    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    return { id, header, body, tag };
+  });
+
+  return adoption;
+}
+
+function parseHtmlToState(htmlStr) {
+  const doc = new DOMParser().parseFromString(htmlStr, "text/html");
+
+  const issueTagEl = doc.querySelector('[data-f="issue-tag"]');
+  const issueTag = issueTagEl ? issueTagEl.textContent.trim() : "";
+
+  const issueSubtitleEl = doc.querySelector('[data-f="issue-subtitle"]');
+  const issueSubtitle = issueSubtitleEl ? issueSubtitleEl.textContent.trim() : "";
+
+  const trainingSectionTitleEl = doc.querySelector('[data-f="training-section-title"]');
+  const trainingSectionTitle = trainingSectionTitleEl ? trainingSectionTitleEl.textContent.trim() : "";
+
+  const awarenessItems = parseAwarenessItems(doc);
+  const trainingItems = parseTrainingItems(doc);
+  const adoption = parseAdoption(doc);
+
+  return { issueTag, issueSubtitle, trainingSectionTitle, awarenessItems, trainingItems, adoption };
+}
+
 // ---------- main component ----------
 
 export default function AIBulletinBuilder() {
@@ -275,6 +394,7 @@ export default function AIBulletinBuilder() {
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
+  const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState(null);
 
   useEffect(() => {
@@ -385,6 +505,44 @@ export default function AIBulletinBuilder() {
     }
   };
 
+  const handleResetHtml = () => {
+    setRawHtmlEdit(null);
+    setSyncMessage(null);
+  };
+
+  const handleApplyHtmlToFields = () => {
+    try {
+      const parsed = parseHtmlToState(html);
+      const foundAnything =
+        parsed.awarenessItems.length ||
+        parsed.trainingItems.length ||
+        parsed.adoption.extraItems.length ||
+        parsed.issueTag ||
+        parsed.issueSubtitle;
+      if (!foundAnything) {
+        setSyncMessage({
+          type: "error",
+          text: "Couldn't find any recognizable fields in that HTML — the data markers may have been removed or the structure changed too much.",
+        });
+        return;
+      }
+      setIssueTag(parsed.issueTag || issueTag);
+      setIssueSubtitle(parsed.issueSubtitle || issueSubtitle);
+      setTrainingSectionTitle(parsed.trainingSectionTitle || trainingSectionTitle);
+      setAwarenessItems(parsed.awarenessItems.map((it) => makeAwarenessItem(it)));
+      setTrainingItems(parsed.trainingItems.map((it) => makeTrainingItem(it)));
+      setAdoption({
+        ...defaultAdoption(),
+        ...parsed.adoption,
+        extraItems: parsed.adoption.extraItems.map((it) => makeAdoptionItem(it)),
+      });
+      setRawHtmlEdit(null);
+      setSyncMessage({ type: "success", text: "Fields updated from your HTML edits." });
+    } catch (e) {
+      setSyncMessage({ type: "error", text: "Couldn't parse that HTML: " + e.message });
+    }
+  };
+
   const tabBtn = (key, label, Icon) => (
     <button
       onClick={() => setTab(key)}
@@ -399,13 +557,13 @@ export default function AIBulletinBuilder() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-  <div className="max-w-4xl mx-auto p-4">        
-  <div className="flex items-center justify-between mb-3">
-        <img
-              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-              alt="SSA Logo"
-              className="h-8 w-auto"
-            />
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="flex items-center justify-between mb-3">
+          <img
+            src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+            alt="SSA Logo"
+            className="h-8 w-auto"
+          />
           <h1 className="text-xl font-bold text-indigo-900">AI Bulletin Builder</h1>
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
@@ -638,16 +796,29 @@ export default function AIBulletinBuilder() {
                     </button>
                     {isEdited && (
                       <button
-                        onClick={() => setRawHtmlEdit(null)}
+                        onClick={handleApplyHtmlToFields}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 text-white text-sm rounded font-medium hover:bg-emerald-800"
+                      >
+                        <Save size={15} /> Apply HTML changes to fields
+                      </button>
+                    )}
+                    {isEdited && (
+                      <button
+                        onClick={handleResetHtml}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
                       >
                         <RotateCcw size={15} /> Discard edits
                       </button>
                     )}
                   </div>
-                  {isEdited && (
+                  {isEdited && !syncMessage && (
                     <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
-                      Showing your manual edits. Other tabs won't reflect this — hand edits are export-only. Click <strong>Discard edits</strong> to go back to the generated version.
+                      Showing your manual edits. The Awareness / Training / Adoption tabs won't reflect this until you click <strong>Apply HTML changes to fields</strong> — text edits inside existing fields sync fine, but new blocks you hand-write from scratch won't be recognized.
+                    </p>
+                  )}
+                  {syncMessage && (
+                    <p className={`text-xs rounded px-2 py-1.5 mb-3 border ${syncMessage.type === "success" ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-red-700 bg-red-50 border-red-200"}`}>
+                      {syncMessage.text}
                     </p>
                   )}
                   <p className="text-xs text-gray-500 mb-2">Live preview:</p>
@@ -659,7 +830,10 @@ export default function AIBulletinBuilder() {
                     className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
                     style={{ height: "220px" }}
                     value={html}
-                    onChange={(e) => setRawHtmlEdit(e.target.value)}
+                    onChange={(e) => {
+                      setRawHtmlEdit(e.target.value);
+                      setSyncMessage(null);
+                    }}
                     spellCheck={false}
                   />
                 </div>
