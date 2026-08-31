@@ -78,27 +78,30 @@ const defaultTrainingItems = () => [
     summaryTag: "<p>The training programme is designed to help maritime professionals and their teams to adopt AI safely and responsibly.</p>",
   }),
 ];
-
-const defaultAdoption = () => ({
-  funding: {
+const defaultAdoptionItems = () => [
+  makeAdoptionItem({
+    header: "Funding Support for AI Adoption",
     body: "<p>Various grants and funding schemes are available to support companies exploring digitalisation and AI adoption initiatives.</p><p><strong>Funding may support:</strong></p><ul><li>Digital transformation projects</li><li>AI solution implementation</li><li>Workforce upskilling</li><li>Innovation and capability development</li></ul><p>To better understand members' AI adoption journeys, SSA representatives may reach out to discuss your organisation's current AI initiatives, challenges and areas of interest.</p>",
     tag: "<p>Kindly refer to the attached grants summary for detailed funding information.</p>",
-  },
-  challenges: {
+    color: "navy",
+    isPreset: true,
+  }),
+
+  makeAdoptionItem({
+    header: "Common AI Adoption Challenges Observed",
     body: "<p>As organisations progress beyond pilot projects, several operational challenges are emerging:</p><ul><li>Scaling successful pilots across multiple business functions</li><li>Ensuring data quality and consistency for reliable AI outputs</li><li>Defining governance, accountability and human oversight</li><li>Integrating AI tools into existing workflows without adding complexity</li><li>Measuring long-term business impact beyond initial productivity gains</li></ul>",
     tag: null,
-  },
-  suggestedAction: {
+    color: "navy",
+    isPreset: true,
+  }),
+
+  makeAdoptionItem({
+    header: "Suggested Action This Month",
     body: "<p>Practical priorities identified through ongoing industry engagement include:</p><ul><li>Prioritise low-risk, high-impact AI use cases</li><li>Map cross-departmental data dependencies</li><li>Establish governance for AI-generated outputs</li><li>Strengthen data quality and accessibility</li><li>Standardise AI workflows and best practices across teams</li></ul>",
     tag: "<p>Small, well-defined pilot projects often provide the strongest foundation for broader AI adoption across the organisation.</p>",
-  },
-  extraItems: [],
-});
-
-const ADOPTION_SECTIONS = [
-  { key: "funding", header: "Funding Support for AI Adoption", color: "navy" },
-  { key: "challenges", header: "Common AI Adoption Challenges Observed", color: "navy" },
-  { key: "suggestedAction", header: "Suggested Action This Month", color: "cyan" },
+    color: "cyan",
+    isPreset: true,
+  }),
 ];
 
 // ---------- email-safe bullet conversion ----------
@@ -196,20 +199,14 @@ ${tagHtml}
 </table>`;
 }
 
-function buildAdoptionSectionHTML(key, header, color, data) {
-  const tagHtml = renderTagBlockHTML(data.tag, color, `adoption-${key}-tag`);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-section" data-key="${key}">
-<tr><td style="padding:0 0 20px 0">
-<p style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(data.body)}</div>
-${tagHtml}
-</td></tr>
-</table>`;
-}
+function buildAdoptionItemHTML(item) {
+  const tagHtml = renderTagBlockHTML(
+    item.tag,
+    item.color || "navy",
+    `adoption-tag-${item.id}`
+  );
 
-function buildAdoptionExtraItemHTML(item) {
-  const tagHtml = renderTagBlockHTML(item.tag, "navy", `adoption-extra-tag-${item.id}`);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-extra-item" data-id="${esc(item.id)}">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}">
 <tr><td style="padding:0 0 20px 0">
 <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
 <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
@@ -224,7 +221,7 @@ function buildFullHTML({
   awarenessItems,
   trainingSectionTitle,
   trainingItems,
-  adoption,
+  adoptionItems,
 }) {
   const awarenessHtml = awarenessItems.map(buildAwarenessItemHTML).join("\n\n");
   const trainingItemsHtml = trainingItems.map(buildTrainingItemHTML).join("\n\n");
@@ -233,12 +230,9 @@ function buildFullHTML({
     : "";
   const trainingHtml = `${trainingSectionTitleHtml}\n${trainingItemsHtml}`;
 
-  const adoptionFixedHtml = ADOPTION_SECTIONS.map(({ key, header, color }) =>
-    buildAdoptionSectionHTML(key, header, color, adoption[key])
-  ).join("\n\n");
-  const adoptionExtraHtml = (adoption.extraItems || []).map(buildAdoptionExtraItemHTML).join("\n\n");
-  const adoptionHtml = [adoptionFixedHtml, adoptionExtraHtml].filter(Boolean).join("\n\n");
-
+  const adoptionHtml = adoptionItems
+  .map(buildAdoptionItemHTML)
+  .join("\n\n");
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -333,32 +327,45 @@ function parseTrainingItems(doc) {
   });
 }
 
-function parseAdoption(doc) {
-  const adoption = { funding: { body: "", tag: null }, challenges: { body: "", tag: null }, suggestedAction: { body: "", tag: null }, extraItems: [] };
-
-  ADOPTION_SECTIONS.forEach(({ key }) => {
-    const block = doc.querySelector(`[data-block="adoption-section"][data-key="${key}"]`);
-    if (!block) return;
-    const bodyEl = block.querySelector('[data-f="body"]');
-    if (bodyEl) convertEmailTablesToBullets(bodyEl);
-    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
-    const tagField = doc.querySelector(`[data-field="adoption-${key}-tag"]`);
-    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    adoption[key] = { body, tag };
-  });
-
-  adoption.extraItems = Array.from(doc.querySelectorAll('[data-block="adoption-extra-item"]')).map((block) => {
+function parseAdoptionItems(doc) {
+  return Array.from(
+    doc.querySelectorAll('[data-block="adoption-item"]')
+  ).map((block) => {
     const id = block.getAttribute("data-id") || uid();
-    const header = block.querySelector('[data-f="header"]')?.textContent.trim() || "";
-    const bodyEl = block.querySelector('[data-f="body"]');
-    if (bodyEl) convertEmailTablesToBullets(bodyEl);
-    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
-    const tagField = block.querySelector(`[data-field="adoption-extra-tag-${id}"]`);
-    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    return { id, header, body, tag };
-  });
 
-  return adoption;
+    const header =
+      block.querySelector('[data-f="header"]')?.textContent.trim() || "";
+
+    const bodyEl = block.querySelector('[data-f="body"]');
+
+    if (bodyEl) {
+      convertEmailTablesToBullets(bodyEl);
+    }
+
+    const body = bodyEl
+      ? bodyEl.innerHTML.trim()
+      : "";
+
+    const tagField = block.querySelector(
+      `[data-field="adoption-tag-${id}"]`
+    );
+
+    const tag = tagField
+      ? tagField.querySelector("td")?.innerHTML.trim() || null
+      : null;
+
+    const color =
+      block.getAttribute("data-color") || "navy";
+
+    return {
+      id,
+      header,
+      body,
+      tag,
+      color,
+      isPreset: false,
+    };
+  });
 }
 
 function parseHtmlToState(htmlStr) {
@@ -375,9 +382,16 @@ function parseHtmlToState(htmlStr) {
 
   const awarenessItems = parseAwarenessItems(doc);
   const trainingItems = parseTrainingItems(doc);
-  const adoption = parseAdoption(doc);
+  const adoptionItems = parseAdoptionItems(doc);
 
-  return { issueTag, issueSubtitle, trainingSectionTitle, awarenessItems, trainingItems, adoption };
+  return {
+    issueTag,
+    issueSubtitle,
+    trainingSectionTitle,
+    awarenessItems,
+    trainingItems,
+    adoptionItems,
+  };
 }
 
 // ---------- main component ----------
@@ -389,7 +403,7 @@ export default function AIBulletinBuilder() {
   const [awarenessItems, setAwarenessItems] = useState(defaultAwarenessItems);
   const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
-  const [adoption, setAdoption] = useState(defaultAdoption);
+  const [adoptionItems, setAdoptionItems] = useState(defaultAdoptionItems);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
@@ -409,12 +423,44 @@ export default function AIBulletinBuilder() {
             if (data.awarenessItems) setAwarenessItems(data.awarenessItems.map((it) => makeAwarenessItem(it)));
             if (typeof data.trainingSectionTitle === "string") setTrainingSectionTitle(data.trainingSectionTitle);
             if (data.trainingItems) setTrainingItems(data.trainingItems.map((it) => makeTrainingItem(it)));
-            if (data.adoption) {
-              setAdoption({
-                ...defaultAdoption(),
-                ...data.adoption,
-                extraItems: (data.adoption.extraItems || []).map((it) => makeAdoptionItem(it)),
-              });
+            if (data.adoptionItems) {
+              setAdoptionItems(
+                data.adoptionItems.map((it) =>
+                  makeAdoptionItem(it)
+                )
+              );
+            } else if (data.adoption) {
+              const old = data.adoption;
+            
+              setAdoptionItems([
+                makeAdoptionItem({
+                  header: "Funding Support for AI Adoption",
+                  body: old.funding?.body || "",
+                  tag: old.funding?.tag || null,
+                  color: "navy",
+                  isPreset: true,
+                }),
+            
+                makeAdoptionItem({
+                  header: "Common AI Adoption Challenges Observed",
+                  body: old.challenges?.body || "",
+                  tag: old.challenges?.tag || null,
+                  color: "navy",
+                  isPreset: true,
+                }),
+            
+                makeAdoptionItem({
+                  header: "Suggested Action This Month",
+                  body: old.suggestedAction?.body || "",
+                  tag: old.suggestedAction?.tag || null,
+                  color: "cyan",
+                  isPreset: true,
+                }),
+            
+                ...(old.extraItems || []).map((it) =>
+                  makeAdoptionItem(it)
+                ),
+              ]);
             }
             if (typeof data.rawHtmlEdit === "string") setRawHtmlEdit(data.rawHtmlEdit);
           }
@@ -440,7 +486,7 @@ export default function AIBulletinBuilder() {
             awarenessItems,
             trainingSectionTitle,
             trainingItems,
-            adoption,
+            adoptionItems,
             rawHtmlEdit,
             builtHtml: html,
           }),
@@ -453,7 +499,16 @@ export default function AIBulletinBuilder() {
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issueTag, issueSubtitle, awarenessItems, trainingSectionTitle, trainingItems, adoption, rawHtmlEdit, loaded]);
+  }, [
+    issueTag,
+    issueSubtitle,
+    awarenessItems,
+    trainingSectionTitle,
+    trainingItems,
+    adoptionItems,
+    rawHtmlEdit,
+    loaded
+  ]);
 
   const move = (list, setList, index, dir) => {
     const arr = [...list];
@@ -467,22 +522,7 @@ export default function AIBulletinBuilder() {
     setList(list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
-  const updateExtraItem = (id, patch) => {
-    setAdoption({
-      ...adoption,
-      extraItems: adoption.extraItems.map((x) => (x.id === id ? { ...x, ...patch } : x)),
-    });
-  };
-  const moveExtraItem = (index, dir) => {
-    const arr = [...adoption.extraItems];
-    const target = index + dir;
-    if (target < 0 || target >= arr.length) return;
-    [arr[index], arr[target]] = [arr[target], arr[index]];
-    setAdoption({ ...adoption, extraItems: arr });
-  };
-  const removeExtraItem = (id) => {
-    setAdoption({ ...adoption, extraItems: adoption.extraItems.filter((x) => x.id !== id) });
-  };
+
 
   const generatedHtml = buildFullHTML({
     issueTag,
@@ -490,7 +530,7 @@ export default function AIBulletinBuilder() {
     awarenessItems,
     trainingSectionTitle,
     trainingItems,
-    adoption,
+    adoptionItems,
   });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
@@ -514,11 +554,11 @@ export default function AIBulletinBuilder() {
     try {
       const parsed = parseHtmlToState(html);
       const foundAnything =
-        parsed.awarenessItems.length ||
-        parsed.trainingItems.length ||
-        parsed.adoption.extraItems.length ||
-        parsed.issueTag ||
-        parsed.issueSubtitle;
+      parsed.awarenessItems.length ||
+      parsed.trainingItems.length ||
+      parsed.adoptionItems.length ||
+      parsed.issueTag ||
+      parsed.issueSubtitle;
       if (!foundAnything) {
         setSyncMessage({
           type: "error",
@@ -531,11 +571,11 @@ export default function AIBulletinBuilder() {
       setTrainingSectionTitle(parsed.trainingSectionTitle || trainingSectionTitle);
       setAwarenessItems(parsed.awarenessItems.map((it) => makeAwarenessItem(it)));
       setTrainingItems(parsed.trainingItems.map((it) => makeTrainingItem(it)));
-      setAdoption({
-        ...defaultAdoption(),
-        ...parsed.adoption,
-        extraItems: parsed.adoption.extraItems.map((it) => makeAdoptionItem(it)),
-      });
+      setAdoptionItems(
+        parsed.adoptionItems.map((it) =>
+          makeAdoptionItem(it)
+        )
+      );
       setRawHtmlEdit(null);
       setSyncMessage({ type: "success", text: "Fields updated from your HTML edits." });
     } catch (e) {
@@ -738,52 +778,40 @@ export default function AIBulletinBuilder() {
 
 {tab === "adoption" && (
   <div className="space-y-4">
-    {ADOPTION_SECTIONS.map(({ key, header, color }) => (
-      <div key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-        <div className="mb-2">
-          <span className="text-xs font-semibold text-indigo-700">
-            {header}
-          </span>
-        </div>
-
-        <Field label="Body">
-          <RichTextEditor
-            value={adoption[key].body}
-            onChange={(html) =>
-              setAdoption({
-                ...adoption,
-                [key]: { ...adoption[key], body: html },
-              })
-            }
-          />
-        </Field>
-
-        <TagBlock
-          value={adoption[key].tag}
-          onChange={(html) =>
-            setAdoption({
-              ...adoption,
-              [key]: { ...adoption[key], tag: html },
-            })
-          }
-          color={color}
-          label="Add optional tag block"
-        />
-      </div>
-    ))}
-
-    {/* Extra custom sections */}
-    {adoption.extraItems.map((item, i) => (
-      <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+    {adoptionItems.map((item, i) => (
+      <div
+        key={item.id}
+        className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+      >
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-indigo-700">
-            {item.header || `Extra Item ${i + 1}`}
+            {item.header.trim() || `Item ${i + 1} (untitled)`}
+
+            {item.isPreset && (
+              <span className="ml-2 text-gray-400 font-normal">
+                (preset)
+              </span>
+            )}
           </span>
+
           <MoveButtons
             index={i}
-            length={adoption.extraItems.length}
-            onMove={moveExtraItem}
-            onRemove={() => removeExtraItem(item.id)}
+            length={adoptionItems.length}
+            onMove={(index, dir) =>
+              move(
+                adoptionItems,
+                setAdoptionItems,
+                index,
+                dir
+              )
+            }
+            onRemove={() =>
+              setAdoptionItems(
+                adoptionItems.filter(
+                  (x) => x.id !== item.id
+                )
+              )
+            }
           />
         </div>
 
@@ -792,7 +820,12 @@ export default function AIBulletinBuilder() {
             className={inputCls}
             value={item.header}
             onChange={(e) =>
-              updateExtraItem(item.id, { header: e.target.value })
+              updateItem(
+                adoptionItems,
+                setAdoptionItems,
+                item.id,
+                { header: e.target.value }
+              )
             }
           />
         </Field>
@@ -800,18 +833,28 @@ export default function AIBulletinBuilder() {
         <Field label="Body">
           <RichTextEditor
             value={item.body}
-            onChange={(html) =>
-              updateExtraItem(item.id, { body: html })
+            onChange={(htmlVal) =>
+              updateItem(
+                adoptionItems,
+                setAdoptionItems,
+                item.id,
+                { body: htmlVal }
+              )
             }
           />
         </Field>
 
         <TagBlock
           value={item.tag}
-          onChange={(html) =>
-            updateExtraItem(item.id, { tag: html })
+          onChange={(htmlVal) =>
+            updateItem(
+              adoptionItems,
+              setAdoptionItems,
+              item.id,
+              { tag: htmlVal }
+            )
           }
-          color="navy"
+          color={item.color}
           label="Add optional tag block"
         />
       </div>
@@ -819,14 +862,15 @@ export default function AIBulletinBuilder() {
 
     <button
       onClick={() =>
-        setAdoption({
-          ...adoption,
-          extraItems: [...adoption.extraItems, makeAdoptionItem()],
-        })
+        setAdoptionItems([
+          ...adoptionItems,
+          makeAdoptionItem(),
+        ])
       }
       className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
     >
-      <Plus size={16} /> Add adoption item
+      <Plus size={16} />
+      Add adoption item
     </button>
   </div>
 )}
