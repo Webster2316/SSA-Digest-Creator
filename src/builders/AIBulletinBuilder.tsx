@@ -655,7 +655,7 @@ export default function AIBulletinBuilder() {
                         value={item.tag}
                         onChange={(htmlVal) => updateItem(awarenessItems, setAwarenessItems, item.id, { tag: htmlVal })}
                         color="navy"
-                        label="Add optional tag block (e.g. Call for Participation)"
+                        label="Add optional tag block"
                       />
                     </div>
                   ))}
