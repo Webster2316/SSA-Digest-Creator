@@ -873,10 +873,6 @@ export default function AIBulletinBuilder() {
                         placeholder="SSA AI Training & Industry Activities"
                       />
                     </Field>
-                    <StatusBadgePicker
-                        item={item}
-                        onChange={(patch) => updateItem(trainingItems, setTrainingItems, item.id, patch)}
-                      />
                   </div>
 
                   {trainingItems.map((item, i) => (
@@ -885,6 +881,10 @@ export default function AIBulletinBuilder() {
                         <span className="text-xs font-semibold text-indigo-700">
                           {item.name.trim() || `Training ${i + 1} (untitled)`}
                         </span>
+                        <StatusBadgePicker
+                        item={item}
+                        onChange={(patch) => updateItem(trainingItems, setTrainingItems, item.id, patch)}
+                      />
                         <MoveButtons
                           index={i}
                           length={trainingItems.length}
