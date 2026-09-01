@@ -108,19 +108,50 @@ const defaultAdoptionItems = () => [
 // RichTextEditor's toolbar produces plain <ul>/<ol><li>, which Outlook desktop
 // renders inconsistently. The template uses a two-column bulletproof table
 // instead, so convert at export time — never touch what's stored in state.
-function convertBulletsForEmail(html) {
+function convertContentForEmail(html) {
   if (!html) return html;
-  return html.replace(/<(ul|ol)>([\s\S]*?)<\/\1>/gi, (match, tag, inner) => {
-    const items = [...inner.matchAll(/<li>([\s\S]*?)<\/li>/gi)].map((m) => m[1].trim());
-    const isOrdered = tag.toLowerCase() === "ol";
-    const rows = items
-      .map((text, i) => {
-        const marker = isOrdered ? `${i + 1}.` : "&bull;";
-        return `<tr><td valign="top" width="20" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${marker}</td><td valign="top" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;padding-bottom:5px;">${text}</td></tr>`;
-      })
-      .join("\n");
-    return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>`;
-  });
+
+  let output = html;
+
+  // Normalise paragraphs for Outlook.
+  output = output.replace(
+    /<p(?:\s[^>]*)?>/gi,
+    `<p style="margin:0 0 10px 0;font-family:${FONT};font-size:14px;line-height:24px;mso-line-height-rule:exactly;">`
+  );
+
+  // Convert lists to bulletproof tables.
+  output = output.replace(
+    /<(ul|ol)>([\s\S]*?)<\/\1>/gi,
+    (match, tag, inner) => {
+      const items = [...inner.matchAll(/<li>([\s\S]*?)<\/li>/gi)].map(
+        (m) => m[1].trim()
+      );
+
+      const isOrdered = tag.toLowerCase() === "ol";
+
+      const rows = items
+        .map((text, i) => {
+          const marker = isOrdered ? `${i + 1}.` : "&bull;";
+
+          return `
+<tr>
+  <td valign="top" width="20"
+      style="font-family:${FONT};font-size:14px;line-height:24px;mso-line-height-rule:exactly;color:#2d3748;">
+    ${marker}
+  </td>
+  <td valign="top"
+      style="font-family:${FONT};font-size:14px;line-height:24px;mso-line-height-rule:exactly;color:#2d3748;padding:0 0 5px 0;">
+    ${text}
+  </td>
+</tr>`;
+        })
+        .join("");
+
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">${rows}</table>`;
+    }
+  );
+
+  return output;
 }
 
 // ---------- reverse of the above, for pulling hand-edited HTML back into the editor ----------
@@ -178,7 +209,7 @@ function buildAwarenessItemHTML(item) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}">
 <tr><td style="padding:0 0 14px 0">
 <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -193,7 +224,7 @@ function buildTrainingItemHTML(item) {
 <tr><td style="padding:0 0 14px 0">
 <p data-f="name" style="margin:0 0 10px 0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.name)}</p>
 ${partnershipHtml}
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -209,7 +240,7 @@ function buildAdoptionItemHTML(item) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}">
 <tr><td style="padding:0 0 20px 0">
 <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertBulletsForEmail(item.body)}</div>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
