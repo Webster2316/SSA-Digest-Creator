@@ -714,7 +714,64 @@ export default function WeeklyDigestBuilder() {
     />
   </div>
 )}
+{showLinkModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+    <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl border border-gray-200">
+      <h3 className="text-sm font-semibold text-gray-800 mb-3">
+        Insert Link
+      </h3>
 
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            Text to display
+          </label>
+
+          <input
+            type="text"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            value={linkText}
+            onChange={(e) => setLinkText(e.target.value)}
+            placeholder="Link text"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            URL
+          </label>
+
+          <input
+            type="url"
+            className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="https://example.com"
+            autoFocus
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-4">
+        <button
+          type="button"
+          onClick={() => setShowLinkModal(false)}
+          className="px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={insertLink}
+          className="px-3 py-1.5 text-sm rounded bg-indigo-700 text-white hover:bg-indigo-800"
+        >
+          Insert Link
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );
