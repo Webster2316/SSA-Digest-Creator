@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Copy, Check, Save, Eye, Code2, BookOpen, GraduationCap, TrendingUp, Archive, Loader2, RotateCcw } from "lucide-react";
+import { Plus, Copy, Check, Save, Eye, Code2, BookOpen, GraduationCap, TrendingUp, Archive, Loader2, RotateCcw, Trash2 } from "lucide-react";
 import Field from "../shared/field";
 import TagBlock, { renderTagBlockHTML } from "../shared/tagBlock";
 import MoveButtons from "../shared/moveButtons";
@@ -7,6 +7,8 @@ import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
+import DocumentUploadModal from "../shared/documentUploadModal";
+
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
@@ -14,28 +16,28 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 function makeAwarenessItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", isPreset: false, subItems: [] },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", isPreset: false, subItems: [], docs: [] },
     overrides
   );
 }
 
 function makeAwarenessSubItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "" },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", docs: [] },
     overrides
   );
 }
 
 function makeTrainingItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), name: "", partnershipLine: "", status: "", statusColor: "", statusCustom: "", body: "", summaryTag: null },
+    { id: uid(), name: "", partnershipLine: "", status: "", statusColor: "", statusCustom: "", body: "", summaryTag: null, docs: [] },
     overrides
   );
 }
 
 function makeAdoptionItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", color: "navy", isPreset: false },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", color: "navy", docs: [], isPreset: false },
     overrides
   );
 }
@@ -300,6 +302,7 @@ function StatusBadgePicker({ item, onChange }) {
 
 function buildAwarenessSubItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-subitem-tag-${item.id}`);
+  const docsHtml = renderDocumentsHTML(item.docs || []);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 10);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitem" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
 <tr><td style="padding:0 0 14px 0">
@@ -308,6 +311,8 @@ function buildAwarenessSubItemHTML(item) {
 ${badgeCell}
 </tr></table>
 <div data-f="subbody" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+
+${docsHtml}
 ${tagHtml}
 </td></tr>
 </table>`;
@@ -315,6 +320,7 @@ ${tagHtml}
 
 function buildAwarenessItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-tag-${item.id}`);
+  const docsHtml = renderDocumentsHTML(item.docs || []);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
   const subItemsHtml = (item.subItems || []).map(buildAwarenessSubItemHTML).join("\n");
   const subItemsBlock = subItemsHtml
@@ -329,6 +335,8 @@ ${subItemsHtml}
 ${badgeCell}
 </tr></table>
 <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+${docsHtml}
+
 ${tagHtml}
 ${subItemsBlock}
 </td></tr>
@@ -336,6 +344,7 @@ ${subItemsBlock}
 }
 
 function buildTrainingItemHTML(item) {
+  const docsHtml = renderDocumentsHTML(item.docs || []);
   const partnershipHtml = (item.partnershipLine || "").trim()
     ? `<p data-f="partnership" style="margin:0 0 14px 0;font-family:${FONT};font-size:14px;line-height:22px;font-style:italic;color:#5f6b7a;">${esc(item.partnershipLine)}</p>`
     : "";
@@ -397,7 +406,7 @@ function buildTrainingItemHTML(item) {
       >
         ${convertContentForEmail(item.body)}
       </div>
-
+      ${docsHtml}
       ${tagHtml}
 
     </td>
@@ -407,6 +416,7 @@ function buildTrainingItemHTML(item) {
 
 function buildAdoptionItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, item.color || "navy", `adoption-tag-${item.id}`);
+  const docsHtml = renderDocumentsHTML(item.docs || []);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
@@ -417,10 +427,34 @@ function buildAdoptionItemHTML(item) {
   ${badgeCell}
   </tr></table>
   <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+
+  ${docsHtml}
   ${tagHtml}
   </td>
   </tr>
   </table>`;
+}
+
+function renderDocumentsHTML(docs = []) {
+  if (!docs.length) return "";
+
+  return `
+<div data-f="docs" style="margin:8px 0 12px 0;">
+  ${docs
+    .map(
+      (doc) => `
+<p style="margin:0 0 4px 0;font-family:${FONT};font-size:13px;line-height:20px;">
+  <a
+    href="${esc(doc.url)}"
+    target="_blank"
+    style="color:#1b75bc;text-decoration:underline;"
+  >
+    ${esc(doc.label)}
+  </a>
+</p>`
+    )
+    .join("")}
+</div>`;
 }
 function buildFullHTML({
   issueTag,
@@ -505,10 +539,23 @@ ${adoptionHtml}
 }
 
 // ---------- parse hand-edited HTML back into state ----------
+function parseDocuments(block) {
+  const docsEl = block.querySelector('[data-f="docs"]');
+
+  if (!docsEl) return [];
+
+  return Array.from(
+    docsEl.querySelectorAll("a")
+  ).map((a) => ({
+    label: a.textContent?.trim() || "",
+    url: a.getAttribute("href") || "",
+  }));
+}
 
 function parseAwarenessSubItems(block) {
   return Array.from(block.querySelectorAll('[data-block="awareness-subitem"]')).map((sub) => {
     const id = sub.getAttribute("data-id") || uid();
+    const docs = parseDocuments(block);
     const header = sub.querySelector('[data-f="subheader"]')?.textContent.trim() || "";
     const bodyEl = sub.querySelector('[data-f="subbody"]');
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
@@ -518,6 +565,11 @@ function parseAwarenessSubItems(block) {
     const status = sub.getAttribute("data-status") || "";
     const statusColor = sub.getAttribute("data-status-color") || "";
     const statusCustom = sub.getAttribute("data-status-custom") || "";
+    const [docModalTarget, setDocModalTarget] = useState<{
+      type: "awareness" | "awareness-subitem" | "training" | "adoption";
+      id: string;
+      parentId?: string;
+    } | null>(null);
     return { id, header, body, tag, status, statusColor, statusCustom };
   });
 }
@@ -525,6 +577,7 @@ function parseAwarenessSubItems(block) {
 function parseAwarenessItems(doc) {
   return Array.from(doc.querySelectorAll('[data-block="awareness-item"]')).map((block) => {
     const id = block.getAttribute("data-id") || uid();
+    const docs = parseDocuments(block);
     const header = block.querySelector('[data-f="header"]')?.textContent.trim() || "";
     const bodyEl = block.querySelector('[data-f="body"]');
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
@@ -542,6 +595,7 @@ function parseAwarenessItems(doc) {
 function parseTrainingItems(doc) {
   return Array.from(doc.querySelectorAll('[data-block="training-item"]')).map((block) => {
     const id = block.getAttribute("data-id") || uid();
+    const docs = parseDocuments(block);
     const name = block.querySelector('[data-f="name"]')?.textContent.trim() || "";
     const partnershipLine = block.querySelector('[data-f="partnership"]')?.textContent.trim() || "";
     const bodyEl = block.querySelector('[data-f="body"]');
@@ -564,7 +618,7 @@ function parseAdoptionItems(doc) {
 
     const header =
       block.querySelector('[data-f="header"]')?.textContent.trim() || "";
-
+      const docs = parseDocuments(block);
     const bodyEl = block.querySelector('[data-f="body"]');
 
     if (bodyEl) {
@@ -608,7 +662,7 @@ function parseHtmlToState(htmlStr) {
 
   const issueTagEl = doc.querySelector('[data-f="issue-tag"]');
   const issueTag = issueTagEl ? issueTagEl.textContent.trim() : "";
-
+  const docs = parseDocuments(block);
   const trainingSectionTitleEl = doc.querySelector('[data-f="training-section-title"]');
   const trainingSectionTitle = trainingSectionTitleEl ? trainingSectionTitleEl.textContent.trim() : "";
 
@@ -624,7 +678,76 @@ function parseHtmlToState(htmlStr) {
     adoptionItems,
   };
 }
+function DocumentsField({
+  docs = [],
+  onChange,
+  onAdd,
+}) {
+  return (
+    <Field label="Documents">
+      <div className="space-y-2">
+        {docs.map((doc, index) => (
+          <div
+            key={index}
+            className="flex gap-2 items-center"
+          >
+            <input
+              className={inputCls}
+              placeholder="Document name"
+              value={doc.label || ""}
+              onChange={(e) =>
+                onChange(
+                  docs.map((d, i) =>
+                    i === index
+                      ? { ...d, label: e.target.value }
+                      : d
+                  )
+                )
+              }
+            />
 
+            <input
+              className={inputCls}
+              placeholder="Document URL"
+              value={doc.url || ""}
+              onChange={(e) =>
+                onChange(
+                  docs.map((d, i) =>
+                    i === index
+                      ? { ...d, url: e.target.value }
+                      : d
+                  )
+                )
+              }
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                onChange(
+                  docs.filter((_, i) => i !== index)
+                )
+              }
+              className="p-1.5 text-red-500 hover:bg-red-50 rounded"
+              title="Remove document"
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={onAdd}
+          className="text-xs text-indigo-700 font-medium flex items-center gap-1"
+        >
+          <Plus size={13} />
+          Add Document
+        </button>
+      </div>
+    </Field>
+  );
+}
 // ---------- main component ----------
 
 export default function AIBulletinBuilder() {
@@ -757,7 +880,70 @@ export default function AIBulletinBuilder() {
   const updateItem = (list, setList, id, patch) => {
     setList(list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
-
+  const handleAddDocs = (newDocs) => {
+    if (!docModalTarget) return;
+  
+    const { type, id, parentId } = docModalTarget;
+  
+    if (type === "awareness") {
+      setAwarenessItems(
+        awarenessItems.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                docs: [...(item.docs || []), ...newDocs],
+              }
+            : item
+        )
+      );
+    }
+  
+    if (type === "awareness-subitem") {
+      setAwarenessItems(
+        awarenessItems.map((item) =>
+          item.id === parentId
+            ? {
+                ...item,
+                subItems: (item.subItems || []).map((sub) =>
+                  sub.id === id
+                    ? {
+                        ...sub,
+                        docs: [...(sub.docs || []), ...newDocs],
+                      }
+                    : sub
+                ),
+              }
+            : item
+        )
+      );
+    }
+  
+    if (type === "training") {
+      setTrainingItems(
+        trainingItems.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                docs: [...(item.docs || []), ...newDocs],
+              }
+            : item
+        )
+      );
+    }
+  
+    if (type === "adoption") {
+      setAdoptionItems(
+        adoptionItems.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                docs: [...(item.docs || []), ...newDocs],
+              }
+            : item
+        )
+      );
+    }
+  };
   // ---- sub-item helpers (awareness only) ----
   const updateSubItem = (parentItem, subId, patch) => {
     const arr = (parentItem.subItems || []).map((s) => (s.id === subId ? { ...s, ...patch } : s));
@@ -945,7 +1131,23 @@ export default function AIBulletinBuilder() {
                           onChange={(htmlVal) => updateItem(awarenessItems, setAwarenessItems, item.id, { body: htmlVal })}
                         />
                       </Field>
-
+                      <DocumentsField
+  docs={item.docs || []}
+  onChange={(docs) =>
+    updateItem(
+      awarenessItems,
+      setAwarenessItems,
+      item.id,
+      { docs }
+    )
+  }
+  onAdd={() =>
+    setDocModalTarget({
+      type: "awareness",
+      id: item.id,
+    })
+  }
+/>
                       <TagBlock
                         value={item.tag}
                         onChange={(htmlVal) => updateItem(awarenessItems, setAwarenessItems, item.id, { tag: htmlVal })}
@@ -992,7 +1194,23 @@ export default function AIBulletinBuilder() {
                                 onChange={(htmlVal) => updateSubItem(item, sub.id, { body: htmlVal })}
                               />
                             </Field>
-
+                            <DocumentsField
+  docs={sub.docs || []}
+  onChange={(docs) =>
+    updateSubItem(
+      item,
+      sub.id,
+      { docs }
+    )
+  }
+  onAdd={() =>
+    setDocModalTarget({
+      type: "awareness-subitem",
+      id: sub.id,
+      parentId: item.id,
+    })
+  }
+/>
                             <TagBlock
                               value={sub.tag}
                               onChange={(htmlVal) => updateSubItem(item, sub.id, { tag: htmlVal })}
@@ -1074,7 +1292,23 @@ export default function AIBulletinBuilder() {
                           onChange={(htmlVal) => updateItem(trainingItems, setTrainingItems, item.id, { body: htmlVal })}
                         />
                       </Field>
-
+                      <DocumentsField
+  docs={item.docs || []}
+  onChange={(docs) =>
+    updateItem(
+      trainingItems,
+      setTrainingItems,
+      item.id,
+      { docs }
+    )
+  }
+  onAdd={() =>
+    setDocModalTarget({
+      type: "training",
+      id: item.id,
+    })
+  }
+/>
                       <TagBlock
                         value={item.summaryTag}
                         onChange={(htmlVal) => updateItem(trainingItems, setTrainingItems, item.id, { summaryTag: htmlVal })}
@@ -1162,6 +1396,23 @@ export default function AIBulletinBuilder() {
                           }
                         />
                       </Field>
+                      <DocumentsField
+  docs={item.docs || []}
+  onChange={(docs) =>
+    updateItem(
+      adoptionItems,
+      setAdoptionItems,
+      item.id,
+      { docs }
+    )
+  }
+  onAdd={() =>
+    setDocModalTarget({
+      type: "adoption",
+      id: item.id,
+    })
+  }
+/>
 
                       <TagBlock
                         value={item.tag}
@@ -1245,6 +1496,11 @@ export default function AIBulletinBuilder() {
                 </div>
               )}
             </div>
+            <DocumentUploadModal
+  isOpen={docModalTarget !== null}
+  onClose={() => setDocModalTarget(null)}
+  onAdd={handleAddDocs}
+/>
           </>
         ) : viewingRecordId === -1 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4">
