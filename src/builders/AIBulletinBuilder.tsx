@@ -14,7 +14,14 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 function makeAwarenessItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", isPreset: false },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", isPreset: false, subItems: [] },
+    overrides
+  );
+}
+
+function makeAwarenessSubItem(overrides = {}) {
+  return Object.assign(
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "" },
     overrides
   );
 }
@@ -291,9 +298,30 @@ function StatusBadgePicker({ item, onChange }) {
 }
 // ---------- HTML builders ----------
 
+function buildAwarenessSubItemHTML(item) {
+  const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-subitem-tag-${item.id}`);
+  const badgeCell = renderStatusBadgeHTML(item, FONT, 10);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitem" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
+<tr><td style="padding:0 0 14px 0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td align="left" valign="top" style="padding:0 0 8px 0"><p data-f="subheader" style="margin:0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.header)}</p></td>
+${badgeCell}
+</tr></table>
+<div data-f="subbody" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+${tagHtml}
+</td></tr>
+</table>`;
+}
+
 function buildAwarenessItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-tag-${item.id}`);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+  const subItemsHtml = (item.subItems || []).map(buildAwarenessSubItemHTML).join("\n");
+  const subItemsBlock = subItemsHtml
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitems"><tr><td style="padding:4px 0 0 20px">
+${subItemsHtml}
+</td></tr></table>`
+    : "";
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
 <tr><td style="padding:0 0 14px 0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -302,6 +330,7 @@ ${badgeCell}
 </tr></table>
 <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${tagHtml}
+${subItemsBlock}
 </td></tr>
 </table>`;
 }
@@ -463,7 +492,7 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
-<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">The bulletin is issued to recognise the member’s participation in the Anchoring AI Training Series and formally acknowledge their nomination as the company’s AI Champion. The AI Champion will serve as a focal point within the company to promote awareness, encourage practical adoption of AI tools, and support the sharing of knowledge and good practices in the workplace.</p>
+<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">The bulletin is issued to recognise the member's participation in the Anchoring AI Training Series and formally acknowledge their nomination as the company's AI Champion. The AI Champion will serve as a focal point within the company to promote awareness, encourage practical adoption of AI tools, and support the sharing of knowledge and good practices in the workplace.</p>
 <p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
   If you wish to unsubscribe, please email <a href="mailto:nurqistina@ssa.org.sg" style="color:#dbe7f4;text-decoration:underline;">nurqistina@ssa.org.sg</a>.</p>
 </td></tr>
@@ -477,6 +506,22 @@ ${adoptionHtml}
 
 // ---------- parse hand-edited HTML back into state ----------
 
+function parseAwarenessSubItems(block) {
+  return Array.from(block.querySelectorAll('[data-block="awareness-subitem"]')).map((sub) => {
+    const id = sub.getAttribute("data-id") || uid();
+    const header = sub.querySelector('[data-f="subheader"]')?.textContent.trim() || "";
+    const bodyEl = sub.querySelector('[data-f="subbody"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = sub.querySelector(`[data-field="awareness-subitem-tag-${id}"]`);
+    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    const status = sub.getAttribute("data-status") || "";
+    const statusColor = sub.getAttribute("data-status-color") || "";
+    const statusCustom = sub.getAttribute("data-status-custom") || "";
+    return { id, header, body, tag, status, statusColor, statusCustom };
+  });
+}
+
 function parseAwarenessItems(doc) {
   return Array.from(doc.querySelectorAll('[data-block="awareness-item"]')).map((block) => {
     const id = block.getAttribute("data-id") || uid();
@@ -488,8 +533,9 @@ function parseAwarenessItems(doc) {
     const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
     const status = block.getAttribute("data-status") || "";
     const statusColor = block.getAttribute("data-status-color") || "";
-    const statusCustom = block.getAttrribute("data-status-custom") || "";
-    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false };
+    const statusCustom = block.getAttribute("data-status-custom") || "";
+    const subItems = parseAwarenessSubItems(block);
+    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false, subItems };
   });
 }
 
@@ -603,7 +649,16 @@ export default function AIBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueTag) setIssueTag(data.issueTag);
-            if (data.awarenessItems) setAwarenessItems(data.awarenessItems.map((it) => makeAwarenessItem(it)));
+            if (data.awarenessItems) {
+              setAwarenessItems(
+                data.awarenessItems.map((it) =>
+                  makeAwarenessItem({
+                    ...it,
+                    subItems: (it.subItems || []).map((s) => makeAwarenessSubItem(s)),
+                  })
+                )
+              );
+            }
             if (typeof data.trainingSectionTitle === "string") setTrainingSectionTitle(data.trainingSectionTitle);
             if (data.trainingItems) setTrainingItems(data.trainingItems.map((it) => makeTrainingItem(it)));
             if (data.adoptionItems) {
@@ -703,7 +758,28 @@ export default function AIBulletinBuilder() {
     setList(list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
   };
 
-
+  // ---- sub-item helpers (awareness only) ----
+  const updateSubItem = (parentItem, subId, patch) => {
+    const arr = (parentItem.subItems || []).map((s) => (s.id === subId ? { ...s, ...patch } : s));
+    updateItem(awarenessItems, setAwarenessItems, parentItem.id, { subItems: arr });
+  };
+  const moveSubItem = (parentItem, index, dir) => {
+    const arr = [...(parentItem.subItems || [])];
+    const target = index + dir;
+    if (target < 0 || target >= arr.length) return;
+    [arr[index], arr[target]] = [arr[target], arr[index]];
+    updateItem(awarenessItems, setAwarenessItems, parentItem.id, { subItems: arr });
+  };
+  const removeSubItem = (parentItem, subId) => {
+    updateItem(awarenessItems, setAwarenessItems, parentItem.id, {
+      subItems: (parentItem.subItems || []).filter((s) => s.id !== subId),
+    });
+  };
+  const addSubItem = (parentItem) => {
+    updateItem(awarenessItems, setAwarenessItems, parentItem.id, {
+      subItems: [...(parentItem.subItems || []), makeAwarenessSubItem()],
+    });
+  };
 
   const generatedHtml = buildFullHTML({
     issueTag,
@@ -747,7 +823,14 @@ export default function AIBulletinBuilder() {
       }
       setIssueTag(parsed.issueTag || issueTag);
       setTrainingSectionTitle(parsed.trainingSectionTitle || trainingSectionTitle);
-      setAwarenessItems(parsed.awarenessItems.map((it) => makeAwarenessItem(it)));
+      setAwarenessItems(
+        parsed.awarenessItems.map((it) =>
+          makeAwarenessItem({
+            ...it,
+            subItems: (it.subItems || []).map((s) => makeAwarenessSubItem(s)),
+          })
+        )
+      );
       setTrainingItems(parsed.trainingItems.map((it) => makeTrainingItem(it)));
       setAdoptionItems(
         parsed.adoptionItems.map((it) =>
@@ -869,6 +952,63 @@ export default function AIBulletinBuilder() {
                         color="navy"
                         label="Add optional tag block"
                       />
+
+                      {/* ---- Sub-items (nested under the main item, dark/navy header like Training) ---- */}
+                      <div className="mt-4 pl-4 border-l-2 border-indigo-200 space-y-3">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          Sub-items
+                        </p>
+
+                        {(item.subItems || []).map((sub, si) => (
+                          <div key={sub.id} className="border border-gray-200 rounded-lg p-3 bg-white">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs font-semibold text-slate-700">
+                                {sub.header.trim() || `Sub-item ${si + 1} (untitled)`}
+                              </span>
+                              <MoveButtons
+                                index={si}
+                                length={item.subItems.length}
+                                onMove={(index, dir) => moveSubItem(item, index, dir)}
+                                onRemove={() => removeSubItem(item, sub.id)}
+                              />
+                            </div>
+
+                            <Field label="Sub-item header">
+                              <input
+                                className={inputCls}
+                                value={sub.header}
+                                onChange={(e) => updateSubItem(item, sub.id, { header: e.target.value })}
+                              />
+                            </Field>
+
+                            <StatusBadgePicker
+                              item={sub}
+                              onChange={(patch) => updateSubItem(item, sub.id, patch)}
+                            />
+
+                            <Field label="Body">
+                              <RichTextEditor
+                                value={sub.body}
+                                onChange={(htmlVal) => updateSubItem(item, sub.id, { body: htmlVal })}
+                              />
+                            </Field>
+
+                            <TagBlock
+                              value={sub.tag}
+                              onChange={(htmlVal) => updateSubItem(item, sub.id, { tag: htmlVal })}
+                              color="navy"
+                              label="Add optional tag block"
+                            />
+                          </div>
+                        ))}
+
+                        <button
+                          onClick={() => addSubItem(item)}
+                          className="flex items-center gap-1.5 text-xs text-slate-600 font-medium hover:text-slate-900"
+                        >
+                          <Plus size={14} /> Add sub-item
+                        </button>
+                      </div>
                     </div>
                   ))}
                   <button
