@@ -54,7 +54,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
 
                 const duplicates = results.filter((r) => r.status === "duplicate");
                 if (duplicates.length > 0) {
-                    alert(`Already uplaoded: ${duplicates.map((d) => d.filename).join(", ")}`);
+                    alert(`Already uploaded: ${duplicates.map((d) => d.filename).join(", ")}`);
                 }
                 const uploaded = results.filter((r) => r.status === "uploaded");
                 if (uploaded.length > 0 && onLinksReady) {
