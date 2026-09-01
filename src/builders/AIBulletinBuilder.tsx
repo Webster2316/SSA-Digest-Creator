@@ -285,8 +285,9 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
-<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;"></p>
-<p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;"></p>
+<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">The bulletin is issued to recognise the member’s participation in the Anchoring AI Training Series and formally acknowledge their nomination as the company’s AI Champion. The AI Champion will serve as a focal point within the company to promote awareness, encourage practical adoption of AI tools, and support the sharing of knowledge and good practices in the workplace.</p>
+<p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
+  If you wish to unsubscribe, please email <a href="mailto:nurqistina@ssa.org.sg" style="color:#dbe7f4;text-decoration:underline;">nurqistina@ssa.org.sg</a>.</p>
 </td></tr>
 
 </table>
