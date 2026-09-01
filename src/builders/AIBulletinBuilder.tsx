@@ -423,7 +423,7 @@ a{text-decoration:none;}
 </td></tr>
 
 <tr><td align="left" valign="top" bgcolor="#1b76bc" class="issue-padding" style="padding:22px 24px;background-color:#1b76bc">
-<p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:28px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
+<p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:23px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
 </td></tr>
 
 <tr><td bgcolor="#262261" align="center" style="padding:10px 16px;background-color:#262261;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
