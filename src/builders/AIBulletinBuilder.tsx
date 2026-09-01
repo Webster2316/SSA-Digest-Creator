@@ -318,7 +318,7 @@ function buildAwarenessItemHTML(item) {
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
   const subItemsHtml = (item.subItems || []).map(buildAwarenessSubItemHTML).join("\n");
   const subItemsBlock = subItemsHtml
-    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitems"><tr><td style="padding:4px 0 0 20px">
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitems"><tr><td style="padding:4px 0 0 0">
 ${subItemsHtml}
 </td></tr></table>`
     : "";
