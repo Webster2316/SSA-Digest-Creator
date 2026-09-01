@@ -38,9 +38,27 @@ export default function RichTextEditor({ value, onChange }) {
   };
 
   const escapeHtml = (str) => {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   };
-
+  const normalizeUrl = (url) => {
+    const trimmed = url.trim();
+  
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("mailto:") ||
+      trimmed.startsWith("tel:")
+    ) {
+      return trimmed;
+    }
+  
+    return `https://${trimmed}`;
+  };
 const openLinkModal = () => {
   const sel = window.getSelection();
 
@@ -55,6 +73,7 @@ const insertLink = () => {
   if (!linkUrl.trim()) {
     return;
   }
+
   const sel = window.getSelection();
 
   ref.current?.focus();
@@ -64,16 +83,17 @@ const insertLink = () => {
     sel.addRange(savedRange.current);
   }
 
-  const text = linkText.trim() || linkUrl.trim()
+  const finalUrl = normalizeUrl(linkUrl);
+  const text = linkText.trim() || finalUrl;
 
   const html = `
-  <a
-  href="${escapeHtml(linkUrl.trim())}"
-  target="_blank"
-  style="color:#1b75bc;text-decoration:underline;font-weight:bold;"
->
-  ${escapeHtml(text)}
-</a>
+    <a
+      href="${escapeHtml(finalUrl)}"
+      target="_blank"
+      style="color:#1b75bc;text-decoration:underline;font-weight:bold;"
+    >
+      ${escapeHtml(text)}
+    </a>
   `;
 
   document.execCommand("insertHTML", false, html);
