@@ -158,7 +158,25 @@ function convertContentForEmail(html) {
 
   return output;
 }
-
+function normalizeLinksForEmail(html) {
+  if (!html) return html;
+  return html.replace(
+    /(<a\s+[^>]*href=")([^"]*)(")/gi,
+    (match, pre, url, post) => {
+      const trimmed = url.trim();
+      if (
+        !trimmed ||
+        /^https?:\/\//i.test(trimmed) ||
+        /^mailto:/i.test(trimmed) ||
+        /^tel:/i.test(trimmed)
+      ) {
+        return match;
+      }
+      const cleaned = trimmed.replace(/^\/+/, "");
+      return `${pre}https://${cleaned}${post}`;
+    }
+  );
+}
 // ---------- reverse of the above, for pulling hand-edited HTML back into the editor ----------
 // Detects the specific two-column bulletproof tables produced by convertBulletsForEmail
 // and turns them back into <ul>/<ol><li> so RichTextEditor's toolbar keeps working on them.
@@ -392,7 +410,7 @@ function buildFullHTML({
   const adoptionHtml = adoptionItems
     .map(buildAdoptionItemHTML)
     .join("\n\n");
-  return `<!doctype html>
+  return normalizeLinksForEmail(`<!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -454,7 +472,7 @@ ${adoptionHtml}
 </td></tr>
 </table>
 </body>
-</html>`;
+</html>`);
 }
 
 // ---------- parse hand-edited HTML back into state ----------
