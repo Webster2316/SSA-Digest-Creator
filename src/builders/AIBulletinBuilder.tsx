@@ -34,7 +34,12 @@ function makeAdoptionItem(overrides = {}) {
 }
 
 // ---------- seed data ----------
-
+const STATUS_PRESETS = {
+  Ongoing: { label: "Ongoing", color: "#f59e0b" },
+  Completed: { label: "Completed", color: "#10b981" },
+  ITP: { label: "Invitation to Participate", color: "#1b75bc" },
+  forNoting: { label: "For Noting", color: "#6b7280" },
+}
 const defaultAwarenessItems = () => [
   makeAwarenessItem({
     header: "Emerging AI Use Cases Across the Maritime Industry",
@@ -201,35 +206,105 @@ function convertEmailTablesToBullets(containerEl) {
 function dividerRow() {
   return `<tr><td style="padding:0 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="32" style="height:32px;border-bottom:1px solid #e5e7eb;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>`;
 }
+function getStatusLabel(item) {
+  if (!item.status) return "";
+  if (item.status === "custom") return item.statusCustom || "";
+  return STATUS_PRESETS[item.status]?.label || item.status;
+}
 
+function renderStatusBadgeHTML(item, font, bottomPad = 14) {
+  const label = getStatusLabel(item);
+  if (!label.trim()) return "";
+  const color = item.statusColor || STATUS_PRESETS[item.status]?.color || "#262261";
+  return `<td align="right" valign="top" style="white-space:nowrap;padding:2px 0 ${bottomPad}px 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background-color:${esc(color)};border-radius:12px;padding:4px 12px;font-family:${font};font-size:11px;line-height:14px;font-weight:bold;color:#ffffff;white-space:nowrap;" data-f="status-badge">${esc(label)}</td></tr></table>
+</td>`;
+}
+
+function StatusBadgePicker({ item, onChange }) {
+  const isCustom = item.status === "custom";
+  const defaultColor = STATUS_PRESETS[item.status]?.color;
+
+  const handleStatusChange = (e) => {
+    const value = e.target.value;
+    const patch = { status: value };
+    if (value && value !== "custom" && !item.statusColor) {
+      patch.statusColor = STATUS_PRESETS[value]?.color || "";
+    }
+    if (!value) {
+      patch.statusColor = "";
+      patch.statusCustom = "";
+    }
+    onChange(patch);
+  };
+
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <select className="text-sm border border-gray-300 rounded px-2 py-1" value={item.status || ""} onChange={handleStatusChange}>
+        <option value="">No status</option>
+        <option value="Ongoing">Ongoing</option>
+        <option value="Completed">Completed</option>
+        <option value="ITP">Invitation to Participate</option>
+        <option value="forNoting">For Noting</option>
+        <option value="custom">Custom</option>
+      </select>
+
+      {isCustom && (
+        <input
+          type="text"
+          className="text-sm border border-gray-300 rounded px-2 py-1 flex-1"
+          placeholder="Custom status label"
+          value={item.statusCustom || ""}
+          onChange={(e) => onChange({ statusCustom: e.target.value })}
+        />
+      )}
+
+      {item.status && (
+        <input
+          type="color"
+          className="h-7 w-9 border border-gray-300 rounded cursor-pointer p-0"
+          value={item.statusColor || defaultColor || "#262261"}
+          onChange={(e) => onChange({ statusColor: e.target.value })}
+          title="Badge color"
+        />
+      )}
+    </div>
+  );
+}
 // ---------- HTML builders ----------
 
 function buildAwarenessItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-tag-${item.id}`);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}">
+  const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
 <tr><td style="padding:0 0 14px 0">
-<p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td align="left" valign="top" style="padding:0 0 14px 0"><p data-f="header" style="margin:0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p></td>
+${badgeCell}
+</tr></table>
 <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${tagHtml}
 </td></tr>
 </table>`;
 }
 
-function buildTrainingItemHTML(item) {
-  const partnershipHtml = (item.partnershipLine || "").trim()
-    ? `<p data-f="partnership" style="margin:0 0 14px 0;font-family:${FONT};font-size:14px;line-height:22px;font-style:italic;color:#5f6b7a;">${esc(item.partnershipLine)}</p>`
-    : "";
-  const tagHtml = renderTagBlockHTML(item.summaryTag, "blue", `training-tag-${item.id}`);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="training-item" data-id="${esc(item.id)}">
-<tr><td style="padding:0 0 14px 0">
-<p data-f="name" style="margin:0 0 10px 0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.name)}</p>
-${partnershipHtml}
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
-${tagHtml}
-</td></tr>
-</table>`;
-}
+function buildAdoptionItemHTML(item) {
+  const tagHtml = renderTagBlockHTML(item.tag, item.color || "navy", `adoption-tag-${item.id}`);
+  const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
 
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
+  <tr>
+  <td style="padding:0 0 6px 0">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+  <td align="left" valign="top" style="padding:0 0 14px 0"><p data-f="header" style="margin:0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p></td>
+  ${badgeCell}
+  </tr></table>
+  <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+  ${tagHtml}
+  </td>
+  </tr>
+  </table>`;
+}
 function buildAdoptionItemHTML(item) {
   const tagHtml = renderTagBlockHTML(
     item.tag,
@@ -341,7 +416,10 @@ function parseAwarenessItems(doc) {
     const body = bodyEl ? bodyEl.innerHTML.trim() : "";
     const tagField = block.querySelector(`[data-field="awareness-tag-${id}"]`);
     const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    return { id, header, body, tag, isPreset: false };
+    const status = block.getAttribute("data-status") || "";
+    const statusColor = block.getAttribute("data-status-color") || "";
+    const statusCustom = block.getAttrribute("data-status-custom") || "";
+    return {id, header, body, tag, status, statusColor, statusCustom, isPreset: false };
   });
 }
 
@@ -388,14 +466,20 @@ function parseAdoptionItems(doc) {
 
     const color =
       block.getAttribute("data-color") || "navy";
-
-    return {
-      id,
-      header,
-      body,
-      tag,
-      color,
-      isPreset: false,
+      const status = block.getAttribute("data-status") || "";
+      const statusColor = block.getAttribute("data-status-color") || "";
+      const statusCustom = block.getAttribute("data-status-custom") || "";
+  
+      return {
+        id,
+        header,
+        body,
+        tag,
+        color,
+        status,
+        statusColor,
+        statusCustom,
+        isPreset: false,
     };
   });
 }
@@ -696,7 +780,10 @@ export default function AIBulletinBuilder() {
                           onChange={(e) => updateItem(awarenessItems, setAwarenessItems, item.id, { header: e.target.value })}
                         />
                       </Field>
-
+                      <StatusBadgePicker
+  item={item}
+  onChange={(patch) => updateItem(awarenessItems, setAwarenessItems, item.id, patch)}
+/>
                       <Field label="Body">
                         <RichTextEditor
                           value={item.body}
@@ -842,7 +929,10 @@ export default function AIBulletinBuilder() {
             }
           />
         </Field>
-
+        <StatusBadgePicker
+  item={item}
+  onChange={(patch) => updateItem(adoptionItems, setAdoptionItems, item.id, patch)}
+/>
         <Field label="Body">
           <RichTextEditor
             value={item.body}
