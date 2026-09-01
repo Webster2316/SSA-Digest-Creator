@@ -298,12 +298,47 @@ function StatusBadgePicker({ item, onChange }) {
     </div>
   );
 }
+function renderDocumentsHTML(docs = [], fieldKey = "") {
+  if (!docs.length) return "";
+
+  const links = docs
+    .filter((doc) => (doc?.label || "").trim() || (doc?.url || "").trim())
+    .map(
+      (doc) => `
+<p style="margin:0 0 4px 0;font-family:${FONT};font-size:13px;line-height:20px;">
+  <a
+    href="${esc(doc.url || "")}"
+    target="_blank"
+    rel="noopener noreferrer"
+    style="color:#1b75bc;text-decoration:underline;"
+  >${esc(doc.label || doc.url || "Document")}</a>
+</p>`
+    )
+    .join("");
+
+  if (!links) return "";
+
+  return `
+<div data-f="docs" data-field="${esc(fieldKey)}" style="margin:10px 0 12px 0;">
+  <p style="margin:0 0 4px 0;font-family:${FONT};font-size:13px;line-height:20px;font-weight:bold;color:#2d3748;">Documents:</p>
+  ${links}
+</div>`;
+}
+
 // ---------- HTML builders ----------
 
 function buildAwarenessSubItemHTML(item) {
-  const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-subitem-tag-${item.id}`);
-  const docsHtml = renderDocumentsHTML(item.docs || []);
+  const tagHtml = renderTagBlockHTML(
+    item.tag,
+    "navy",
+    `awareness-subitem-tag-${item.id}`
+  );
   const badgeCell = renderStatusBadgeHTML(item, FONT, 10);
+  const docsHtml = renderDocumentsHTML(
+    item.docs || [],
+    `awareness-subitem-docs-${item.id}`
+  );
+
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitem" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
 <tr><td style="padding:0 0 14px 0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -311,7 +346,6 @@ function buildAwarenessSubItemHTML(item) {
 ${badgeCell}
 </tr></table>
 <div data-f="subbody" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
-
 ${docsHtml}
 ${tagHtml}
 </td></tr>
@@ -320,14 +354,18 @@ ${tagHtml}
 
 function buildAwarenessItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, "navy", `awareness-tag-${item.id}`);
-  const docsHtml = renderDocumentsHTML(item.docs || []);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+  const docsHtml = renderDocumentsHTML(
+    item.docs || [],
+    `awareness-docs-${item.id}`
+  );
   const subItemsHtml = (item.subItems || []).map(buildAwarenessSubItemHTML).join("\n");
   const subItemsBlock = subItemsHtml
     ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-subitems"><tr><td style="padding:4px 0 0 0">
 ${subItemsHtml}
 </td></tr></table>`
     : "";
+
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="awareness-item" data-id="${esc(item.id)}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
 <tr><td style="padding:0 0 14px 0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -336,7 +374,6 @@ ${badgeCell}
 </tr></table>
 <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
 ${docsHtml}
-
 ${tagHtml}
 ${subItemsBlock}
 </td></tr>
@@ -344,7 +381,6 @@ ${subItemsBlock}
 }
 
 function buildTrainingItemHTML(item) {
-  const docsHtml = renderDocumentsHTML(item.docs || []);
   const partnershipHtml = (item.partnershipLine || "").trim()
     ? `<p data-f="partnership" style="margin:0 0 14px 0;font-family:${FONT};font-size:14px;line-height:22px;font-style:italic;color:#5f6b7a;">${esc(item.partnershipLine)}</p>`
     : "";
@@ -356,6 +392,10 @@ function buildTrainingItemHTML(item) {
   );
 
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+  const docsHtml = renderDocumentsHTML(
+    item.docs || [],
+    `training-docs-${item.id}`
+  );
 
   return `
 <table
@@ -406,7 +446,9 @@ function buildTrainingItemHTML(item) {
       >
         ${convertContentForEmail(item.body)}
       </div>
+
       ${docsHtml}
+
       ${tagHtml}
 
     </td>
@@ -415,47 +457,32 @@ function buildTrainingItemHTML(item) {
 }
 
 function buildAdoptionItemHTML(item) {
-  const tagHtml = renderTagBlockHTML(item.tag, item.color || "navy", `adoption-tag-${item.id}`);
-  const docsHtml = renderDocumentsHTML(item.docs || []);
+  const tagHtml = renderTagBlockHTML(
+    item.tag,
+    item.color || "navy",
+    `adoption-tag-${item.id}`
+  );
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+  const docsHtml = renderDocumentsHTML(
+    item.docs || [],
+    `adoption-docs-${item.id}`
+  );
 
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}" data-status="${esc(item.status || "")}" data-status-color="${esc(item.statusColor || "")}" data-status-custom="${esc(item.statusCustom || "")}">
-  <tr>
-  <td style="padding:0 0 6px 0">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-  <td align="left" valign="top" style="padding:0 0 14px 0"><p data-f="header" style="margin:0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p></td>
-  ${badgeCell}
-  </tr></table>
-  <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
-
-  ${docsHtml}
-  ${tagHtml}
-  </td>
-  </tr>
-  </table>`;
+<tr>
+<td style="padding:0 0 6px 0">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+<td align="left" valign="top" style="padding:0 0 14px 0"><p data-f="header" style="margin:0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p></td>
+${badgeCell}
+</tr></table>
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+${docsHtml}
+${tagHtml}
+</td>
+</tr>
+</table>`;
 }
 
-function renderDocumentsHTML(docs = []) {
-  if (!docs.length) return "";
-
-  return `
-<div data-f="docs" style="margin:8px 0 12px 0;">
-  ${docs
-    .map(
-      (doc) => `
-<p style="margin:0 0 4px 0;font-family:${FONT};font-size:13px;line-height:20px;">
-  <a
-    href="${esc(doc.url)}"
-    target="_blank"
-    style="color:#1b75bc;text-decoration:underline;"
-  >
-    ${esc(doc.label)}
-  </a>
-</p>`
-    )
-    .join("")}
-</div>`;
-}
 function buildFullHTML({
   issueTag,
   awarenessItems,
@@ -539,74 +566,118 @@ ${adoptionHtml}
 }
 
 // ---------- parse hand-edited HTML back into state ----------
-function parseDocuments(block) {
-  const docsEl = block.querySelector('[data-f="docs"]');
 
+function parseDocuments(block, fieldKey) {
+  const docsEl = block.querySelector(`[data-field="${fieldKey}"]`);
   if (!docsEl) return [];
 
-  return Array.from(
-    docsEl.querySelectorAll("a")
-  ).map((a) => ({
+  return Array.from(docsEl.querySelectorAll("a")).map((a) => ({
     label: a.textContent?.trim() || "",
     url: a.getAttribute("href") || "",
   }));
 }
 
 function parseAwarenessSubItems(block) {
-  return Array.from(block.querySelectorAll('[data-block="awareness-subitem"]')).map((sub) => {
+  return Array.from(
+    block.querySelectorAll('[data-block="awareness-subitem"]')
+  ).map((sub) => {
     const id = sub.getAttribute("data-id") || uid();
-    const docs = parseDocuments(block);
-    const header = sub.querySelector('[data-f="subheader"]')?.textContent.trim() || "";
+    const header =
+      sub.querySelector('[data-f="subheader"]')?.textContent.trim() || "";
     const bodyEl = sub.querySelector('[data-f="subbody"]');
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
     const body = bodyEl ? bodyEl.innerHTML.trim() : "";
-    const tagField = sub.querySelector(`[data-field="awareness-subitem-tag-${id}"]`);
-    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    const tagField = sub.querySelector(
+      `[data-field="awareness-subitem-tag-${id}"]`
+    );
+    const tag = tagField
+      ? tagField.querySelector("td")?.innerHTML.trim() || null
+      : null;
+    const docs = parseDocuments(sub, `awareness-subitem-docs-${id}`);
     const status = sub.getAttribute("data-status") || "";
     const statusColor = sub.getAttribute("data-status-color") || "";
     const statusCustom = sub.getAttribute("data-status-custom") || "";
-    const [docModalTarget, setDocModalTarget] = useState<{
-      type: "awareness" | "awareness-subitem" | "training" | "adoption";
-      id: string;
-      parentId?: string;
-    } | null>(null);
-    return { id, header, body, tag, status, statusColor, statusCustom };
+
+    return {
+      id,
+      header,
+      body,
+      tag,
+      docs,
+      status,
+      statusColor,
+      statusCustom,
+    };
   });
 }
 
 function parseAwarenessItems(doc) {
-  return Array.from(doc.querySelectorAll('[data-block="awareness-item"]')).map((block) => {
+  return Array.from(
+    doc.querySelectorAll('[data-block="awareness-item"]')
+  ).map((block) => {
     const id = block.getAttribute("data-id") || uid();
-    const docs = parseDocuments(block);
-    const header = block.querySelector('[data-f="header"]')?.textContent.trim() || "";
-    const bodyEl = block.querySelector('[data-f="body"]');
+    const header =
+      block.querySelector('[data-f="header"]')?.textContent.trim() || "";
+    const bodyEl = block.querySelector(':scope > tr > td > [data-f="body"]');
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
     const body = bodyEl ? bodyEl.innerHTML.trim() : "";
     const tagField = block.querySelector(`[data-field="awareness-tag-${id}"]`);
-    const tag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
+    const tag = tagField
+      ? tagField.querySelector("td")?.innerHTML.trim() || null
+      : null;
+    const docs = parseDocuments(block, `awareness-docs-${id}`);
     const status = block.getAttribute("data-status") || "";
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttribute("data-status-custom") || "";
     const subItems = parseAwarenessSubItems(block);
-    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false, subItems };
+
+    return {
+      id,
+      header,
+      body,
+      tag,
+      docs,
+      status,
+      statusColor,
+      statusCustom,
+      isPreset: false,
+      subItems,
+    };
   });
 }
 
 function parseTrainingItems(doc) {
-  return Array.from(doc.querySelectorAll('[data-block="training-item"]')).map((block) => {
+  return Array.from(
+    doc.querySelectorAll('[data-block="training-item"]')
+  ).map((block) => {
     const id = block.getAttribute("data-id") || uid();
-    const docs = parseDocuments(block);
-    const name = block.querySelector('[data-f="name"]')?.textContent.trim() || "";
-    const partnershipLine = block.querySelector('[data-f="partnership"]')?.textContent.trim() || "";
-    const bodyEl = block.querySelector('[data-f="body"]');
+    const name =
+      block.querySelector('[data-f="name"]')?.textContent.trim() || "";
+    const partnershipLine =
+      block.querySelector('[data-f="partnership"]')?.textContent.trim() || "";
+    const bodyEl = block.querySelector(':scope > tr > td > [data-f="body"]');
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
     const body = bodyEl ? bodyEl.innerHTML.trim() : "";
     const tagField = block.querySelector(`[data-field="training-tag-${id}"]`);
+    const docs = parseDocuments(block, `training-docs-${id}`);
     const status = block.getAttribute("data-status") || "";
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttribute("data-status-custom") || "";
-    const summaryTag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    return { id, name, partnershipLine, status, statusColor, statusCustom, body, summaryTag };
+    const summaryTag = tagField
+      ? tagField.querySelector("td")?.innerHTML.trim() || null
+      : null;
+
+    return {
+      id,
+      name,
+      partnershipLine,
+      status,
+      statusColor,
+      statusCustom,
+      body,
+      summaryTag,
+      docs,
+    };
   });
 }
 
@@ -615,30 +686,17 @@ function parseAdoptionItems(doc) {
     doc.querySelectorAll('[data-block="adoption-item"]')
   ).map((block) => {
     const id = block.getAttribute("data-id") || uid();
-
     const header =
       block.querySelector('[data-f="header"]')?.textContent.trim() || "";
-      const docs = parseDocuments(block);
-    const bodyEl = block.querySelector('[data-f="body"]');
-
-    if (bodyEl) {
-      convertEmailTablesToBullets(bodyEl);
-    }
-
-    const body = bodyEl
-      ? bodyEl.innerHTML.trim()
-      : "";
-
-    const tagField = block.querySelector(
-      `[data-field="adoption-tag-${id}"]`
-    );
-
+    const bodyEl = block.querySelector(':scope > tr > td > [data-f="body"]');
+    if (bodyEl) convertEmailTablesToBullets(bodyEl);
+    const body = bodyEl ? bodyEl.innerHTML.trim() : "";
+    const tagField = block.querySelector(`[data-field="adoption-tag-${id}"]`);
     const tag = tagField
       ? tagField.querySelector("td")?.innerHTML.trim() || null
       : null;
-
-    const color =
-      block.getAttribute("data-color") || "navy";
+    const docs = parseDocuments(block, `adoption-docs-${id}`);
+    const color = block.getAttribute("data-color") || "navy";
     const status = block.getAttribute("data-status") || "";
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttribute("data-status-custom") || "";
@@ -648,6 +706,7 @@ function parseAdoptionItems(doc) {
       header,
       body,
       tag,
+      docs,
       color,
       status,
       statusColor,
@@ -662,7 +721,7 @@ function parseHtmlToState(htmlStr) {
 
   const issueTagEl = doc.querySelector('[data-f="issue-tag"]');
   const issueTag = issueTagEl ? issueTagEl.textContent.trim() : "";
-  const docs = parseDocuments(block);
+
   const trainingSectionTitleEl = doc.querySelector('[data-f="training-section-title"]');
   const trainingSectionTitle = trainingSectionTitleEl ? trainingSectionTitleEl.textContent.trim() : "";
 
@@ -763,6 +822,11 @@ export default function AIBulletinBuilder() {
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
   const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState(null);
+  const [docModalTarget, setDocModalTarget] = useState<{
+    type: "awareness" | "awareness-subitem" | "training" | "adoption";
+    id: string;
+    parentId?: string;
+  } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -777,17 +841,25 @@ export default function AIBulletinBuilder() {
                 data.awarenessItems.map((it) =>
                   makeAwarenessItem({
                     ...it,
-                    subItems: (it.subItems || []).map((s) => makeAwarenessSubItem(s)),
+                    docs: it.docs || [],
+                    subItems: (it.subItems || []).map((s) =>
+                      makeAwarenessSubItem({ ...s, docs: s.docs || [] })
+                    ),
                   })
                 )
               );
             }
             if (typeof data.trainingSectionTitle === "string") setTrainingSectionTitle(data.trainingSectionTitle);
-            if (data.trainingItems) setTrainingItems(data.trainingItems.map((it) => makeTrainingItem(it)));
+            if (data.trainingItems)
+              setTrainingItems(
+                data.trainingItems.map((it) =>
+                  makeTrainingItem({ ...it, docs: it.docs || [] })
+                )
+              );
             if (data.adoptionItems) {
               setAdoptionItems(
                 data.adoptionItems.map((it) =>
-                  makeAdoptionItem(it)
+                  makeAdoptionItem({ ...it, docs: it.docs || [] })
                 )
               );
             } else if (data.adoption) {
@@ -1156,7 +1228,7 @@ export default function AIBulletinBuilder() {
                       />
 
                       {/* ---- Sub-items (nested under the main item, dark/navy header like Training) ---- */}
-                      <div className="mt-4 pl-4 border-l-2 border-indigo-200 space-y-3">
+                      <div className="mt-4 space-y-3">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                           Sub-items
                         </p>
@@ -1497,10 +1569,10 @@ export default function AIBulletinBuilder() {
               )}
             </div>
             <DocumentUploadModal
-  isOpen={docModalTarget !== null}
-  onClose={() => setDocModalTarget(null)}
-  onAdd={handleAddDocs}
-/>
+              isOpen={docModalTarget !== null}
+              onClose={() => setDocModalTarget(null)}
+              onAdd={handleAddDocs}
+            />
           </>
         ) : viewingRecordId === -1 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4">
