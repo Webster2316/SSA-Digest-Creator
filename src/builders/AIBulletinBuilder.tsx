@@ -14,7 +14,7 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 function makeAwarenessItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, isPreset: false },
+    { id: uid(), header: "", body: "", tag: null,  status: "", statusColor: "", statusCustom:"", isPreset: false },
     overrides
   );
 }
@@ -28,7 +28,7 @@ function makeTrainingItem(overrides = {}) {
 
 function makeAdoptionItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, color: "navy", isPreset: false },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom:"", color: "navy", isPreset: false },
     overrides
   );
 }
@@ -299,7 +299,7 @@ a{text-decoration:none;}
 <p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:28px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
 </td></tr>
 
-<tr><td bgcolor="#1f498c" align="center" style="padding:10px 16px;background-color:#262261;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
+<tr><td bgcolor="#1f498c" align="center" style="padding:10px 16px;background-color:#1f498c;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
 <tr><td align="left" valign="top" bgcolor="#ffffff" class="content-padding" style="padding:22px 24px 0 24px;background-color:#ffffff" data-section="awareness">
 ${awarenessHtml}
 </td></tr>
