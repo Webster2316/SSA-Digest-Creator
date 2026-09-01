@@ -305,23 +305,7 @@ function buildAdoptionItemHTML(item) {
   </tr>
   </table>`;
 }
-function buildAdoptionItemHTML(item) {
-  const tagHtml = renderTagBlockHTML(
-    item.tag,
-    item.color || "navy",
-    `adoption-tag-${item.id}`
-  );
 
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="adoption-item" data-id="${esc(item.id)}" data-color="${esc(item.color || "navy")}">
-  <tr>
-  <td style="padding:0 0 6px 0">
-  <p data-f="header" style="margin:0 0 14px 0;font-family:${FONT};font-size:22px;line-height:28px;font-weight:bold;color:#1b75bc;">${esc(item.header)}</p>
-  <div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
-  ${tagHtml}
-  </td>
-  </tr>
-  </table>`;
-}
 
 function buildFullHTML({
   issueTag,
