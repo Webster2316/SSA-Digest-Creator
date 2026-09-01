@@ -370,7 +370,6 @@ function buildTrainingItemHTML(item) {
   data-status-color="${esc(item.statusColor || "")}"
   data-status-custom="${esc(item.statusCustom || "")}"
 >
-${docsHtml}
   <tr>
     <td style="padding:0 0 14px 0">
 
