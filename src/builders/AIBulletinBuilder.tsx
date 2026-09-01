@@ -288,6 +288,20 @@ ${tagHtml}
 </table>`;
 }
 
+function buildTrainingItemHTML(item) {
+  const partnershipHtml = (item.partnershipLine || "").trim()
+    ? `<p data-f="partnership" style="margin:0 0 14px 0;font-family:${FONT};font-size:14px;line-height:22px;font-style:italic;color:#5f6b7a;">${esc(item.partnershipLine)}</p>`
+    : "";
+  const tagHtml = renderTagBlockHTML(item.summaryTag, "blue", `training-tag-${item.id}`);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="training-item" data-id="${esc(item.id)}">
+<tr><td style="padding:0 0 14px 0">
+<p data-f="name" style="margin:0 0 10px 0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.name)}</p>
+${partnershipHtml}
+<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
+${tagHtml}
+</td></tr>
+</table>`;
+}
 function buildAdoptionItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, item.color || "navy", `adoption-tag-${item.id}`);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
@@ -305,8 +319,6 @@ function buildAdoptionItemHTML(item) {
   </tr>
   </table>`;
 }
-
-
 function buildFullHTML({
   issueTag,
   awarenessItems,
@@ -913,7 +925,7 @@ export default function AIBulletinBuilder() {
             }
           />
         </Field>
-        <StatusBadgePicker
+<StatusBadgePicker
   item={item}
   onChange={(patch) => updateItem(adoptionItems, setAdoptionItems, item.id, patch)}
 />
