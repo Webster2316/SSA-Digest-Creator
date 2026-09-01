@@ -217,7 +217,6 @@ ${tagHtml}
 
 function buildFullHTML({
   issueTag,
-  issueSubtitle,
   awarenessItems,
   trainingSectionTitle,
   trainingItems,
@@ -265,7 +264,6 @@ a{text-decoration:none;}
 
 <tr><td align="left" valign="top" bgcolor="#262261" class="issue-padding" style="padding:22px 24px;background-color:#262261">
 <p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:28px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
-<p data-f="issue-subtitle" style="margin:8px 0 0 0;font-family:${FONT};font-size:14px;line-height:20px;color:#ffffff;">${esc(issueSubtitle)}</p>
 </td></tr>
 
 <tr><td bgcolor="#262261" align="center" style="padding:10px 16px;background-color:#262261;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
@@ -374,9 +372,6 @@ function parseHtmlToState(htmlStr) {
   const issueTagEl = doc.querySelector('[data-f="issue-tag"]');
   const issueTag = issueTagEl ? issueTagEl.textContent.trim() : "";
 
-  const issueSubtitleEl = doc.querySelector('[data-f="issue-subtitle"]');
-  const issueSubtitle = issueSubtitleEl ? issueSubtitleEl.textContent.trim() : "";
-
   const trainingSectionTitleEl = doc.querySelector('[data-f="training-section-title"]');
   const trainingSectionTitle = trainingSectionTitleEl ? trainingSectionTitleEl.textContent.trim() : "";
 
@@ -386,7 +381,6 @@ function parseHtmlToState(htmlStr) {
 
   return {
     issueTag,
-    issueSubtitle,
     trainingSectionTitle,
     awarenessItems,
     trainingItems,
@@ -399,7 +393,6 @@ function parseHtmlToState(htmlStr) {
 export default function AIBulletinBuilder() {
   const [tab, setTab] = useState("awareness");
   const [issueTag, setIssueTag] = useState("Issue 04 | Sep 2026");
-  const [issueSubtitle, setIssueSubtitle] = useState("Accelerating Maritime AI Through Use Cases, Governance and Collaboration");
   const [awarenessItems, setAwarenessItems] = useState(defaultAwarenessItems);
   const [trainingSectionTitle, setTrainingSectionTitle] = useState("SSA AI Training & Industry Activities");
   const [trainingItems, setTrainingItems] = useState(defaultTrainingItems);
@@ -419,7 +412,6 @@ export default function AIBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueTag) setIssueTag(data.issueTag);
-            if (typeof data.issueSubtitle === "string") setIssueSubtitle(data.issueSubtitle);
             if (data.awarenessItems) setAwarenessItems(data.awarenessItems.map((it) => makeAwarenessItem(it)));
             if (typeof data.trainingSectionTitle === "string") setTrainingSectionTitle(data.trainingSectionTitle);
             if (data.trainingItems) setTrainingItems(data.trainingItems.map((it) => makeTrainingItem(it)));
@@ -482,7 +474,6 @@ export default function AIBulletinBuilder() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             issueTag,
-            issueSubtitle,
             awarenessItems,
             trainingSectionTitle,
             trainingItems,
@@ -501,7 +492,6 @@ export default function AIBulletinBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     issueTag,
-    issueSubtitle,
     awarenessItems,
     trainingSectionTitle,
     trainingItems,
@@ -526,7 +516,6 @@ export default function AIBulletinBuilder() {
 
   const generatedHtml = buildFullHTML({
     issueTag,
-    issueSubtitle,
     awarenessItems,
     trainingSectionTitle,
     trainingItems,
@@ -557,8 +546,7 @@ export default function AIBulletinBuilder() {
       parsed.awarenessItems.length ||
       parsed.trainingItems.length ||
       parsed.adoptionItems.length ||
-      parsed.issueTag ||
-      parsed.issueSubtitle;
+      parsed.issueTag;
       if (!foundAnything) {
         setSyncMessage({
           type: "error",
@@ -567,7 +555,6 @@ export default function AIBulletinBuilder() {
         return;
       }
       setIssueTag(parsed.issueTag || issueTag);
-      setIssueSubtitle(parsed.issueSubtitle || issueSubtitle);
       setTrainingSectionTitle(parsed.trainingSectionTitle || trainingSectionTitle);
       setAwarenessItems(parsed.awarenessItems.map((it) => makeAwarenessItem(it)));
       setTrainingItems(parsed.trainingItems.map((it) => makeTrainingItem(it)));
@@ -629,14 +616,6 @@ export default function AIBulletinBuilder() {
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
           <Field label="Issue tag">
             <input className={inputCls} value={issueTag} onChange={(e) => setIssueTag(e.target.value)} placeholder="Issue 04 | Sep 2026" />
-          </Field>
-          <Field label="Issue subtitle">
-            <input
-              className={inputCls}
-              value={issueSubtitle}
-              onChange={(e) => setIssueSubtitle(e.target.value)}
-              placeholder="Accelerating Maritime AI Through Use Cases, Governance and Collaboration"
-            />
           </Field>
         </div>
 
