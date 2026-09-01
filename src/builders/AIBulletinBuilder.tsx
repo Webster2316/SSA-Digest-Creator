@@ -526,7 +526,59 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
-<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">The bulletin is issued to recognise the member's participation in the Anchoring AI Training Series and formally acknowledge their nomination as the company's AI Champion. The AI Champion will serve as a focal point within the company to promote awareness, encourage practical adoption of AI tools, and support the sharing of knowledge and good practices in the workplace.</p>
+<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">also any updates on the legal minutes extraction
+ 
+I'm going through it right now. I'll try to send it before lunch if there's any
+ 
+okay thanks
+ 
+The only completed item seems to be the marine insurance course run from July
+Nurqistina Ediana Binte Mohamad Eder
+can u extract for me what was shared under the legal insurance meeting for the completed items
+ 
+okay thanks for coming
+ 
+confirming*
+ 
+i just send u the comment for chatper 1 please refer to his deck accordingly and start
+ 
+i will reach out to the rest and cc u
+ 
+Nurqistina Ediana Binte Mohamad Eder
+i just send u the comment for chatper 1 please refer to his deck accordingly and start
+this is added to the playbook right?
+ 
+correct
+ 
+what does he mean by establish 4 focus groups in Oct to develop use case within 4Q 2026??
+ 
+we are focusing on 4 segments 
+
+Bunkering
+
+Chartering
+
+Ship managment
+
+Port agency
+ 
+okay. this is under awareness right?
+ 
+Yes
+ 
+can you update the ai bulletin content for September based on this 
+SSA AI Programme Bulletin - September 2026.docx
+ 
+https://ssaorgsg.sharepoint.com/sites/SSAKnowledgeHub
+ 
+ 
+Consolidate AI Grants_1065.pdf
+ 
+Consolidate AI Grants.pdf
+Consolidate AI Grants.pdf
+ 
+The bulletin is issued to recognise the member's participation in the AI Training Series and formally acknowledge them as the company's AI Champion. The AI Champion will serve as a focal point within the company to promote awareness, encourage practical adoption of AI tools, and support the sharing of knowledge and good practices in the workplace.
+ </p>
 <p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
   If you wish to unsubscribe, please email <a href="mailto:nurqistina@ssa.org.sg" style="color:#dbe7f4;text-decoration:underline;">nurqistina@ssa.org.sg</a>.</p>
 </td></tr>
