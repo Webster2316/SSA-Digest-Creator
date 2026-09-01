@@ -14,21 +14,21 @@ const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 function makeAwarenessItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null,  status: "", statusColor: "", statusCustom:"", isPreset: false },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", isPreset: false },
     overrides
   );
 }
 
 function makeTrainingItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), name: "", partnershipLine: "", body: "", summaryTag: null },
+    { id: uid(), name: "", partnershipLine: "", status: "", statusColor: "", statusCustom: "", body: "", summaryTag: null },
     overrides
   );
 }
 
 function makeAdoptionItem(overrides = {}) {
   return Object.assign(
-    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom:"", color: "navy", isPreset: false },
+    { id: uid(), header: "", body: "", tag: null, status: "", statusColor: "", statusCustom: "", color: "navy", isPreset: false },
     overrides
   );
 }
@@ -292,16 +292,72 @@ function buildTrainingItemHTML(item) {
   const partnershipHtml = (item.partnershipLine || "").trim()
     ? `<p data-f="partnership" style="margin:0 0 14px 0;font-family:${FONT};font-size:14px;line-height:22px;font-style:italic;color:#5f6b7a;">${esc(item.partnershipLine)}</p>`
     : "";
-  const tagHtml = renderTagBlockHTML(item.summaryTag, "blue", `training-tag-${item.id}`);
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" data-block="training-item" data-id="${esc(item.id)}">
-<tr><td style="padding:0 0 14px 0">
-<p data-f="name" style="margin:0 0 10px 0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;">${esc(item.name)}</p>
-${partnershipHtml}
-<div data-f="body" style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;">${convertContentForEmail(item.body)}</div>
-${tagHtml}
-</td></tr>
+
+  const tagHtml = renderTagBlockHTML(
+    item.summaryTag,
+    "blue",
+    `training-tag-${item.id}`
+  );
+
+  const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
+
+  return `
+<table
+  role="presentation"
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  data-block="training-item"
+  data-id="${esc(item.id)}"
+  data-status="${esc(item.status || "")}"
+  data-status-color="${esc(item.statusColor || "")}"
+  data-status-custom="${esc(item.statusCustom || "")}"
+>
+  <tr>
+    <td style="padding:0 0 14px 0">
+
+      <table
+        role="presentation"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+      >
+        <tr>
+          <td
+            align="left"
+            valign="top"
+            style="padding:0 0 10px 0"
+          >
+            <p
+              data-f="name"
+              style="margin:0;font-family:${FONT};font-size:17px;line-height:23px;font-weight:bold;color:#262261;"
+            >
+              ${esc(item.name)}
+            </p>
+          </td>
+
+          ${badgeCell}
+        </tr>
+      </table>
+
+      ${partnershipHtml}
+
+      <div
+        data-f="body"
+        style="font-family:${FONT};font-size:14px;line-height:24px;color:#2d3748;"
+      >
+        ${convertContentForEmail(item.body)}
+      </div>
+
+      ${tagHtml}
+
+    </td>
+  </tr>
 </table>`;
 }
+
 function buildAdoptionItemHTML(item) {
   const tagHtml = renderTagBlockHTML(item.tag, item.color || "navy", `adoption-tag-${item.id}`);
   const badgeCell = renderStatusBadgeHTML(item, FONT, 14);
@@ -334,8 +390,8 @@ function buildFullHTML({
   const trainingHtml = `${trainingSectionTitleHtml}\n${trainingItemsHtml}`;
 
   const adoptionHtml = adoptionItems
-  .map(buildAdoptionItemHTML)
-  .join("\n\n");
+    .map(buildAdoptionItemHTML)
+    .join("\n\n");
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -366,11 +422,11 @@ a{text-decoration:none;}
 <img src="https://raw.githubusercontent.com/Webster2316/AI_Bulletin_Draft/refs/heads/main/Banner3.png" width="680" height="183" alt="SSA AI bulletin Banner" class="banner-image" style="display:block;width:680px;height:183px;max-width:100%;border:0;" />
 </td></tr>
 
-<tr><td align="left" valign="top" bgcolor="#262261" class="issue-padding" style="padding:22px 24px;background-color:#262261">
+<tr><td align="left" valign="top" bgcolor="#1b76bc" class="issue-padding" style="padding:22px 24px;background-color:#1b76bc">
 <p class="issue-title" data-f="issue-tag" style="margin:0;font-family:${FONT};font-size:28px;line-height:34px;font-weight:bold;color:#ffffff;">${esc(issueTag)}</p>
 </td></tr>
 
-<tr><td bgcolor="#1f498c" align="center" style="padding:10px 16px;background-color:#1f498c;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
+<tr><td bgcolor="#262261" align="center" style="padding:10px 16px;background-color:#262261;font-family:${FONT};font-size:18px;line-height:24px;text-align:center;font-weight:bold;color:#ffffff;">Awareness</td></tr>
 <tr><td align="left" valign="top" bgcolor="#ffffff" class="content-padding" style="padding:22px 24px 0 24px;background-color:#ffffff" data-section="awareness">
 ${awarenessHtml}
 </td></tr>
@@ -415,7 +471,7 @@ function parseAwarenessItems(doc) {
     const status = block.getAttribute("data-status") || "";
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttrribute("data-status-custom") || "";
-    return {id, header, body, tag, status, statusColor, statusCustom, isPreset: false };
+    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false };
   });
 }
 
@@ -428,8 +484,11 @@ function parseTrainingItems(doc) {
     if (bodyEl) convertEmailTablesToBullets(bodyEl);
     const body = bodyEl ? bodyEl.innerHTML.trim() : "";
     const tagField = block.querySelector(`[data-field="training-tag-${id}"]`);
+    const status = block.getAttribute("data-status") || "";
+    const statusColor = block.getAttribute("data-status-color") || "";
+    const statusCustom = block.getAttribute("data-status-custom") || "";
     const summaryTag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    return { id, name, partnershipLine, body, summaryTag };
+    return { id, name, partnershipLine, status, statusColor, statusCustom, body, summaryTag };
   });
 }
 
@@ -462,20 +521,20 @@ function parseAdoptionItems(doc) {
 
     const color =
       block.getAttribute("data-color") || "navy";
-      const status = block.getAttribute("data-status") || "";
-      const statusColor = block.getAttribute("data-status-color") || "";
-      const statusCustom = block.getAttribute("data-status-custom") || "";
-  
-      return {
-        id,
-        header,
-        body,
-        tag,
-        color,
-        status,
-        statusColor,
-        statusCustom,
-        isPreset: false,
+    const status = block.getAttribute("data-status") || "";
+    const statusColor = block.getAttribute("data-status-color") || "";
+    const statusCustom = block.getAttribute("data-status-custom") || "";
+
+    return {
+      id,
+      header,
+      body,
+      tag,
+      color,
+      status,
+      statusColor,
+      statusCustom,
+      isPreset: false,
     };
   });
 }
@@ -537,7 +596,7 @@ export default function AIBulletinBuilder() {
               );
             } else if (data.adoption) {
               const old = data.adoption;
-            
+
               setAdoptionItems([
                 makeAdoptionItem({
                   header: "Funding Support for AI Adoption",
@@ -546,7 +605,7 @@ export default function AIBulletinBuilder() {
                   color: "navy",
                   isPreset: true,
                 }),
-            
+
                 makeAdoptionItem({
                   header: "Common AI Adoption Challenges Observed",
                   body: old.challenges?.body || "",
@@ -554,7 +613,7 @@ export default function AIBulletinBuilder() {
                   color: "navy",
                   isPreset: true,
                 }),
-            
+
                 makeAdoptionItem({
                   header: "Suggested Action This Month",
                   body: old.suggestedAction?.body || "",
@@ -562,7 +621,7 @@ export default function AIBulletinBuilder() {
                   color: "cyan",
                   isPreset: true,
                 }),
-            
+
                 ...(old.extraItems || []).map((it) =>
                   makeAdoptionItem(it)
                 ),
@@ -657,10 +716,10 @@ export default function AIBulletinBuilder() {
     try {
       const parsed = parseHtmlToState(html);
       const foundAnything =
-      parsed.awarenessItems.length ||
-      parsed.trainingItems.length ||
-      parsed.adoptionItems.length ||
-      parsed.issueTag;
+        parsed.awarenessItems.length ||
+        parsed.trainingItems.length ||
+        parsed.adoptionItems.length ||
+        parsed.issueTag;
       if (!foundAnything) {
         setSyncMessage({
           type: "error",
@@ -687,9 +746,8 @@ export default function AIBulletinBuilder() {
   const tabBtn = (key, label, Icon) => (
     <button
       onClick={() => setTab(key)}
-      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 ${
-        tab === key ? "border-indigo-700 text-indigo-800" : "border-transparent text-gray-500 hover:text-gray-700"
-      }`}
+      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 ${tab === key ? "border-indigo-700 text-indigo-800" : "border-transparent text-gray-500 hover:text-gray-700"
+        }`}
     >
       <Icon size={15} />
       {label}
@@ -699,33 +757,33 @@ export default function AIBulletinBuilder() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-3">
-  <div className="flex items-center gap-3">
-    <img
-      src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-      alt="SSA Logo"
-      className="h-8 w-auto"
-    />
-    <h1 className="text-xl font-bold text-indigo-900">
-      AI Bulletin Builder
-    </h1>
-  </div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <img
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+              alt="SSA Logo"
+              className="h-8 w-auto"
+            />
+            <h1 className="text-xl font-bold text-indigo-900">
+              AI Bulletin Builder
+            </h1>
+          </div>
 
-  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-    {saveStatus === "saving" && (
-      <>
-        <Loader2 size={13} className="animate-spin" />
-        Saving…
-      </>
-    )}
-    {saveStatus === "saved" && (
-      <>
-        <Save size={13} />
-        Saved
-      </>
-    )}
-  </div>
-</div>
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            {saveStatus === "saving" && (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                Saving…
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <Save size={13} />
+                Saved
+              </>
+            )}
+          </div>
+        </div>
 
         <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3">
           <Field label="Issue tag">
@@ -777,9 +835,9 @@ export default function AIBulletinBuilder() {
                         />
                       </Field>
                       <StatusBadgePicker
-  item={item}
-  onChange={(patch) => updateItem(awarenessItems, setAwarenessItems, item.id, patch)}
-/>
+                        item={item}
+                        onChange={(patch) => updateItem(awarenessItems, setAwarenessItems, item.id, patch)}
+                      />
                       <Field label="Body">
                         <RichTextEditor
                           value={item.body}
@@ -815,6 +873,10 @@ export default function AIBulletinBuilder() {
                         placeholder="SSA AI Training & Industry Activities"
                       />
                     </Field>
+                    <StatusBadgePicker
+                        item={item}
+                        onChange={(patch) => updateItem(trainingItems, setTrainingItems, item.id, patch)}
+                      />
                   </div>
 
                   {trainingItems.map((item, i) => (
@@ -872,107 +934,107 @@ export default function AIBulletinBuilder() {
                 </div>
               )}
 
-{tab === "adoption" && (
-  <div className="space-y-4">
-    {adoptionItems.map((item, i) => (
-      <div
-        key={item.id}
-        className="border border-gray-200 rounded-lg p-3 bg-gray-50"
-      >
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-semibold text-indigo-700">
-            {item.header.trim() || `Item ${i + 1} (untitled)`}
+              {tab === "adoption" && (
+                <div className="space-y-4">
+                  {adoptionItems.map((item, i) => (
+                    <div
+                      key={item.id}
+                      className="border border-gray-200 rounded-lg p-3 bg-gray-50"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-indigo-700">
+                          {item.header.trim() || `Item ${i + 1} (untitled)`}
 
-            {item.isPreset && (
-              <span className="ml-2 text-gray-400 font-normal">
-                (preset)
-              </span>
-            )}
-          </span>
+                          {item.isPreset && (
+                            <span className="ml-2 text-gray-400 font-normal">
+                              (preset)
+                            </span>
+                          )}
+                        </span>
 
-          <MoveButtons
-            index={i}
-            length={adoptionItems.length}
-            onMove={(index, dir) =>
-              move(
-                adoptionItems,
-                setAdoptionItems,
-                index,
-                dir
-              )
-            }
-            onRemove={() =>
-              setAdoptionItems(
-                adoptionItems.filter(
-                  (x) => x.id !== item.id
-                )
-              )
-            }
-          />
-        </div>
+                        <MoveButtons
+                          index={i}
+                          length={adoptionItems.length}
+                          onMove={(index, dir) =>
+                            move(
+                              adoptionItems,
+                              setAdoptionItems,
+                              index,
+                              dir
+                            )
+                          }
+                          onRemove={() =>
+                            setAdoptionItems(
+                              adoptionItems.filter(
+                                (x) => x.id !== item.id
+                              )
+                            )
+                          }
+                        />
+                      </div>
 
-        <Field label="Item block header">
-          <input
-            className={inputCls}
-            value={item.header}
-            onChange={(e) =>
-              updateItem(
-                adoptionItems,
-                setAdoptionItems,
-                item.id,
-                { header: e.target.value }
-              )
-            }
-          />
-        </Field>
-<StatusBadgePicker
-  item={item}
-  onChange={(patch) => updateItem(adoptionItems, setAdoptionItems, item.id, patch)}
-/>
-        <Field label="Body">
-          <RichTextEditor
-            value={item.body}
-            onChange={(htmlVal) =>
-              updateItem(
-                adoptionItems,
-                setAdoptionItems,
-                item.id,
-                { body: htmlVal }
-              )
-            }
-          />
-        </Field>
+                      <Field label="Item block header">
+                        <input
+                          className={inputCls}
+                          value={item.header}
+                          onChange={(e) =>
+                            updateItem(
+                              adoptionItems,
+                              setAdoptionItems,
+                              item.id,
+                              { header: e.target.value }
+                            )
+                          }
+                        />
+                      </Field>
+                      <StatusBadgePicker
+                        item={item}
+                        onChange={(patch) => updateItem(adoptionItems, setAdoptionItems, item.id, patch)}
+                      />
+                      <Field label="Body">
+                        <RichTextEditor
+                          value={item.body}
+                          onChange={(htmlVal) =>
+                            updateItem(
+                              adoptionItems,
+                              setAdoptionItems,
+                              item.id,
+                              { body: htmlVal }
+                            )
+                          }
+                        />
+                      </Field>
 
-        <TagBlock
-          value={item.tag}
-          onChange={(htmlVal) =>
-            updateItem(
-              adoptionItems,
-              setAdoptionItems,
-              item.id,
-              { tag: htmlVal }
-            )
-          }
-          color={item.color}
-          label="Add optional tag block"
-        />
-      </div>
-    ))}
+                      <TagBlock
+                        value={item.tag}
+                        onChange={(htmlVal) =>
+                          updateItem(
+                            adoptionItems,
+                            setAdoptionItems,
+                            item.id,
+                            { tag: htmlVal }
+                          )
+                        }
+                        color={item.color}
+                        label="Add optional tag block"
+                      />
+                    </div>
+                  ))}
 
-    <button
-      onClick={() =>
-        setAdoptionItems([
-          ...adoptionItems,
-          makeAdoptionItem(),
-        ])
-      }
-      className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-    >
-      <Plus size={16} />
-      Add adoption item
-    </button>
-  </div>
-)}
+                  <button
+                    onClick={() =>
+                      setAdoptionItems([
+                        ...adoptionItems,
+                        makeAdoptionItem(),
+                      ])
+                    }
+                    className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+                  >
+                    <Plus size={16} />
+                    Add adoption item
+                  </button>
+                </div>
+              )}
 
               {tab === "preview" && (
                 <div>
