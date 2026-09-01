@@ -287,8 +287,8 @@ ${adoptionHtml}
 
 <tr><td align="center" bgcolor="#262261" style="padding:22px;background-color:#262261;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">
 <p style="margin:0;font-family:${FONT};font-size:14px;line-height:20px;font-weight:bold;color:#ffffff;">Singapore Shipping Association</p>
-<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">footer</p>
-<p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;">footerrrrr.</p>
+<p style="margin:4px 0 12px 0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;"></p>
+<p style="margin:0;font-family:${FONT};font-size:12px;line-height:20px;color:#dbe7f4;"></p>
 </td></tr>
 
 </table>
