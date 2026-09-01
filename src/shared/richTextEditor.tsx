@@ -4,6 +4,10 @@ export default function RichTextEditor({ value, onChange }) {
   const ref = useRef(null);
   const init = useRef(false);
   const savedRange = useRef(null);
+  
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("https://");
+  const [linkText, setLinkText] = useState("");
 
   useEffect(() => {
     if (ref.current && !init.current) {
