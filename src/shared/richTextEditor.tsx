@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import {Unlink, Link} from "lucide-react"
+
 
 export default function RichTextEditor({ value, onChange }) {
   const ref = useRef(null);
@@ -176,7 +178,7 @@ const openLinkModal = () => {
             onClick={openLinkModal}
             className={btn}
           >
-            Link
+          <Link size={14}/>
           </button>
   
           <button
@@ -185,9 +187,9 @@ const openLinkModal = () => {
             onClick={() => exec("unlink")}
             className={btn}
           >
-            Unlink
+           
           </button>
-  
+  <Unlink size={14}/>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
