@@ -187,9 +187,9 @@ const openLinkModal = () => {
             onClick={() => exec("unlink")}
             className={btn}
           >
-           
+             <Unlink size={14}/>
           </button>
-  <Unlink size={14}/>
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
