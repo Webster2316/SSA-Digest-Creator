@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import {Unlink, Link} from "lucide-react"
+import { Unlink, Link, Palette } from "lucide-react"
 
 
 export default function RichTextEditor({ value, onChange }) {
   const ref = useRef(null);
   const init = useRef(false);
   const savedRange = useRef(null);
-  
+
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (ref.current && !init.current) {
@@ -17,6 +18,26 @@ export default function RichTextEditor({ value, onChange }) {
       init.current = true;
     }
   }, [value]);
+
+  const setColor = (color) => {
+    ref.current?.focus();
+
+    const sel = window.getSelection();
+    if (savedRange.current && sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange.current);
+    }
+    document.execCommand("foreColor", false, color);
+    onChange(ref.current.innerHTML);
+    setShowColorPicker(false);
+    savedRange.current = null;
+  };
+
+  const openColorPicker = () => {
+    saveSelection();
+    setShowColorPicker((prev) => !prev);
+  };
+
 
   const exec = (cmd, val = null) => {
     ref.current.focus();
@@ -50,10 +71,10 @@ export default function RichTextEditor({ value, onChange }) {
 
   const normalizeUrl = (url) => {
     let trimmed = url.trim();
-  
+
     // Remove accidental leading slashes
     trimmed = trimmed.replace(/^\/+/, "");
-  
+
     if (
       /^https?:\/\//i.test(trimmed) ||
       /^mailto:/i.test(trimmed) ||
@@ -61,54 +82,54 @@ export default function RichTextEditor({ value, onChange }) {
     ) {
       return trimmed;
     }
-  
+
     return `https://${trimmed}`;
   };
-  
+
   const insertLink = () => {
     if (!linkUrl.trim() || linkUrl.trim() === "https://") {
       return;
     }
-  
+
     const finalUrl = normalizeUrl(linkUrl);
     const text = linkText.trim() || finalUrl;
-  
+
     const sel = window.getSelection();
-  
+
     ref.current?.focus();
-  
+
     if (savedRange.current && sel) {
       sel.removeAllRanges();
       sel.addRange(savedRange.current);
     }
-  
+
     const html = `<a href="${escapeHtml(
       finalUrl
     )}" target="_blank" rel="noopener noreferrer" style="color:#1b75bc;text-decoration:underline;font-weight:bold;">${escapeHtml(
       text
     )}</a>`;
-  
+
     document.execCommand("insertHTML", false, html);
-  
+
     if (ref.current) {
       onChange(ref.current.innerHTML);
     }
-  
+
     setShowLinkModal(false);
     setLinkUrl("");
     setLinkText("");
     savedRange.current = null;
   };
 
-const openLinkModal = () => {
-  const sel = window.getSelection();
+  const openLinkModal = () => {
+    const sel = window.getSelection();
 
-  saveSelection();
+    saveSelection();
 
-  setLinkText(sel?.toString() || "");
-  setLinkUrl("");
-  setShowLinkModal(true);
-};
+    setLinkText(sel?.toString() || "");
+    setLinkUrl("");
+    setShowLinkModal(true);
+  };
 
 
 
@@ -126,7 +147,7 @@ const openLinkModal = () => {
           >
             B
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -135,7 +156,7 @@ const openLinkModal = () => {
           >
             I
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -144,7 +165,40 @@ const openLinkModal = () => {
           >
             U
           </button>
-  
+          <div className="relative">
+  <button
+    type="button"
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={openColorPicker}
+    className={btn}
+  >
+    <Palette size={14} />
+  </button>
+
+  {showColorPicker && (
+    <div className="absolute z-50 mt-1 flex flex-wrap gap-1 rounded border border-gray-200 bg-white p-2 shadow-lg w-36">
+      {["#000000", "#1b75bc", "#e11d48", "#16a34a", "#f59e0b", "#7c3aed", "#374151", "#ffffff"].map((c) => (
+        <button
+          key={c}
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setColor(c)}
+          className="h-5 w-5 rounded-full border border-gray-300"
+          style={{ backgroundColor: c }}
+          title={c}
+        />
+      ))}
+
+      <input
+        type="color"
+        onMouseDown={(e) => e.preventDefault()}
+        onChange={(e) => setColor(e.target.value)}
+        className="h-5 w-9 cursor-pointer border border-gray-300 p-0"
+        title="Custom color"
+      />
+    </div>
+  )}
+</div>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -153,7 +207,7 @@ const openLinkModal = () => {
           >
             • List
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -162,7 +216,7 @@ const openLinkModal = () => {
           >
             1. List
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
@@ -171,23 +225,23 @@ const openLinkModal = () => {
           >
             Table
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={openLinkModal}
             className={btn}
           >
-          <Link size={14}/>
+            <Link size={14} />
           </button>
-  
+
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => exec("unlink")}
             className={btn}
           >
-             <Unlink size={14}/>
+            <Unlink size={14} />
           </button>
 
           <button
@@ -199,7 +253,7 @@ const openLinkModal = () => {
             Clear
           </button>
         </div>
-  
+
         <div
           ref={ref}
           contentEditable
@@ -209,20 +263,20 @@ const openLinkModal = () => {
           style={{ minHeight: "90px" }}
         />
       </div>
-  
+
       {showLinkModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
           <div className="w-full max-w-sm rounded-lg bg-white p-4 shadow-xl border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-800 mb-4">
               Insert Link
             </h3>
-  
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Text to display
                 </label>
-  
+
                 <input
                   type="text"
                   value={linkText}
@@ -231,12 +285,12 @@ const openLinkModal = () => {
                   className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                 />
               </div>
-  
+
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   URL
                 </label>
-  
+
                 <input
                   type="url"
                   value={linkUrl}
@@ -247,7 +301,7 @@ const openLinkModal = () => {
                 />
               </div>
             </div>
-  
+
             <div className="flex justify-end gap-2 mt-4">
               <button
                 type="button"
@@ -256,7 +310,7 @@ const openLinkModal = () => {
               >
                 Cancel
               </button>
-  
+
               <button
                 type="button"
                 onClick={insertLink}
