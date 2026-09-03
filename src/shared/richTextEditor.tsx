@@ -178,6 +178,7 @@ const closeColorPicker = () => {
     <Palette size={14} />
   </button>
 
+
   {showColorPicker && (
   <div className="absolute z-50 mt-1 flex flex-col gap-2 rounded border border-gray-200 bg-white p-2 shadow-lg w-40">
     <div className="flex flex-wrap gap-1">
