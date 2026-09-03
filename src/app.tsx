@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare, Martini } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
+import EventsBuilder from "./builders/EventsBuilder";
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin";
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" ;
 
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
-  { key: "AIBulletin", label: "AI Bulletin", icon:BotMessageSquare },
+  { key: "AIBulletin", label: "AI Bulletin", icon: BotMessageSquare },
+  { key: "events", label: "Events", icon: Martini},
 ];
 
 export default function App() {
@@ -59,6 +61,7 @@ export default function App() {
         {builder === "weeklyDigest" && <WeeklyDigestBuilder />}
         {builder === "trainingBulletin" && <TrainingBulletinBuilder />}
         {builder === "AIBulletin" && <AIBulletinBuilder/>}
+        {builder === "events" && <EventsBuilder/>}
       </div>
     </div>
   );
