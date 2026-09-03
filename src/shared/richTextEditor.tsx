@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Unlink, Link, Palette } from "lucide-react"
+import { HexColorPicker } from "react-colorful"
 
 
 export default function RichTextEditor({ value, onChange }) {
@@ -10,7 +11,7 @@ export default function RichTextEditor({ value, onChange }) {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
-  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState("#000000");
 
   useEffect(() => {
     if (ref.current && !init.current) {
@@ -189,13 +190,14 @@ export default function RichTextEditor({ value, onChange }) {
         />
       ))}
 
-      <input
-        type="color"
-        onMouseDown={(e) => e.preventDefault()}
-        onChange={(e) => setColor(e.target.value)}
-        className="h-5 w-9 cursor-pointer border border-gray-300 p-0"
-        title="Custom color"
-      />
+<HexColorPicker
+  color={pickerColor}
+  onChange={(c) => {
+    setPickerColor(c);
+    setColor(c);
+  }}
+  style={{ width: 150, height: 120 }}
+/>
     </div>
   )}
 </div>
