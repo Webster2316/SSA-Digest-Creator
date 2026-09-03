@@ -31,8 +31,6 @@ export default function RichTextEditor({ value, onChange }) {
     }
     document.execCommand("foreColor", false, color);
     onChange(ref.current.innerHTML);
-    setShowColorPicker(false);
-    savedRange.current = null;
   };
 
   const openColorPicker = () => {
@@ -40,7 +38,10 @@ export default function RichTextEditor({ value, onChange }) {
     setShowColorPicker((prev) => !prev);
   };
 
-
+const closeColorPicker = () => {
+  setShowColorPicker(false);
+  savedRange.current = null;
+}
   const exec = (cmd, val = null) => {
     ref.current.focus();
     document.execCommand(cmd, false, val);
@@ -178,29 +179,43 @@ export default function RichTextEditor({ value, onChange }) {
   </button>
 
   {showColorPicker && (
-    <div className="absolute z-50 mt-1 flex flex-wrap gap-1 rounded border border-gray-200 bg-white p-2 shadow-lg w-36">
+  <div className="absolute z-50 mt-1 flex flex-col gap-2 rounded border border-gray-200 bg-white p-2 shadow-lg w-40">
+    <div className="flex flex-wrap gap-1">
       {["#000000", "#1b75bc", "#e11d48", "#16a34a", "#f59e0b", "#7c3aed", "#374151", "#ffffff"].map((c) => (
         <button
           key={c}
           type="button"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => setColor(c)}
+          onClick={() => {
+            setColor(c);
+            closeColorPicker();
+          }}
           className="h-5 w-5 rounded-full border border-gray-300"
           style={{ backgroundColor: c }}
           title={c}
         />
       ))}
-
-<HexColorPicker
-  color={pickerColor}
-  onChange={(c) => {
-    setPickerColor(c);
-    setColor(c);
-  }}
-  style={{ width: 150, height: 120 }}
-/>
     </div>
-  )}
+
+    <HexColorPicker
+      color={pickerColor}
+      onChange={(c) => {
+        setPickerColor(c);
+        setColor(c);
+      }}
+      style={{ width: "100%", height: 120 }}
+    />
+
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={closeColorPicker}
+      className="px-2 py-1 text-xs rounded bg-indigo-700 text-white hover:bg-indigo-800"
+    >
+      Done
+    </button>
+  </div>
+)}
 </div>
           <button
             type="button"
