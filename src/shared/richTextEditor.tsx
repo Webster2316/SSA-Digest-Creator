@@ -11,7 +11,8 @@ export default function RichTextEditor({ value, onChange }) {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
-  const [showColorPicker, setShowColorPicker] = useState("#000000");
+  const [showColorPicker, setShowColorPicker] = useState(false);   // back to boolean
+  const [pickerColor, setPickerColor] = useState("#000000");   
 
   useEffect(() => {
     if (ref.current && !init.current) {
