@@ -8,6 +8,8 @@ import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 
+const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+
 export default function EventsBuilder() {
     <div>
         <p>Work in progress</p>
