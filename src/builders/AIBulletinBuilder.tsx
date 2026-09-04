@@ -231,6 +231,13 @@ function convertEmailTablesToBullets(containerEl) {
   });
 }
 
+function getDateTime() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function dividerRow() {
   return `<tr><td style="padding:0 24px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="32" style="height:32px;border-bottom:1px solid #e5e7eb;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td></tr>`;
 }
@@ -837,7 +844,9 @@ export default function AIBulletinBuilder() {
 
   useEffect(() => {
     if (!loaded) return;
+  
     setSaveStatus("saving");
+  
     const t = setTimeout(async () => {
       try {
         const res = await fetch("/api/save-digest?key=ai-bulletin-data", {
@@ -853,14 +862,20 @@ export default function AIBulletinBuilder() {
             builtHtml: html,
           }),
         });
-        setSaveStatus(res.ok ? "saved" : "error");
+  
+        if (res.ok) {
+          setSaveStatus(`Saved at ${getDateTime()}`);
+        } else {
+          setSaveStatus("error");
+        }
+  
       } catch (e) {
         console.error("Failed to save AI bulletin:", e);
         setSaveStatus("error");
       }
     }, 700);
+  
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     issueTag,
     awarenessItems,
@@ -868,7 +883,7 @@ export default function AIBulletinBuilder() {
     trainingItems,
     adoptionItems,
     rawHtmlEdit,
-    loaded
+    loaded,
   ]);
 
   const move = (list, setList, index, dir) => {
@@ -1065,12 +1080,12 @@ export default function AIBulletinBuilder() {
                 Saving…
               </>
             )}
-            {saveStatus === "saved" && (
-              <>
-                <Save size={13} />
-                Saved
-              </>
-            )}
+           {saveStatus.startsWith("Saved at") && (
+  <>
+    <Save size={13} />
+    {saveStatus}
+  </>
+)}
           </div>
         </div>
 
