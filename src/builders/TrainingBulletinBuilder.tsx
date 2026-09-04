@@ -60,6 +60,15 @@ function getSortDate(course: any) {
   return new Date(dateStr);
 }
 
+
+//for saving
+function getDateTime() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // non-pinned items sort by date; pinned - NEW items/customOrder items keep their exact slot
 function sortWithPinned(list: any[]) {
   const sorted = [...list].sort((a, b) =>
@@ -373,7 +382,11 @@ export default function TrainingBulletinBuilder() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ greeting, issueRange, courses, eobItems, rawHtmlEdit, builtHtml: html }),
         });
-        setSaveStatus(res.ok ? "saved" : "error");
+        if (res.ok) {
+          setSaveStatus(`Saved at ${getDateTime()}`);
+        } else {
+          setSaveStatus("error");
+        }
       } catch (e) {
         console.error("Failed to save training bulletin:", e);
         setSaveStatus("error");
@@ -474,11 +487,17 @@ export default function TrainingBulletinBuilder() {
                 <Loader2 size={13} className="animate-spin" /> Saving…
               </>
             )}
-            {saveStatus === "saved" && (
-              <>
-                <Save size={13} /> Saved
-              </>
-            )}
+           {saveStatus.startsWith("Saved at") && (
+  <>
+    <Save size={13} />
+    {saveStatus}
+  </>
+)}
+{saveStatus === "error" && (
+  <span className="text-red-600">
+    Save failed
+  </span>
+)}
           </div>
         </div>
 
