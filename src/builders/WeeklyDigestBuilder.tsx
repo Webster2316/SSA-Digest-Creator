@@ -299,6 +299,13 @@ function parseHtmlToState(htmlStr) {
 
   return { issueRange, events, actionItems, notingItems };
 }
+function getDateTime() {
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 
 export default function WeeklyDigestBuilder() {
   const [tab, setTab] = useState("events");
@@ -314,6 +321,7 @@ export default function WeeklyDigestBuilder() {
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
   const [docModalTarget, setDocModalTarget] = useState<{ type: "action" | "noting"; id: string } | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
+
 
 
   useEffect(() => {
@@ -357,7 +365,11 @@ export default function WeeklyDigestBuilder() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit, builtHtml: html }),
         });
-        setSaveStatus(res.ok ? "saved" : "error");
+        if (res.ok) {
+  setSaveStatus(`Saved at ${getDateTime()}`);
+} else {
+  setSaveStatus("error");
+}
       } catch (e) {
         console.error("Failed to save digest:", e);
         setSaveStatus("error");
@@ -466,7 +478,17 @@ export default function WeeklyDigestBuilder() {
           
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
-            {saveStatus === "saved" && <><Save size={13} /> Saved</>}
+            {saveStatus.startsWith("Saved at") && (
+  <>
+    <Save size={13} />
+    {saveStatus}
+  </>
+)}
+{saveStatus === "error" && (
+  <span className="text-red-600">
+    Save failed
+  </span>
+)}
           </div>
         </div>
 
