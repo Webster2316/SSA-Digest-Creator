@@ -8,6 +8,7 @@ import RecordViewer from "../shared/recordViewer";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
+import useConfirmDelete from "../shared/useConfirmDelete";
 
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
@@ -758,6 +759,7 @@ export default function AIBulletinBuilder() {
   const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
   const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState(null);
+  const { confirmDelete, deleteModal } = useConfirmDelete();
   const [docModalTarget, setDocModalTarget] = useState<{
     type: "awareness" | "awareness-subitem" | "training" | "adoption";
     id: string;
@@ -1110,7 +1112,16 @@ export default function AIBulletinBuilder() {
                           index={i}
                           length={awarenessItems.length}
                           onMove={(index, dir) => move(awarenessItems, setAwarenessItems, index, dir)}
-                          onRemove={() => setAwarenessItems(awarenessItems.filter((x) => x.id !== item.id))}
+                          onRemove={() =>
+                            confirmDelete({
+                              itemType: "awareness item",
+                              itemName: item.header,
+                              action: () =>
+                                setAwarenessItems((prev) =>
+                                  prev.filter((x) => x.id !== item.id)
+                                ),
+                            })
+                          }
                         />
                       </div>
 
@@ -1171,7 +1182,14 @@ export default function AIBulletinBuilder() {
                                 index={si}
                                 length={item.subItems.length}
                                 onMove={(index, dir) => moveSubItem(item, index, dir)}
-                                onRemove={() => removeSubItem(item, sub.id)}
+                                onRemove={() =>
+                                  confirmDelete({
+                                    itemType: "awareness sub-item",
+                                    itemName: sub.header,
+                                    action: () =>
+                                      removeSubItem(item, sub.id),
+                                  })
+                                }
                               />
                             </div>
 
@@ -1265,7 +1283,16 @@ export default function AIBulletinBuilder() {
                           index={i}
                           length={trainingItems.length}
                           onMove={(index, dir) => move(trainingItems, setTrainingItems, index, dir)}
-                          onRemove={() => setTrainingItems(trainingItems.filter((x) => x.id !== item.id))}
+                          onRemove={() =>
+                            confirmDelete({
+                              itemType: "training item",
+                              itemName: item.name,
+                              action: () =>
+                                setTrainingItems((prev) =>
+                                  prev.filter((x) => x.id !== item.id)
+                                ),
+                            })
+                          }
                         />
                       </div>
 
@@ -1356,11 +1383,14 @@ export default function AIBulletinBuilder() {
                             )
                           }
                           onRemove={() =>
-                            setAdoptionItems(
-                              adoptionItems.filter(
-                                (x) => x.id !== item.id
-                              )
-                            )
+                            confirmDelete({
+                              itemType: "adoption item",
+                              itemName: item.header,
+                              action: () =>
+                                setAdoptionItems((prev) =>
+                                  prev.filter((x) => x.id !== item.id)
+                                ),
+                            })
                           }
                         />
                       </div>
@@ -1501,6 +1531,7 @@ export default function AIBulletinBuilder() {
   onClose={() => setDocModalTarget(null)}
   onAdd={handleAddDocs}
 />
+{deleteModal}
           </>
         ) : viewingRecordId === -1 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4">

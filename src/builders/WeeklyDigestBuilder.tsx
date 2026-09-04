@@ -7,6 +7,7 @@ import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
+import useConfirmDelete from "../shared/useConfirmDelete";
 
 const badgePresets = {
   Review: "#d0a523",
@@ -312,6 +313,8 @@ export default function WeeklyDigestBuilder() {
   const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
   const [docModalTarget, setDocModalTarget] = useState<{ type: "action" | "noting"; id: string } | null>(null);
+  const { confirmDelete, deleteModal } = useConfirmDelete();
+
 
   useEffect(() => {
     (async () => {
@@ -497,7 +500,16 @@ export default function WeeklyDigestBuilder() {
             <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
-                <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() => setEvents(events.filter((e) => e.id !== ev.id))} />
+                <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() =>
+  confirmDelete({
+    itemType: "event",
+    itemName: ev.title,
+    action: () =>
+      setEvents((prev) =>
+        prev.filter((e) => e.id !== ev.id)
+      ),
+  })
+}/>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
@@ -551,7 +563,16 @@ export default function WeeklyDigestBuilder() {
       index={i}
       length={actionItems.length}
       onMove={move(actionItems, setActionItems)}
-      onRemove={() => setActionItems(actionItems.filter((x) => x.id !== it.id))}
+      onRemove={() =>
+        confirmDelete({
+          itemType: "action item",
+          itemName: it.title,
+          action: () =>
+            setActionItems((prev) =>
+              prev.filter((x) => x.id !== it.id)
+            ),
+        })
+      }
     />
   </div>
 </div>
@@ -615,7 +636,16 @@ export default function WeeklyDigestBuilder() {
 >  <ArrowRightLeft size={16} />
     </button>
 
-    <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() => setNotingItems(notingItems.filter((x) => x.id !== it.id))} />
+    <MoveButtons index={i} length={notingItems.length} onMove={move(notingItems, setNotingItems)} onRemove={() =>
+  confirmDelete({
+    itemType: "noting item",
+    itemName: it.title,
+    action: () =>
+      setNotingItems((prev) =>
+        prev.filter((x) => x.id !== it.id)
+      ),
+  })
+} />
   </div>
 </div>
               <div className="grid grid-cols-2 gap-3">
@@ -692,6 +722,7 @@ export default function WeeklyDigestBuilder() {
   onClose={() => setDocModalTarget(null)}
   onAdd={handleAddDocs}
 />
+    {deleteModal}
   </>
 ) : viewingRecordId === -1 ? (
   <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -713,6 +744,7 @@ export default function WeeklyDigestBuilder() {
       onBack={() => setViewingRecordId(null)}
     />
   </div>
+  
 )}
       </div>
     </div>

@@ -5,6 +5,7 @@ import MoveButtons from "../shared/moveButtons";
 import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import { uid, esc, inputCls } from "../shared/utils";
+import useConfirmDelete from "../shared/useConfirmDelete";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
@@ -335,6 +336,7 @@ export default function TrainingBulletinBuilder() {
   const [issueRange, setIssueRange] = useState("Issue: ");
   const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
+  const { confirmDelete, deleteModal } = useConfirmDelete();
 
   useEffect(() => {
     (async () => {
@@ -549,13 +551,22 @@ export default function TrainingBulletinBuilder() {
           >
             <Pin size={16} />
           </button>
-  <button
-    onClick={() => setCourses(courses.filter((x) => x.id !== c.id))}
-    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
-    title="Delete course"
-  >
-    <Trash2 size={16} />
-  </button>
+          <button
+  onClick={() =>
+    confirmDelete({
+      itemType: "course",
+      itemName: c.title,
+      action: () =>
+        setCourses((prev) =>
+          prev.filter((x) => x.id !== c.id)
+        ),
+    })
+  }
+  className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-600"
+  title="Delete course"
+>
+  <Trash2 size={16} />
+</button>
                 </div>
               </div>
 
@@ -695,7 +706,16 @@ export default function TrainingBulletinBuilder() {
   index={i}
   length={eobItems.length}
   onMove={(index, dir) => move(eobItems, setEobItems, index, dir)}
-  onRemove={() => setEobItems(eobItems.filter((x) => x.id !== c.id))}
+  onRemove={() =>
+    confirmDelete({
+      itemType: "EOB programme",
+      itemName: c.title,
+      action: () =>
+        setEobItems((prev) =>
+          prev.filter((x) => x.id !== c.id)
+        ),
+    })
+  }
 />
           </div>
         </div>
@@ -920,6 +940,8 @@ export default function TrainingBulletinBuilder() {
         </div>
       )}
     </div>
+
+    {deleteModal}
   </>
 ) : viewingRecordId === -1 ? (
   <div className="bg-white rounded-lg border border-gray-200 p-4">
