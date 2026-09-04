@@ -5,7 +5,7 @@ import MoveButtons from "../shared/moveButtons";
 import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
 import { uid, esc, inputCls } from "../shared/utils";
-import useConfirmDelete from "../shared/useConfirmDelete";
+import useConfirmDelete from "../shared/useConfirmDelete"; 
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
