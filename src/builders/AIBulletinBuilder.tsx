@@ -1284,6 +1284,7 @@ export default function AIBulletinBuilder() {
                     </Field>
                   </div>
 
+
                   {trainingItems.map((item, i) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                       <div className="flex justify-between items-center mb-2">

@@ -448,6 +448,7 @@ if(!input) return;
 const start = input.selectionStart ?? 0;
 const end = input.selectionEnd ?? 0;
 
+
 if (start === end) {
   return;
 }

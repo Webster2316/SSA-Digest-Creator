@@ -410,6 +410,7 @@ export default function TrainingBulletinBuilder() {
   const updateCourse = (id: string, patch: Partial<(typeof defaultCourses)[0]>) => {
     setCourses(courses.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
+  
 
   const copyItem = (item: any, target: "here" | "other") => {
     const copy = { ...item, id: uid() };
