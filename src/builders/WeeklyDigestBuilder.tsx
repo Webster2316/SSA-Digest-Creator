@@ -58,7 +58,7 @@ function buildEventBlock(ev) {
     <td style="border-bottom:1px solid #e8e3da;padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
-          <td class="pad-sides" style="padding:10pt 28px;">
+          <td class="pad-sides" style="padding:14px 28px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
                 <td class="event-date-cell" width="52" valign="top" style="background-color:#281e7e;text-align:center;padding:6px 4px;width:52px;">
@@ -67,7 +67,7 @@ function buildEventBlock(ev) {
                 </td>
                 <td class="event-spacer-cell" width="16">&nbsp;</td>
                 <td class="event-title-cell" valign="top">
-                  <p data-f="title" style="margin:0 0 3px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;font-weight:700;color:#281e7e;line-height:1.3;">${esc(ev.title)}</p>
+                  <p data-f="title" style="margin:0 0 3px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(ev.title)}</p>
                   <p style="margin:0;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:12px;color:#000000;letter-spacing:0.5px;"><span data-f="location">${esc(ev.location)}</span> &nbsp;&#183;&nbsp; <span data-f="time">${esc(ev.timeText)}</span></p>
                 </td>
               </tr>
@@ -75,7 +75,7 @@ function buildEventBlock(ev) {
           </td>
         </tr>
         <tr>
-          <td class="body-indented pad-sides" style="padding:0 28px 16px 96px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;line-height:1.7;color:#000000;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
+          <td class="body-indented pad-sides" style="padding:0 28px 16px 96px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;line-height:1.7;color:#000000;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
             <p data-f="tags" style="margin:10px 0 8px;">${tagPills(ev.tags)}</p>
             <p style="margin:0 0 6px;${ev.venue ? "" : "display:none;"}"><strong>Venue:</strong> <span data-f="venue">${esc(ev.venue)}</span></p>
             <p style="margin:0 0 6px;${ev.regLink ? "" : "display:none;"}">Registration: <a data-f="reg-link" href="${esc(ev.regLink)}" style="color:#81bce9;text-decoration:underline;">${esc(ev.regText || "Register here")}</a></p>
@@ -96,14 +96,14 @@ function buildActionBlock(it) {
     <td style="border-bottom:1px solid #e8e3da;padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
-          <td class="pad-sides" style="padding:10pt 28px;">
+          <td class="pad-sides" style="padding:14px 28px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
-                <td class="badge-cell" valign="top" style="white-space:nowrap;width:1%;padding-right:10pt;">
+                <td class="badge-cell" valign="top" style="white-space:nowrap;width:1%;padding-right:14px;">
                   <span data-f="badge" data-color="${esc(it.badgeColor)}" style="white-space:nowrap;background:${it.badgeColor};font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#ffffff;padding:3px 8px;">${esc(it.badge)}</span>
                 </td>
                 <td valign="top">
-                  <p data-f="title" style="margin:0 0 2px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;font-weight:700;color:#281e7e;line-height:1.3;">${esc(it.title)}</p>
+                  <p data-f="title" style="margin:0 0 2px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(it.title)}</p>
                   <div data-f="docs">${docLinks}</div>
                 </td>
               </tr>
@@ -111,7 +111,7 @@ function buildActionBlock(it) {
           </td>
         </tr>
         <tr>
-          <td class="pad-sides" style="padding:0 28px 16px 28px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;line-height:1.7;color:#000000;background:#faf9f6;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
+          <td class="pad-sides" style="padding:0 28px 16px 28px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;line-height:1.7;color:#000000;background:#faf9f6;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
             <p data-f="tags" style="margin:10px 0 6px;">${tagPills(it.tags)}</p>
             <p style="margin:0 0 8px;font-weight:700;color:#730303;${it.deadline ? "" : "display:none;"}">Deadline: <span data-f="deadline" data-raw="${esc(it.deadline || "")}">${esc(deadlineDisplay)}</span></p>
             <div data-f="content">${it.content || ""}</div>
@@ -129,14 +129,14 @@ function buildNotingBlock(it) {
     <td style="border-bottom:1px solid #e8e3da;padding:0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
-          <td class="pad-sides" style="padding:10pt 28px;">
+          <td class="pad-sides" style="padding:14px 28px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
-                <td class="badge-cell" valign="top" style="white-space:nowrap;width:1%;padding-right:10pt;">
+                <td class="badge-cell" valign="top" style="white-space:nowrap;width:1%;padding-right:14px;">
                   <span data-f="badge" data-color="${esc(it.badgeColor)}" style="white-space:nowrap;background:${it.badgeColor};font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f9f6ff;padding:3px 8px;">${esc(it.badge)}</span>
                 </td>
                 <td valign="top">
-                  <p data-f="title" style="margin:0 0 2px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;font-weight:700;color:#281e7e;line-height:1.3;">${esc(it.title)}</p>
+                  <p data-f="title" style="margin:0 0 2px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(it.title)}</p>
                   <div data-f="docs">${docLinks}</div>
                 </td>
               </tr>
@@ -144,7 +144,7 @@ function buildNotingBlock(it) {
           </td>
         </tr>
         <tr>
-          <td class="pad-sides" style="padding:0 28px 16px 28px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;line-height:1.7;color:#000000;background:#faf9f6;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
+          <td class="pad-sides" style="padding:0 28px 16px 28px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;line-height:1.7;color:#000000;background:#faf9f6;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
             <p data-f="tags" style="margin:10px 0 8px;">${tagPills(it.tags)}</p>
             <div data-f="content">${it.content || ""}</div>
           </td>
@@ -189,19 +189,19 @@ body{margin:0!important;padding:0!important;background-color:#f4f1ec;}
 </td></tr>
 <tr><td data-f="issue-range" style="background-color:#1b76bc;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td></tr>
 
-<tr><td style="background-color:#281e7e;padding:10pt 28px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Upcoming Events for the Next Three Months</td></tr></table>
+<tr><td style="background-color:#281e7e;padding:14px 28px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Upcoming Events for the Next Three Months</td></tr></table>
 </td></tr>
 ${events.map(buildEventBlock).join("")}
 
-<tr><td style="background-color:#281e7e;padding:10pt 28px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Papers, Circulars &amp; Surveys</td></tr></table>
+<tr><td style="background-color:#281e7e;padding:14px 28px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Papers, Circulars &amp; Surveys</td></tr></table>
 </td></tr>
 
 <tr><td style="background-color:#281e7e;padding:12px 28px;border-bottom:1px solid #e8e3da;">
 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
 <td width="8" height="8" style="background-color:#308acf;width:8px;height:8px;font-size:1px;line-height:1px;">&nbsp;</td>
-<td style="padding-left:10px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#f9f6ff;">For Action</td>
+<td style="padding-left:10px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#f9f6ff;">For Action</td>
 </tr></table>
 </td></tr>
 ${actionItems.map(buildActionBlock).join("")}
@@ -209,7 +209,7 @@ ${actionItems.map(buildActionBlock).join("")}
 <tr><td style="background-color:#281e7e;padding:12px 28px;border-top:1px solid #e8e3da;border-bottom:1px solid #e8e3da;">
 <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
 <td width="8" height="8" style="background-color:#931bb1;width:8px;height:8px;font-size:1px;line-height:1px;">&nbsp;</td>
-<td style="padding-left:10px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#f9f6ff;">For Noting</td>
+<td style="padding-left:10px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#f9f6ff;">For Noting</td>
 </tr></table>
 </td></tr>
 ${notingItems.map(buildNotingBlock).join("")}
@@ -323,6 +323,7 @@ export default function WeeklyDigestBuilder() {
   const { confirmDelete, deleteModal } = useConfirmDelete();
   const issueRangeRef = useRef<HTMLInputElement>(null);
   const titleRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [collapsedItem, setCollapsedItem] = useState<Record<string, boolean>>({});
 
 
 
@@ -441,13 +442,18 @@ export default function WeeklyDigestBuilder() {
     setSyncMessage(null);
   };
 
+  const toggleCollapsed = (id: string) => {
+    setCollapsedItem((prev) => ({
+      ...prev, 
+      [id]: !prev[id],
+    }));
+  };
   const capitalizeTitleSelection = (id: string, currentTitle: string, updateTitle:(newTitle: string) => void) => {
 const input = titleRefs.current[id];
 if(!input) return;
 
 const start = input.selectionStart ?? 0;
 const end = input.selectionEnd ?? 0;
-
 
 if (start === end) {
   return;
@@ -549,6 +555,13 @@ requestAnimationFrame(() => {
             <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
+                <button
+                type="button"
+                onClick={() => toggleCollapsed(ev.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[ev.id] ? "Expand" : "Collapse"}
+              </button>
                 <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() =>
   confirmDelete({
     itemType: "event",
@@ -560,6 +573,9 @@ requestAnimationFrame(() => {
   })
 }/>
               </div>
+
+              {!collapsedItem[ev.id] && (
+  <>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
                 <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
@@ -618,6 +634,7 @@ requestAnimationFrame(() => {
                 <Field label="Registration Link URL"><input className={inputCls} value={ev.regLink} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regLink: e.target.value } : x))} /></Field>
               </div>
               <Field label="Description"><textarea className={inputCls} rows={3} value={ev.description} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, description: e.target.value } : x))} /></Field>
+              </>)}
             </div>
           ))}
           <button onClick={() => setEvents([...events, { id: uid(), day: "1", month: "Jan", title: "New Event", location: "", timeText: "", tags: "All Members", venue: "", regText: "", regLink: "", description: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
@@ -634,6 +651,13 @@ requestAnimationFrame(() => {
   <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
 
   <div className="flex items-center gap-1">
+  <button
+                type="button"
+                onClick={() => toggleCollapsed(it.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[it.id] ? "Expand" : "Collapse"}
+              </button>
     <button
       onClick={() => copyItem(it, "here")}
       className="p-1 rounded hover:bg-gray-100 text-gray-500"
@@ -667,6 +691,9 @@ requestAnimationFrame(() => {
     />
   </div>
 </div>
+
+{!collapsedItem[it.id] && (
+  <>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
@@ -738,6 +765,8 @@ requestAnimationFrame(() => {
               <Field label="Content">
                 <RichTextEditor value={it.content} onChange={(html) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
               </Field>
+              </>
+)}
             </div>
           ))}
           <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Public Comments", badgeColor: badgePresets.PublicComments, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
@@ -754,6 +783,13 @@ requestAnimationFrame(() => {
   <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
 
   <div className="flex items-center gap-1">
+  <button
+                type="button"
+                onClick={() => toggleCollapsed(it.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[it.id] ? "Expand" : "Collapse"}
+              </button>
   <button
   onClick={() => copyItem(it, "here")}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
@@ -781,6 +817,9 @@ requestAnimationFrame(() => {
 } />
   </div>
 </div>
+{!collapsedItem[it.id] && (
+    <>
+
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
@@ -844,6 +883,8 @@ requestAnimationFrame(() => {
               <Field label="Content">
                 <RichTextEditor value={it.content} onChange={(html) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
               </Field>
+              </>
+)}
             </div>
           ))}
           <button onClick={() => setNotingItems([...notingItems, { id: uid(), badge: "ICS", badgeColor: badgePresets.ICS, title: "New Noting Item", tags: "Committee 1, Committee 2", docs: [], content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
