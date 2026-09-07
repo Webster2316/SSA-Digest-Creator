@@ -53,6 +53,8 @@ function buildBadgeSpan(badge: { text: string; bg: string; color: string; border
   return `<span style="display:inline-block;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;background:${badge.bg};color:${badge.color};border:1px solid ${badge.border};margin-right:6px;">${esc(badge.text)}</span>`;
 }
 
+///=========Helpers==========///
+
 //concats dates 
 function getSortDate(course: any) {
   const firstDay = course.dateRange.split("-")[0];
@@ -80,6 +82,9 @@ function sortWithPinned(list: any[]) {
 
   return [...pinned, ...normal];
 }
+
+
+/////////////////////////////////////////////////////
 function buildCourseRow(course: any) {
   const title = course.title.trim() || "Untitled Course";
   const dateRange = course.dateRange.trim() || "TBC";
@@ -346,6 +351,7 @@ export default function TrainingBulletinBuilder() {
   const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
+  const [collapsedItem, setCollapsedItem] = useState<Record<String, boolean>>({}); 
 
   useEffect(() => {
     (async () => {
@@ -403,6 +409,15 @@ export default function TrainingBulletinBuilder() {
     setList(arr);
   };
   
+
+const toggleCollapsed = (id: string) => {
+  setCollapsedItem((prev) => ({
+    ...prev, 
+    [id]: !prev[id],
+  }));
+};
+
+
   const updateItem = (list: any[], setList: (v: any[]) => void, id: string, patch: any) => {
     setList(list.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
@@ -542,6 +557,7 @@ export default function TrainingBulletinBuilder() {
         <div className="space-y-4">
           {sortedCourses.map((c) => {
   const i = courses.findIndex((x) => x.id === c.id);
+  
   return (
     <div key={c.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
       <div className="flex justify-between items-center mb-2">
@@ -557,6 +573,13 @@ export default function TrainingBulletinBuilder() {
     {c.title.trim() || `Course ${i + 1} (untitled)`}
         </span>
         <div className="flex items-center gap-1">
+        <button
+                type="button"
+                onClick={() => toggleCollapsed(c.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[c.id] ? "Expand" : "Collapse"}
+              </button>
           <button onClick={() => copyItem(c, "here")} className="p-1 rounded hover:bg-gray-100 text-gray-500" title="Copy here">
             <Files size={16} />
           </button>
@@ -588,6 +611,9 @@ export default function TrainingBulletinBuilder() {
 </button>
                 </div>
               </div>
+
+              {!collapsedItem[c.id] && (
+    <>
 
               <Field label="Course title">
                 <input className={inputCls} value={c.title} onChange={(e) => updateCourse(c.id, { title: e.target.value })} />
@@ -672,6 +698,7 @@ export default function TrainingBulletinBuilder() {
               <Field label="Footnote under the button">
                 <input className={inputCls} value={c.footnote} onChange={(e) => updateCourse(c.id, { footnote: e.target.value })} />
               </Field>
+            </>  )}
             </div>
           )})}
           <button
@@ -706,6 +733,13 @@ export default function TrainingBulletinBuilder() {
 
           <div className="flex items-center gap-1">
           <button
+                type="button"
+                onClick={() => toggleCollapsed(c.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[c.id] ? "Expand" : "Collapse"}
+              </button>
+          <button
   onClick={() => copyItem(c, "here")}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy here"
@@ -739,6 +773,8 @@ export default function TrainingBulletinBuilder() {
           </div>
         </div>
 
+        {!collapsedItem[c.id] && (
+  <>
         <Field label="Course title">
           <input
             className={inputCls}
@@ -912,6 +948,9 @@ export default function TrainingBulletinBuilder() {
             }
           />
         </Field>
+        </>
+                      )}
+
       </div>
     ))}
 

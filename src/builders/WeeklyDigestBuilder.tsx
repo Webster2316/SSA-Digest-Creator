@@ -323,6 +323,7 @@ export default function WeeklyDigestBuilder() {
   const { confirmDelete, deleteModal } = useConfirmDelete();
   const issueRangeRef = useRef<HTMLInputElement>(null);
   const titleRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [collapsedItem, setCollapsedItem] = useState<Record<string, boolean>>({});
 
 
 
@@ -441,6 +442,12 @@ export default function WeeklyDigestBuilder() {
     setSyncMessage(null);
   };
 
+  const toggleCollapsed = (id: string) => {
+    setCollapsedItem((prev) => ({
+      ...prev, 
+      [id]: !prev[id],
+    }));
+  };
   const capitalizeTitleSelection = (id: string, currentTitle: string, updateTitle:(newTitle: string) => void) => {
 const input = titleRefs.current[id];
 if(!input) return;
@@ -548,6 +555,13 @@ requestAnimationFrame(() => {
             <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
+                <button
+                type="button"
+                onClick={() => toggleCollapsed(ev.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[ev.id] ? "Expand" : "Collapse"}
+              </button>
                 <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() =>
   confirmDelete({
     itemType: "event",
@@ -559,6 +573,9 @@ requestAnimationFrame(() => {
   })
 }/>
               </div>
+
+              {!collapsedItem[ev.id] && (
+  <>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
                 <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
@@ -617,6 +634,7 @@ requestAnimationFrame(() => {
                 <Field label="Registration Link URL"><input className={inputCls} value={ev.regLink} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regLink: e.target.value } : x))} /></Field>
               </div>
               <Field label="Description"><textarea className={inputCls} rows={3} value={ev.description} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, description: e.target.value } : x))} /></Field>
+              </>)}
             </div>
           ))}
           <button onClick={() => setEvents([...events, { id: uid(), day: "1", month: "Jan", title: "New Event", location: "", timeText: "", tags: "All Members", venue: "", regText: "", regLink: "", description: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
@@ -633,6 +651,13 @@ requestAnimationFrame(() => {
   <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
 
   <div className="flex items-center gap-1">
+  <button
+                type="button"
+                onClick={() => toggleCollapsed(it.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[it.id] ? "Expand" : "Collapse"}
+              </button>
     <button
       onClick={() => copyItem(it, "here")}
       className="p-1 rounded hover:bg-gray-100 text-gray-500"
@@ -666,6 +691,9 @@ requestAnimationFrame(() => {
     />
   </div>
 </div>
+
+{!collapsedItem[it.id] && (
+  <>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
@@ -737,6 +765,8 @@ requestAnimationFrame(() => {
               <Field label="Content">
                 <RichTextEditor value={it.content} onChange={(html) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
               </Field>
+              </>
+)}
             </div>
           ))}
           <button onClick={() => setActionItems([...actionItems, { id: uid(), badge: "Public Comments", badgeColor: badgePresets.PublicComments, title: "New Action Item", deadline: "", docs: [], tags: "All Members", content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
@@ -753,6 +783,13 @@ requestAnimationFrame(() => {
   <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
 
   <div className="flex items-center gap-1">
+  <button
+                type="button"
+                onClick={() => toggleCollapsed(it.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[it.id] ? "Expand" : "Collapse"}
+              </button>
   <button
   onClick={() => copyItem(it, "here")}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
@@ -780,6 +817,9 @@ requestAnimationFrame(() => {
 } />
   </div>
 </div>
+{!collapsedItem[it.id] && (
+    <>
+
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
@@ -843,6 +883,8 @@ requestAnimationFrame(() => {
               <Field label="Content">
                 <RichTextEditor value={it.content} onChange={(html) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
               </Field>
+              </>
+)}
             </div>
           ))}
           <button onClick={() => setNotingItems([...notingItems, { id: uid(), badge: "ICS", badgeColor: badgePresets.ICS, title: "New Noting Item", tags: "Committee 1, Committee 2", docs: [], content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
