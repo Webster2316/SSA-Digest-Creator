@@ -70,7 +70,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
             [onLinksReady]
           );
 
-          const handleDrop = (e: React.DragEvent<HTMLDivElemnts>) => {
+          const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
             e.preventDefault();
             setIsDragging(false);
             handleFiles(e.dataTransfer.files);
