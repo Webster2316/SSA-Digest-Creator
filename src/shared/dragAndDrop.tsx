@@ -140,7 +140,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
                     onClick={() => onLinksReady?.([f])}
                     className="px-3 py-1.5 text-xs font-medium rounded border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
                   >
-                    Use existing
+                    Use existing link
                   </button>
                 )}
               </li>
