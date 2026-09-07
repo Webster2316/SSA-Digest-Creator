@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive,  FileText, Loader2, RotateCcw, Files,  ArrowRightLeft, } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
@@ -321,6 +321,8 @@ export default function WeeklyDigestBuilder() {
   const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
   const [docModalTarget, setDocModalTarget] = useState<{ type: "action" | "noting"; id: string } | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
+  const issueRangeRef = useRef<HTMLInputElement>(null);
+  const titleRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
 
 
@@ -439,6 +441,30 @@ export default function WeeklyDigestBuilder() {
     setSyncMessage(null);
   };
 
+  const capitalizeTitleSelection = (id: string, currentTitle: string, updateTitle:(newTitle: string) => void) => {
+const input = titleRefs.current[id];
+if(!input) return;
+
+const start = input.selectionStart ?? 0;
+const end = input.selectionEnd ?? 0;
+
+if (start === end) {
+  return;
+}
+const selected = currentTitle.slice(start, end);
+if (!selected) return;
+const capitalized = selected.split(" ").map((word) => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : word).join(" ");
+
+const newTitle = currentTitle.slice(0, start) + capitalized + currentTitle.slice(end);
+
+updateTitle(newTitle);
+
+requestAnimationFrame(() => {
+  input.focus();
+  input.setSelectionRange(start, end);
+});
+  };
+
   const handleApplyHtmlToFields = () => {
     try {
       const parsed = parseHtmlToState(html);
@@ -537,7 +563,49 @@ export default function WeeklyDigestBuilder() {
                 <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
                 <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
               </div>
-              <Field label="Title"><input className={inputCls} value={ev.title} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <Field label="Title">
+  <div className="flex items-center gap-2">
+    <input
+      ref={(el) => {
+        titleRefs.current[ev.id] = el;
+      }}
+      className={inputCls}
+      value={ev.title}
+      onChange={(e) =>
+        setEvents(
+          events.map((x) =>
+            x.id === ev.id
+              ? { ...x, title: e.target.value }
+              : x
+          )
+        )
+      }
+    />
+
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() =>
+        capitalizeTitleSelection(
+          ev.id,
+          ev.title,
+          (newTitle) =>
+            setEvents(
+              events.map((x) =>
+                x.id === ev.id
+                  ? { ...x, title: newTitle }
+                  : x
+              )
+            )
+        )
+      }
+      className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
+      title="Capitalise selected text"
+    >
+      Aa
+    </button>
+  </div>
+</Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Location"><input className={inputCls} value={ev.location} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, location: e.target.value } : x))} /></Field>
                 <Field label="Time"><input className={inputCls} value={ev.timeText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, timeText: e.target.value } : x))} /></Field>
@@ -602,7 +670,49 @@ export default function WeeklyDigestBuilder() {
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
               </div>
-              <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <Field label="Title">
+  <div className="flex items-center gap-2">
+    <input
+      ref={(el) => {
+        titleRefs.current[it.id] = el;
+      }}
+      className={inputCls}
+      value={it.title}
+      onChange={(e) =>
+        setActionItems(
+          actionItems.map((x) =>
+            x.id === it.id
+              ? { ...x, title: e.target.value }
+              : x
+          )
+        )
+      }
+    />
+
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() =>
+        capitalizeTitleSelection(
+          it.id,
+          it.title,
+          (newTitle) =>
+            setActionItems(
+              actionItems.map((x) =>
+                x.id === it.id
+                  ? { ...x, title: newTitle }
+                  : x
+              )
+            )
+        )
+      }
+      className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
+      title="Capitalise first letter of selected text"
+    >
+      Aa
+    </button>
+  </div>
+</Field>
               <Field label="Deadline (optional)">
                 <div className="flex items-center gap-2">
                   <input type="date" className={inputCls} value={it.deadline || ""} onChange={(e) => setActionItems(actionItems.map((x) => x.id === it.id ? { ...x, deadline: e.target.value } : x))} />
@@ -674,7 +784,49 @@ export default function WeeklyDigestBuilder() {
                 <Field label="Badge Label"><input className={inputCls} value={it.badge} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badge: e.target.value } : x))} /></Field>
                 <Field label="Badge Color"><input type="color" className="w-full h-9 border border-gray-300 rounded" value={it.badgeColor} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, badgeColor: e.target.value } : x))} /></Field>
               </div>
-              <Field label="Title"><input className={inputCls} value={it.title} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, title: e.target.value } : x))} /></Field>
+              <Field label="Title">
+  <div className="flex items-center gap-2">
+    <input
+      ref={(el) => {
+        titleRefs.current[it.id] = el;
+      }}
+      className={inputCls}
+      value={it.title}
+      onChange={(e) =>
+        setNotingItems(
+          notingItems.map((x) =>
+            x.id === it.id
+              ? { ...x, title: e.target.value }
+              : x
+          )
+        )
+      }
+    />
+
+    <button
+      type="button"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={() =>
+        capitalizeTitleSelection(
+          it.id,
+          it.title,
+          (newTitle) =>
+            setNotingItems(
+              notingItems.map((x) =>
+                x.id === it.id
+                  ? { ...x, title: newTitle }
+                  : x
+              )
+            )
+        )
+      }
+      className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
+      title="Capitalise first letter of selected text"
+    >
+      Aa
+    </button>
+  </div>
+</Field>
               <Field label="Tags (comma separated)"><input className={inputCls} value={it.tags} onChange={(e) => setNotingItems(notingItems.map((x) => x.id === it.id ? { ...x, tags: e.target.value } : x))} /></Field>
               <Field label="Documents">
                 <div className="space-y-2">
