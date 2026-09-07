@@ -782,6 +782,9 @@ export default function AIBulletinBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueTag) setIssueTag(data.issueTag);
+            if (data.collapsedItem) {
+              setCollapsedItem(data.collapsedItem);
+            }
             if (data.awarenessItems) {
               setAwarenessItems(
                 data.awarenessItems.map((it) =>
@@ -859,6 +862,7 @@ export default function AIBulletinBuilder() {
             trainingSectionTitle,
             trainingItems,
             adoptionItems,
+            collapsedItem,
             rawHtmlEdit,
             builtHtml: html,
           }),
@@ -883,6 +887,7 @@ export default function AIBulletinBuilder() {
     trainingSectionTitle,
     trainingItems,
     adoptionItems,
+    collapsedItem,
     rawHtmlEdit,
     loaded,
   ]);
