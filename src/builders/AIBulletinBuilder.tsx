@@ -767,6 +767,7 @@ export default function AIBulletinBuilder() {
   const [syncMessage, setSyncMessage] = useState(null);
   const [viewingRecordId, setViewingRecordId] = useState(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
+  const [collapsedItem, setCollapsedItem] = useState<Record<string, boolean>>({});
   const [docModalTarget, setDocModalTarget] = useState<{
     type: "awareness" | "awareness-subitem" | "training" | "adoption";
     id: string;
@@ -886,6 +887,12 @@ export default function AIBulletinBuilder() {
     loaded,
   ]);
 
+  const toggleCollapsed = (id: string) => {
+    setCollapsedItem((prev) => ({
+      ...prev, 
+      [id]: !prev[id],
+    }));
+  };
   const move = (list, setList, index, dir) => {
     const arr = [...list];
     const target = index + dir;
@@ -1193,6 +1200,14 @@ export default function AIBulletinBuilder() {
                               <span className="text-xs font-semibold text-slate-700">
                                 {sub.header.trim() || `Sub-item ${si + 1} (untitled)`}
                               </span>
+                              <div className="flex items-center gap-1">
+                              <button
+                type="button"
+                onClick={() => toggleCollapsed(sub.id)}
+                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+              >
+                {collapsedItem[sub.id] ? "Expand" : "Collapse"}
+              </button>
                               <MoveButtons
                                 index={si}
                                 length={item.subItems.length}
@@ -1207,7 +1222,10 @@ export default function AIBulletinBuilder() {
                                 }
                               />
                             </div>
+                            </div>
 
+                            {!collapsedItem[sub.id] && (
+  <>
                             <Field label="Sub-item header">
                               <input
                                 className={inputCls}
@@ -1250,6 +1268,8 @@ export default function AIBulletinBuilder() {
                               color="navy"
                               label="Add optional tag block"
                             />
+                            </>
+                            )}
                           </div>
                         ))}
 
@@ -1283,7 +1303,6 @@ export default function AIBulletinBuilder() {
                       />
                     </Field>
                   </div>
-
 
                   {trainingItems.map((item, i) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
