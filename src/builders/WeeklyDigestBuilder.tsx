@@ -67,7 +67,7 @@ function buildEventBlock(ev) {
                 </td>
                 <td class="event-spacer-cell" width="16">&nbsp;</td>
                 <td class="event-title-cell" valign="top">
-                  <p data-f="title" style="margin:0 0 3px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:13.3px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(ev.title)}</p>
+                  <p data-f="title" style="margin:0 0 3px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:13.5px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(ev.title)}</p>
                   <p style="margin:0;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:12px;color:#000000;letter-spacing:0.5px;"><span data-f="location">${esc(ev.location)}</span> &nbsp;&#183;&nbsp; <span data-f="time">${esc(ev.timeText)}</span></p>
                 </td>
               </tr>
