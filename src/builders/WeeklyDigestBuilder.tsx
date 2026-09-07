@@ -557,7 +557,7 @@ requestAnimationFrame(() => {
           {events.map((ev, i) => (
             <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold text-indigo-700">Event {i + 1}</span>
+                <span className="text-xs font-semibold text-indigo-700">Event {i + 1} : {ev.title}</span>
                 <button
                 type="button"
                 onClick={() => toggleCollapsed(ev.id)}
@@ -651,7 +651,7 @@ requestAnimationFrame(() => {
           {actionItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
-  <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+  <span className="text-xs font-semibold text-indigo-700">Item {i + 1} : {it.title}</span>
 
   <div className="flex items-center gap-1">
   <button
@@ -783,7 +783,7 @@ requestAnimationFrame(() => {
           {notingItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
-  <span className="text-xs font-semibold text-indigo-700">Item {i + 1}</span>
+  <span className="text-xs font-semibold text-indigo-700">Item {i + 1} : {it.title}</span>
 
   <div className="flex items-center gap-1">
   <button

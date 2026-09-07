@@ -362,6 +362,9 @@ export default function TrainingBulletinBuilder() {
           if (data) {
             if (data.greeting) setGreeting(data.greeting);
             if (data.issueRange) setIssueRange(data.issueRange);
+            if (data.collapsedItem) {
+              setCollapsedItem(data.collapsedItem);
+            }
             if (data.eobItems) {
               setEobItems(data.eobItems.map((c: any) => ({...makeCourse(), ...c})));
             }
@@ -386,7 +389,7 @@ export default function TrainingBulletinBuilder() {
         const res = await fetch("/api/save-digest?key=training-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ greeting, issueRange, courses, eobItems, rawHtmlEdit, builtHtml: html }),
+          body: JSON.stringify({ greeting, issueRange, courses, eobItems, collapsedItem, rawHtmlEdit, builtHtml: html }),
         });
         if (res.ok) {
           setSaveStatus(`Saved at ${getDateTime()}`);
@@ -399,7 +402,7 @@ export default function TrainingBulletinBuilder() {
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [greeting, issueRange, courses, eobItems, rawHtmlEdit, loaded]);
+  }, [greeting, issueRange, courses, eobItems, collapsedItem, rawHtmlEdit, loaded]);
 
   const move = (list: any[], setList: (v: any[]) => void, index: number, dir: number) => {
     const arr = [...list];
