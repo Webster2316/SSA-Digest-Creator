@@ -336,6 +336,9 @@ export default function WeeklyDigestBuilder() {
           if (data) {
             if (data.issueRange) setIssueRange(data.issueRange);
             if (data.events) setEvents(data.events);
+            if (data.collapsedItem) {
+              setCollapsedItem(data.collapsedItem);
+            }
             if (data.actionItems) {
               const migrated = data.actionItems.map((it) => {
                 if (it.docs) return { deadline: "", ...it };
@@ -366,7 +369,7 @@ export default function WeeklyDigestBuilder() {
         const res = await fetch("/api/save-digest?key=ssa-digest-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit, builtHtml: html }),
+          body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit, collapsedItem, builtHtml: html }),
         });
         if (res.ok) {
   setSaveStatus(`Saved at ${getDateTime()}`);
@@ -379,7 +382,7 @@ export default function WeeklyDigestBuilder() {
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [issueRange, events, actionItems, notingItems, rawHtmlEdit, loaded]);
+  }, [issueRange, events, actionItems, notingItems, rawHtmlEdit, collapsedItem, loaded]);
 
   const move = (list, setList) => (index, dir) => {
     const arr = [...list];
