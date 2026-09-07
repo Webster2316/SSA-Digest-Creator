@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive,  FileText, Loader2, RotateCcw, Files,  ArrowRightLeft, } from "lucide-react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive, FileText, Loader2, RotateCcw, Files, ArrowRightLeft, GripVertical } from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RichTextEditor from "../shared/richTextEditor";
@@ -8,6 +8,24 @@ import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 import useConfirmDelete from "../shared/useConfirmDelete";
+import {
+  DndContext,
+  closestCenter,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+
+import { CSS } from "@dnd-kit/utilities";
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const badgePresets = {
   Review: "#d0a523",
@@ -305,7 +323,48 @@ function getDateTime() {
     minute: "2-digit",
   });
 }
+function SortableCard({
+  id,
+  children,
+}: {
+  id: string;
+  children: (dragHandle: ReactNode) => ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+  };
+
+  const dragHandle = (
+    <button
+      type="button"
+      {...attributes}
+      {...listeners}
+      className="p-1 rounded cursor-grab active:cursor-grabbing text-gray-400 hover:text-indigo-700 hover:bg-gray-100 touch-none"
+      title="Drag to rearrange"
+      aria-label="Drag to rearrange"
+    >
+      <GripVertical size={16} />
+    </button>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(dragHandle)}
+    </div>
+  );
+}
 
 export default function WeeklyDigestBuilder() {
   const [tab, setTab] = useState("events");
@@ -447,9 +506,24 @@ export default function WeeklyDigestBuilder() {
 
   const toggleCollapsed = (id: string) => {
     setCollapsedItem((prev) => ({
-      ...prev, 
+      ...prev,
       [id]: !prev[id],
     }));
+  };
+
+  const handleEventDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setEvents((prev) => {
+      const oldIndex = prev.findIndex((item) => item.id === active.id);
+      const newIndex = prev.findIndex((item) => item.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return prev;
+
+      return arrayMove(prev, oldIndex, newIndex);
+    });
   };
   const capitalizeTitleSelection = (id: string, currentTitle: string, updateTitle:(newTitle: string) => void) => {
 const input = titleRefs.current[id];
@@ -553,99 +627,280 @@ requestAnimationFrame(() => {
 
     <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
       {tab === "events" && (
-        <div className="space-y-4">
-          {events.map((ev, i) => (
-            <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs font-semibold text-indigo-700">Event {i + 1} : {ev.title}</span>
-                <div className="flex items-center gap-1">
-                <button
-                type="button"
-                onClick={() => toggleCollapsed(ev.id)}
-                className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleEventDragEnd}
+        >
+          <SortableContext
+            items={events.map((ev) => ev.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-4">
+              {events.map((ev, i) => (
+                <SortableCard key={ev.id} id={ev.id}>
+                  {(dragHandle) => (
+                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                      <div className="flex justify-between items-center mb-2 gap-2">
+                        <div className="flex items-center gap-1 min-w-0">
+                          {dragHandle}
+                          <span className="text-xs font-semibold text-indigo-700 truncate">
+                            Event {i + 1}: {ev.title}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleCollapsed(ev.id)}
+                            className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+                          >
+                            {collapsedItem[ev.id] ? "Expand" : "Collapse"}
+                          </button>
+
+                          <MoveButtons
+                            index={i}
+                            length={events.length}
+                            onMove={move(events, setEvents)}
+                            onRemove={() =>
+                              confirmDelete({
+                                itemType: "event",
+                                itemName: ev.title,
+                                action: () =>
+                                  setEvents((prev) =>
+                                    prev.filter((e) => e.id !== ev.id)
+                                  ),
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {!collapsedItem[ev.id] && (
+                        <>
+                          <div className="grid grid-cols-2 gap-3">
+                            <Field label="Day">
+                              <input
+                                className={inputCls}
+                                value={ev.day}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, day: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                            <Field label="Month">
+                              <input
+                                className={inputCls}
+                                value={ev.month}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, month: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                          </div>
+
+                          <Field label="Title">
+                            <div className="flex items-center gap-2">
+                              <input
+                                ref={(el) => {
+                                  titleRefs.current[ev.id] = el;
+                                }}
+                                className={inputCls}
+                                value={ev.title}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, title: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={() =>
+                                  capitalizeTitleSelection(
+                                    ev.id,
+                                    ev.title,
+                                    (newTitle) =>
+                                      setEvents(
+                                        events.map((x) =>
+                                          x.id === ev.id
+                                            ? { ...x, title: newTitle }
+                                            : x
+                                        )
+                                      )
+                                  )
+                                }
+                                className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
+                                title="Capitalise selected text"
+                              >
+                                Aa
+                              </button>
+                            </div>
+                          </Field>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <Field label="Location">
+                              <input
+                                className={inputCls}
+                                value={ev.location}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, location: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                            <Field label="Time">
+                              <input
+                                className={inputCls}
+                                value={ev.timeText}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, timeText: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                          </div>
+
+                          <Field label="Tags (comma separated)">
+                            <input
+                              className={inputCls}
+                              value={ev.tags}
+                              onChange={(e) =>
+                                setEvents(
+                                  events.map((x) =>
+                                    x.id === ev.id
+                                      ? { ...x, tags: e.target.value }
+                                      : x
+                                  )
+                                )
+                              }
+                            />
+                          </Field>
+
+                          <Field label="Venue">
+                            <input
+                              className={inputCls}
+                              value={ev.venue}
+                              onChange={(e) =>
+                                setEvents(
+                                  events.map((x) =>
+                                    x.id === ev.id
+                                      ? { ...x, venue: e.target.value }
+                                      : x
+                                  )
+                                )
+                              }
+                            />
+                          </Field>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <Field label="Registration Link Text">
+                              <input
+                                className={inputCls}
+                                value={ev.regText}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, regText: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                            <Field label="Registration Link URL">
+                              <input
+                                className={inputCls}
+                                value={ev.regLink}
+                                onChange={(e) =>
+                                  setEvents(
+                                    events.map((x) =>
+                                      x.id === ev.id
+                                        ? { ...x, regLink: e.target.value }
+                                        : x
+                                    )
+                                  )
+                                }
+                              />
+                            </Field>
+                          </div>
+
+                          <Field label="Description">
+                            <textarea
+                              className={inputCls}
+                              rows={3}
+                              value={ev.description}
+                              onChange={(e) =>
+                                setEvents(
+                                  events.map((x) =>
+                                    x.id === ev.id
+                                      ? { ...x, description: e.target.value }
+                                      : x
+                                  )
+                                )
+                              }
+                            />
+                          </Field>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </SortableCard>
+              ))}
+
+              <button
+                onClick={() =>
+                  setEvents([
+                    ...events,
+                    {
+                      id: uid(),
+                      day: "1",
+                      month: "Jan",
+                      title: "New Event",
+                      location: "",
+                      timeText: "",
+                      tags: "All Members",
+                      venue: "",
+                      regText: "",
+                      regLink: "",
+                      description: "",
+                    },
+                  ])
+                }
+                className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
               >
-                {collapsedItem[ev.id] ? "Expand" : "Collapse"}
+                <Plus size={16} /> Add Event
               </button>
-                <MoveButtons index={i} length={events.length} onMove={move(events, setEvents)} onRemove={() =>
-  confirmDelete({
-    itemType: "event",
-    itemName: ev.title,
-    action: () =>
-      setEvents((prev) =>
-        prev.filter((e) => e.id !== ev.id)
-      ),
-  })
-}/>
-</div>
-              </div>
-
-              {!collapsedItem[ev.id] && (
-  <>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Day"><input className={inputCls} value={ev.day} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, day: e.target.value } : x))} /></Field>
-                <Field label="Month"><input className={inputCls} value={ev.month} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, month: e.target.value } : x))} /></Field>
-              </div>
-              <Field label="Title">
-  <div className="flex items-center gap-2">
-    <input
-      ref={(el) => {
-        titleRefs.current[ev.id] = el;
-      }}
-      className={inputCls}
-      value={ev.title}
-      onChange={(e) =>
-        setEvents(
-          events.map((x) =>
-            x.id === ev.id
-              ? { ...x, title: e.target.value }
-              : x
-          )
-        )
-      }
-    />
-
-    <button
-      type="button"
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={() =>
-        capitalizeTitleSelection(
-          ev.id,
-          ev.title,
-          (newTitle) =>
-            setEvents(
-              events.map((x) =>
-                x.id === ev.id
-                  ? { ...x, title: newTitle }
-                  : x
-              )
-            )
-        )
-      }
-      className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
-      title="Capitalise selected text"
-    >
-      Aa
-    </button>
-  </div>
-</Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Location"><input className={inputCls} value={ev.location} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, location: e.target.value } : x))} /></Field>
-                <Field label="Time"><input className={inputCls} value={ev.timeText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, timeText: e.target.value } : x))} /></Field>
-              </div>
-              <Field label="Tags (comma separated)"><input className={inputCls} value={ev.tags} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, tags: e.target.value } : x))} /></Field>
-              <Field label="Venue"><input className={inputCls} value={ev.venue} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, venue: e.target.value } : x))} /></Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Registration Link Text"><input className={inputCls} value={ev.regText} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regText: e.target.value } : x))} /></Field>
-                <Field label="Registration Link URL"><input className={inputCls} value={ev.regLink} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, regLink: e.target.value } : x))} /></Field>
-              </div>
-              <Field label="Description"><textarea className={inputCls} rows={3} value={ev.description} onChange={(e) => setEvents(events.map((x) => x.id === ev.id ? { ...x, description: e.target.value } : x))} /></Field>
-              </>)}
             </div>
-          ))}
-          <button onClick={() => setEvents([...events, { id: uid(), day: "1", month: "Jan", title: "New Event", location: "", timeText: "", tags: "All Members", venue: "", regText: "", regLink: "", description: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
-            <Plus size={16} /> Add Event
-          </button>
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {tab === "action" && (
