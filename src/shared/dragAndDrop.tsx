@@ -54,7 +54,7 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
 
                 const duplicates = results.filter((r) => r.status === "duplicate");
                 if (duplicates.length > 0) {
-                    alert(`Already uploaded: ${duplicates.map((d) => d.filename).join(", ")}`);
+                    alert(`Already uploaded: ${duplicates.map((d) => d.filename).join(", ")}. Would you link to fetch file link?`);
                 }
                 const uploaded = results.filter((r) => r.status === "uploaded");
                 if (uploaded.length > 0 && onLinksReady) {
@@ -110,13 +110,40 @@ export default function DigestDropZone({onLinksReady }: DigestDropZoneProps) {
             {fileStatuses.length > 0 && (
               <ul className="text-left space-y-1 mt-2">
                 {fileStatuses.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm">
-    {f.status === "uploading" && <Loader2 size={40} className="animate-spin text-indigo-600" />}
-    {f.status === "uploaded" && <CheckCircle2 size={40} className="text-emerald-600" />}
-    {f.status === "duplicate" && <AlertTriangle size={40} className="text-amber-600" />}
-    {f.status === "error" && <XCircle size={40} className="text-red-600" />}
-    <span>{f.filename}</span>
-  </li>
+                <li
+                key={i}
+                className="flex items-center gap-2 text-sm"
+              >
+                {f.status === "uploading" && (<Loader2 size={20} className="animate-spin text-indigo-600" />)}
+              
+                {f.status === "uploaded" && (<CheckCircle2 size={20} className="text-emerald-600" />   )}
+              
+                {f.status === "duplicate" && (<AlertTriangle size={20}  className="text-amber-600" /> )}
+              
+                {f.status === "error" && (  <XCircle  size={20}  className="text-red-600"/>  )}
+              
+                <div className="flex-1">
+                  <div className="font-medium">
+                    {f.filename}
+                  </div>
+              
+                  {f.status === "duplicate" && (
+                    <div className="text-xs text-amber-700">
+                      This file already exists.
+                    </div>
+                  )}
+                </div>
+              
+                {f.status === "duplicate" && f.link && (
+                  <button
+                    type="button"
+                    onClick={() => onLinksReady?.([f])}
+                    className="px-3 py-1.5 text-xs font-medium rounded border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100"
+                  >
+                    Use existing
+                  </button>
+                )}
+              </li>
                 ))}
               </ul>
             )}
