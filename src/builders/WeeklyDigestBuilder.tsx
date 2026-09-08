@@ -342,7 +342,7 @@ function SortableCard({
       type="button"
       {...attributes}
       {...listeners}
-      className="p-1 rounded cursor-grab active:cursor-grabbing text-gray-400 hover:text-indigo-700 hover:bg-gray-100 touch-none"
+      className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded cursor-grab active:cursor-grabbing text-gray-400 hover:text-indigo-700 hover:bg-gray-100 touch-none"
       title="Drag to rearrange"
       aria-label="Drag to rearrange"
     >
@@ -634,8 +634,8 @@ requestAnimationFrame(() => {
                 <SortableCard key={ev.id} id={ev.id}>
                   {(dragHandle) => (
                     <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                      <div className="flex justify-between items-center mb-2 gap-2">
-                        <div className="flex items-center gap-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1 min-w-0 flex-1">
                           {dragHandle}
                           <span className="text-xs font-semibold text-indigo-700 truncate">
                             Event {i + 1}: {ev.title}
@@ -910,12 +910,16 @@ requestAnimationFrame(() => {
           {actionItems.map((it, i) => (
                <SortableCard key={it.id} id={it.id}>
                {(dragHandle) => (
-            <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-              {dragHandle}
-  <span className="text-xs font-semibold text-indigo-700">Item {i + 1} : {it.title}</span>
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  {dragHandle}
+                  <span className="text-xs font-semibold text-indigo-700 truncate">
+                    Item {i + 1}: {it.title}
+                  </span>
+                </div>
 
-  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
   <button
                 type="button"
                 onClick={() => toggleCollapsed(it.id)}
@@ -1058,12 +1062,16 @@ requestAnimationFrame(() => {
           {notingItems.map((it, i) => (
                <SortableCard key={it.id} id={it.id}>
                {(dragHandle) => (
-            <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-              {dragHandle}
-  <span className="text-xs font-semibold text-indigo-700">Item {i + 1} : {it.title}</span>
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  {dragHandle}
+                  <span className="text-xs font-semibold text-indigo-700 truncate">
+                    Item {i + 1}: {it.title}
+                  </span>
+                </div>
 
-  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
   <button
                 type="button"
                 onClick={() => toggleCollapsed(it.id)}
