@@ -196,7 +196,7 @@ body{margin:0!important;padding:0!important;background-color:#f4f1ec;}
 <tr><td style="padding:0;font-size:0;line-height:0;">
 <img class="header-img" src="https://raw.githubusercontent.com/Webster2316/AI_Bulletin_Draft/refs/heads/main/Banner.png" width="680" alt="SSA Weekly Digest" style="display:block;width:100%;max-width:680px;border:0;height:auto;">
 </td></tr>
-<tr><td data-f="issue-range" style="background-color:#1b76bc;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td></tr>
+<tr><td data-f="issue-range" style="background-color:#1b76bc;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td></tr>
 
 <tr><td style="background-color:#281e7e;padding:14px 28px;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:19px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Upcoming Events for the Next Three Months</td></tr></table>
