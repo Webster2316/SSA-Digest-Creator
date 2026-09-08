@@ -6,7 +6,7 @@ import AIBulletinBuilder from "./builders/AIBulletinBuilder";
 import EventsBuilder from "./builders/events/EventsHome";
 
 type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" ;
-
+ 
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
