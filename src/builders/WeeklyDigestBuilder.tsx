@@ -518,6 +518,7 @@ export default function WeeklyDigestBuilder() {
       return arrayMove(prev, oldIndex, newIndex);
     });
   };
+
   const capitalizeTitleSelection = (id: string, currentTitle: string, updateTitle:(newTitle: string) => void) => {
 const input = titleRefs.current[id];
 if(!input) return;
@@ -622,7 +623,7 @@ requestAnimationFrame(() => {
       {tab === "events" && (
         <DndContext
           collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
+          onDragEnd={handleDragEnd(setEvents)}
         >
           <SortableContext
             items={events.map((ev) => ev.id)}
@@ -899,7 +900,7 @@ requestAnimationFrame(() => {
       {tab === "action" && (
             <DndContext
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+            onDragEnd={handleDragEnd(setActionItems)}
           >
             <SortableContext
               items={actionItems.map((it) => it.id)}
@@ -1046,7 +1047,7 @@ requestAnimationFrame(() => {
       {tab === "noting" && (
             <DndContext
             collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+            onDragEnd={handleDragEnd(setNotingItems)}
           >
             <SortableContext
               items={notingItems.map((it) => it.id)}
