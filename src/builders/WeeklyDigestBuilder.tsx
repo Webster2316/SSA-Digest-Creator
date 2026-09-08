@@ -8,18 +8,9 @@ import RecordViewer from "../shared/recordViewer";
 import { uid, esc, tagPills, formatDeadline, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 import useConfirmDelete from "../shared/useConfirmDelete";
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent,} from "@dnd-kit/core";
 
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable,} from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
 
@@ -904,6 +895,14 @@ requestAnimationFrame(() => {
       )}
 
       {tab === "action" && (
+            <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={handleEventDragEnd}
+          >
+            <SortableContext
+              items={actionItems.map((it) => it.id)}
+              strategy={verticalListSortingStrategy}
+            >
         <div className="space-y-4">
           {actionItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -1033,9 +1032,19 @@ requestAnimationFrame(() => {
             <Plus size={16} /> Add Action Item
           </button>
         </div>
+        </SortableContext>
+        </DndContext>
       )}
 
       {tab === "noting" && (
+            <DndContext
+            collisionDetection={closestCenter}
+            onDragEnd={handleEventDragEnd}
+          >
+            <SortableContext
+              items={notingItems.map((it) => it.id)}
+              strategy={verticalListSortingStrategy}
+            >
         <div className="space-y-4">
           {notingItems.map((it, i) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -1151,6 +1160,8 @@ requestAnimationFrame(() => {
             <Plus size={16} /> Add Noting Item
           </button>
         </div>
+        </SortableContext>
+        </DndContext>
       )}
 
       {tab === "preview" && (
