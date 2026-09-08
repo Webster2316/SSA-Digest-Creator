@@ -3,7 +3,7 @@ import { CalendarDays, GraduationCap, BotMessageSquare, Martini } from "lucide-r
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
-import EventsBuilder from "./builders/EventsBuilder";
+import EventsBuilder from "./builders/events/EventsHome";
 
 type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" ;
 
