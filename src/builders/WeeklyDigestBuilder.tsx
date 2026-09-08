@@ -912,9 +912,10 @@ requestAnimationFrame(() => {
                {(dragHandle) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-1 min-w-0">
               {dragHandle}
   <span className="text-xs font-semibold text-indigo-700">Item: {it.title}</span>
-
+</div>
   <div className="flex items-center gap-1">
   <button
                 type="button"
