@@ -502,12 +502,14 @@ export default function WeeklyDigestBuilder() {
     }));
   };
 
-  const handleEventDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd =
+  (setList: React.Dispatch<React.SetStateAction<any[]>>) =>
+  (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over || active.id === over.id) return;
 
-    setEvents((prev) => {
+    setList((prev) => {
       const oldIndex = prev.findIndex((item) => item.id === active.id);
       const newIndex = prev.findIndex((item) => item.id === over.id);
 
@@ -620,7 +622,7 @@ requestAnimationFrame(() => {
       {tab === "events" && (
         <DndContext
           collisionDetection={closestCenter}
-          onDragEnd={handleEventDragEnd}
+          onDragEnd={handleDragEnd}
         >
           <SortableContext
             items={events.map((ev) => ev.id)}
@@ -897,7 +899,7 @@ requestAnimationFrame(() => {
       {tab === "action" && (
             <DndContext
             collisionDetection={closestCenter}
-            onDragEnd={handleEventDragEnd}
+            onDragEnd={handleDragEnd}
           >
             <SortableContext
               items={actionItems.map((it) => it.id)}
@@ -1044,7 +1046,7 @@ requestAnimationFrame(() => {
       {tab === "noting" && (
             <DndContext
             collisionDetection={closestCenter}
-            onDragEnd={handleEventDragEnd}
+            onDragEnd={handleDragEnd}
           >
             <SortableContext
               items={notingItems.map((it) => it.id)}
@@ -1052,6 +1054,8 @@ requestAnimationFrame(() => {
             >
         <div className="space-y-4">
           {notingItems.map((it, i) => (
+               <SortableCard key={it.id} id={it.id}>
+               {(dragHandle) => (
             <div key={it.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
               <div className="flex justify-between items-center mb-2">
   <span className="text-xs font-semibold text-indigo-700">Item {i + 1} : {it.title}</span>
@@ -1160,6 +1164,8 @@ requestAnimationFrame(() => {
               </>
 )}
             </div>
+              )}
+              </SortableCard>
           ))}
           <button onClick={() => setNotingItems([...notingItems, { id: uid(), badge: "ICS", badgeColor: badgePresets.ICS, title: "New Noting Item", tags: "Committee 1, Committee 2", docs: [], content: "" }])} className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900">
             <Plus size={16} /> Add Noting Item
