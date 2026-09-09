@@ -18,7 +18,7 @@ overrides
 )
 };
 
-interface speakerItems{
+interface SpeakerItems{
   id: string;
   name: string;
   designation: string;
