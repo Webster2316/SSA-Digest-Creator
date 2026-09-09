@@ -178,18 +178,35 @@ export default function EventsHome() {
 )}
           </div>
           </div>
+<div>
+<Field label="Issue Range">
+  <input
+    className={inputCls}
+    value={issueRange}
+    onChange={(e) => setIssueRange(e.target.value)}
+  />
+</Field>
 
+<Field label="Header Greeting">
+  <textarea
+    className={inputCls}
+    rows={3}
+    value={greeting}
+    onChange={(e) => setGreeting(e.target.value)}
+  />
+</Field>
+</div>
 
           {/* EVENT LIST */}
           <div className="space-y-2">
-            {upcomingEvents.length === 0 ? (
+            {events.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
                 <p className="text-sm text-gray-500">
                   No upcoming events yet.
                 </p>
               </div>
             ) : (
-              upcomingEvents.map((ev) => {
+              events.map((ev) => {
                 const badge = statusOptions[ev.status];
     
                 return (
