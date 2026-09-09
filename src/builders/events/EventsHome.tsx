@@ -6,6 +6,7 @@ import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "./NamePopUpModal";
 import RecordsPanel from "../shared/recordsPanel";
 import RecordViewer from "../shared/recordViewer";
+import EventsEditor from "./EventsEditor";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
@@ -74,6 +75,7 @@ export default function EventsHome() {
     const { confirmDelete, deleteModal } = useConfirmDelete();
     const [issueRange, setIssueRange] = useState("Issue: ");
     const [greeting, setGreeting] = useState("Dear Member, below is...");
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,8 +150,18 @@ export default function EventsHome() {
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
-
+    if (selectedEventId) {
+      return (
+        <EventsEditor
+          eventId={selectedEventId}
+          events={events}
+          setEvents={setEvents}
+          onBack={() => setSelectedEventId(null)}
+        />
+      );
+    }
     return (
+      
       <div className="min-h-screen bg-gray-100">
         <div className="max-w-4xl mx-auto p-4">
     
@@ -209,7 +221,7 @@ export default function EventsHome() {
               </div>
             ) : (
               events.map((ev) => {
-                const badge = statusOptions[ev.status];
+                const badge = statusOptions[ev.registrationStatus];
     
                 return (
                   <div
@@ -221,33 +233,39 @@ export default function EventsHome() {
                     </span>
     
                     <div className="flex items-center gap-2">
+                    
+
                     <select
-  value={ev.status}
+  value={ev.registrationStatus}
   onChange={(e) =>
     setEvents((prev) =>
       prev.map((item) =>
         item.id === ev.id
           ? {
               ...item,
-              status: e.target.value as "onGoing" | "completed",
+              registrationStatus: e.target.value as EventItem["registrationStatus"],
             }
           : item
-          )
-          )
-        }
-        className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
-      >
-        <option value="onGoing">On Going</option>
-        <option value="completed">Completed</option>
-      </select>
+      )
+    )
+  }
+  className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
+>
+  <option value="Available">Available</option>
+  <option value="LimitedSlots">Limited Seats</option>
+  <option value="ClosingSoon">Closing Soon</option>
+  <option value="Waitlist">Waitlist</option>
+  <option value="Full">Full</option>
+</select>
 
-            <button
-              type="button"
-              className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-              title="Open event"
-            >
-              <SquareArrowOutUpRight size={16} />
-            </button>
+      <button
+  type="button"
+  onClick={() => setSelectedEventId(ev.id)}
+  className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
+  title="Open event"
+>
+  <SquareArrowOutUpRight size={16} />
+</button>
 
             <button
               type="button"
@@ -293,4 +311,5 @@ export default function EventsHome() {
         </div>
       </div>
     );
+    
 }

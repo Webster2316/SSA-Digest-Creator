@@ -10,7 +10,7 @@ import DocumentUploadModal from "../../shared/documentUploadModal";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
-export default function EventsBuilder() {
+export default function EventsEditor() {
     <div>
         <p>Work in progress</p>
     </div>
