@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, SquareArrowOutUpRight, ChevronDown, ChevronUp, Plus,  Archive} from "lucide-react";
+import { Trash2, SquareArrowOutUpRight, ChevronDown, ChevronUp, Plus,  Archive, Loader2} from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
