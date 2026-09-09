@@ -140,7 +140,7 @@ export default function EventsHome() {
               Upcoming Events
             </h1>
 
-            <div className="flex items-right gap-1.5 text-xs text-gray-500">
+            <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus.startsWith("Saved at") && (
   <>
