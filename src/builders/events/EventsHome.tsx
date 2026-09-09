@@ -28,7 +28,12 @@ const statusOptions: Record<string, { text: string; bg: string; color: string; b
     completed: { text: "Completed", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
     onGoing: { text: "On Going", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
   };
-
+  function getDateTime() {
+    return new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 export default function EventsHome() {
     const [events, setEvents] = useState<EventItem[]>([]);
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
