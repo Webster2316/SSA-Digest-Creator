@@ -11,32 +11,43 @@ import DocumentUploadModal from "../../shared/documentUploadModal";
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 export default function EventsEditor() {
-    <div>
-              <div className="flex items-center gap-3 mb-4">
-            <img
-              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-              alt="SSA Logo"
-              className="h-8 w-auto"
-            />
-    
-            <h1 className="text-xl font-bold text-indigo-900">
-              Upcoming Events
-            </h1>
+    const [events, setEvents] = useState<EventItem[]>([]);
+    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+    const [loaded, setLoaded] = useState(false);
+    const [saveStatus, setSaveStatus] = useState("idle");
+    const { confirmDelete, deleteModal } = useConfirmDelete();
+    const [issueRange, setIssueRange] = useState("Issue: ");
+    const [greeting, setGreeting] = useState("Dear Member, below is...");
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+   
+    return (
+        <div>
+        <div className="flex items-center gap-3 mb-4">
+      <img
+        src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+        alt="SSA Logo"
+        className="h-8 w-auto"
+      />
 
-            <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-            {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
-            {saveStatus.startsWith("Saved at") && (
-  <>
-    <Save size={13} />
-    {saveStatus}
-  </>
+      <h1 className="text-xl font-bold text-indigo-900">
+        Upcoming Events
+      </h1>
+
+      <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
+      {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
+      {saveStatus.startsWith("Saved at") && (
+<>
+<Save size={13} />
+{saveStatus}
+</>
 )}
 {saveStatus === "error" && (
-  <span className="text-red-600">
-    Save failed
-  </span>
+<span className="text-red-600">
+Save failed
+</span>
 )}
-          </div>
-          </div>
     </div>
+    </div>
+</div>
+    )
 }
