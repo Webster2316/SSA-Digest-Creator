@@ -17,11 +17,28 @@ overrides
 )
 };
 
+interface speakerItems{
+  id: string;
+  name: string;
+  designation: string;
+  company: string;
+};
+
 interface EventItem {
   id: string;
   title: string;
-  status: "onGoing" | "completed";
-}
+date: string;
+registrationStatus: "Available"
+| "LimitedSlots"
+| "Waitlist"
+| "ClosingSoon"
+| "Full";
+registrationLink: string;
+committees: string[];
+details: string;
+programme: string;
+speakers: SpeakerItems[];
+};
 
 
 const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
@@ -117,27 +134,18 @@ export default function EventsHome() {
         {
           id: uid(),
           title,
-          status: "onGoing",
+          date: "",
+          registrationStatus: "Available",
+          registrationLink: "",
+          committees: [],
+          details: "",
+          programme: "",
+          speakers: [],
         },
       ]);
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-    const upcomingEvents =events.filter((ev) => ev.status === "onGoing");
-    const completedEvents = events.filter((ev) => ev.status === "completed");
-
-    const toggleEventStatus = (id: string) => {
-      setEvents((prev) =>
-      prev.map((ev) => 
-      ev.id === id ? {
-        ...ev,
-        status: ev.status === "onGoing" ? "completed" : "onGoing",
-      } : ev
-      )
-      );
-    };
-
+    //////////////////////////////////////////////////////////////////////////////////////////////
 
     return (
       <div className="min-h-screen bg-gray-100">
