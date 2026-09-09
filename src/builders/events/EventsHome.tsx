@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, SquareArrowOutUpRight, ChevronDown, ChevronUp, Plus,  Archive, Loader2} from "lucide-react";
+import { Trash2, SquareArrowOutUpRight, ChevronDown, ChevronUp, Plus,  Archive, Loader2, Save} from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
@@ -140,7 +140,7 @@ export default function EventsHome() {
               Upcoming Events
             </h1>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div className="flex items-right gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus.startsWith("Saved at") && (
   <>
