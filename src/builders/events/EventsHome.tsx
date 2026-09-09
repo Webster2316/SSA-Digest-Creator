@@ -25,7 +25,7 @@ interface EventItem {
 
 
 const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
-    completed: { text: "Completed", bg: "#ffdd80", color: "#007d21", border: "#007d21" },
+    completed: { text: "Completed", bg: "#f2dc9d", color: "#007d21", border: "#007d21" },
     onGoing: { text: "On Going", bg: "#c7b267", color: "#bf9708", border: "#bf9708" },
   };
 
