@@ -3,7 +3,7 @@ import { Trash2, SquareArrowOutUpRight, ChevronDown, ChevronUp, Plus} from "luci
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
-import namePopUp from "./namePopUpModal";
+import NamePopUp from "./NamePopUpModal";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
@@ -15,24 +15,34 @@ overrides
 )
 };
 
+interface EventItem {
+  id: string;
+  title: string;
+  status: "onGoing" | "completed";
+}
+
 
 const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
     completed: { text: "Completed", bg: "#4ab065", color: "#007d21", border: "#007d21" },
     onGoing: { text: "On Going", bg: "#c7b267", color: "#bf9708", border: "#bf9708" },
   };
+
 export default function EventsHome() {
-    const [events, setEvents] = useState(makeEventItem);
+    const [events, setEvents] = useState<EventItem[]>([]);
+    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
     const handleAddEvents = (title:string) => {
       setEvents((prev) => [
-      ...prev,{
-        id: uid(),
-        title,
-        status: "onGoing"
-      }])
+        ...prev,
+        {
+          id: uid(),
+          title,
+          status: "onGoing",
+        },
+      ]);
     }
 
-
+  
 return(
     <div className="min-h-screen bg-gray-100">
     <div className="max-w-4xl mx-auto p-4">
@@ -51,11 +61,16 @@ return(
 <div>
  
 <button
-                onClick={namePopUp}
+               onClick={() => setIsNameModalOpen(true)}
                 className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
               >
                 <Plus size={16} /> Add Event
               </button>
+              <NamePopUp
+              isOpen={isNameModalOpen}
+              onClose={() => setIsNameModalOpen(false)}
+              onAdd={handleAddEvents}
+              ></NamePopUp>
 </div>
 </div>
 </div>
