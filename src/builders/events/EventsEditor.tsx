@@ -7,6 +7,7 @@ import RecordViewer from "../../shared/recordViewer";
 import RichTextEditor from "../../shared/richTextEditor";
 import { uid, esc, inputCls } from "../../shared/utils";
 import DocumentUploadModal from "../../shared/documentUploadModal";
+import useConfirmDelete from "../../shared/useConfirmDelete";
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
