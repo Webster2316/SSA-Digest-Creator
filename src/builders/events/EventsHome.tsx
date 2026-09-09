@@ -107,7 +107,7 @@ export default function EventsHome() {
     const upcomingEvents =events.filter((ev) => ev.status === "onGoing");
     const completedEvents = events.filter((ev) => ev.status === "completed");
 
-    const toggleEventSatus = (id: string) => {
+    const toggleEventStatus = (id: string) => {
       setEvents((prev) =>
       prev.map((ev) => 
       ev.id === id ? {
@@ -159,18 +159,30 @@ export default function EventsHome() {
                     </span>
     
                     <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => toggleEventStatus(ev.id)}
-              style={{
-                backgroundColor: badge.bg,
-                color: badge.color,
-                borderColor: badge.border,
-              }}
-              className="px-2.5 py-1 text-xs font-semibold rounded border"
-            >
-              {badge.text}
-            </button>
+                    <select
+  value={ev.status}
+  onChange={(e) =>
+    setEvents((prev) =>
+      prev.map((item) =>
+        item.id === ev.id
+          ? {
+              ...item,
+              status: e.target.value as "onGoing" | "completed",
+            }
+          : item
+      )
+    )
+  }
+  style={{
+    backgroundColor: badge.bg,
+    color: badge.color,
+    borderColor: badge.border,
+  }}
+  className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
+>
+  <option value="onGoing">On Going</option>
+  <option value="completed">Completed</option>
+</select>
 
             <button
               type="button"
