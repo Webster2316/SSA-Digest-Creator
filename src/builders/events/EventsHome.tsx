@@ -119,43 +119,46 @@ export default function EventsHome() {
     };
 
 
-return(
-    <div className="min-h-screen bg-gray-100">
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-3">
-    <div className="flex items-center gap-3">
-    <img
-      src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-      alt="SSA Logo"
-      className="h-8 w-auto"
-    />
-    <h1 className="text-xl font-bold text-indigo-900">
-      Upcoming Events
-    </h1>
-  </div>
-{/* //if events.length == 0  */}
-<div>
-<div className="mt-4 space-y-2">
-  {upcomingEvents.length === 0 ? (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-      <p className="text-sm text-gray-500">
-        No upcoming events yet.
-      </p>
-    </div>
-  ) : (
-    upcomingEvents.map((ev) => {
-      const badge = statusOptions[ev.status];
-
-      return (
-        <div
-          key={ev.id}
-          className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between"
-        >
-          <span className="text-sm font-semibold text-gray-800">
-            {ev.title}
-          </span>
-
-          <div className="flex items-center gap-2">
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="max-w-4xl mx-auto p-4">
+    
+          {/* HEADER */}
+          <div className="flex items-center gap-3 mb-4">
+            <img
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+              alt="SSA Logo"
+              className="h-8 w-auto"
+            />
+    
+            <h1 className="text-xl font-bold text-indigo-900">
+              Upcoming Events
+            </h1>
+          </div>
+    
+    
+          {/* EVENT LIST */}
+          <div className="space-y-2">
+            {upcomingEvents.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                <p className="text-sm text-gray-500">
+                  No upcoming events yet.
+                </p>
+              </div>
+            ) : (
+              upcomingEvents.map((ev) => {
+                const badge = statusOptions[ev.status];
+    
+                return (
+                  <div
+                    key={ev.id}
+                    className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between"
+                  >
+                    <span className="text-sm font-semibold text-gray-800">
+                      {ev.title}
+                    </span>
+    
+                    <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => toggleEventStatus(ev.id)}
@@ -195,28 +198,30 @@ return(
               <Trash2 size={16} />
             </button>
           </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+    
+    
+          {/* ADD EVENT */}
+          <button
+            onClick={() => setIsNameModalOpen(true)}
+            className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+          >
+            <Plus size={16} /> Add Event
+          </button>
+    
+    
+          <NamePopUp
+            isOpen={isNameModalOpen}
+            onClose={() => setIsNameModalOpen(false)}
+            onAdd={handleAddEvents}
+          />
+    
+          {deleteModal}
         </div>
-      );
-    })
-  )}
-</div>
-<button
-               onClick={() => setIsNameModalOpen(true)}
-                className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-              >
-                <Plus size={16} /> Add Event
-              </button>
-
-
-</div>
-</div>
-</div>
-<NamePopUp
-              isOpen={isNameModalOpen}
-              onClose={() => setIsNameModalOpen(false)}
-              onAdd={handleAddEvents}
-              ></NamePopUp>
-{deleteModal}
-</div>
-);
+      </div>
+    );
 }
