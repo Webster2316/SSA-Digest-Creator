@@ -135,7 +135,20 @@ export default function EventsHome() {
               Upcoming Events
             </h1>
           </div>
-    
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
+            {saveStatus.startsWith("Saved at") && (
+  <>
+    <Save size={13} />
+    {saveStatus}
+  </>
+)}
+{saveStatus === "error" && (
+  <span className="text-red-600">
+    Save failed
+  </span>
+)}
+          </div>
     
           {/* EVENT LIST */}
           <div className="space-y-2">
