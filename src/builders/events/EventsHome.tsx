@@ -25,9 +25,24 @@ interface EventItem {
 
 
 const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
-    completed: { text: "Completed", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
-    onGoing: { text: "On Going", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
+    LimitedSlots: { text: "Limited Seats", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Available: { text: "Available", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Waitlist: {text: "Waitlist", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708"},
+    ClosingSoon: { text: "Closing Soon", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }
   };
+
+const committeOptions:  Record<string, { text: string; bg: string; color: string; border: string }> = {
+  DEC : {text: "Decarbonisation", bg: "#8ede96", color: "#1d7d26", border: "#1d7d26"},
+  DIG : {text: "Digitalisation", bg: "#9eb2de", color: "#103687", border: "#103687"},
+  INT : {text: "International", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708"},
+  TEC : {text: "Technical", bg: "#c78585", color: "#871010", border: "#871010"},
+  LEG : {text: "Legal and Insurance", bg: "#b48fbd", color: "#510763", border: "#510763"},
+  SVC : {text: "Services", bg: "#e9eba4", color: "#717312", border: "#717312"},
+  MFC : {text: "Marine Fuels", bg: "#91c4b5", color: "#238266", border: "#238266"},
+  YEG : {text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57"},
+}
+
   function getDateTime() {
     return new Date().toLocaleTimeString([], {
       hour: "2-digit",
