@@ -52,7 +52,7 @@ const [eventName, setEventName] = useState("");
             <div className="flex gap-2">
               <input
                 className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm"
-                placeholder="e.g. AI Seminar 2026"
+                placeholder="e.g MaritimeConvo@SSA"
                 value={eventName}
                 onChange={(e) => setEventName(e.target.value)}
               />
