@@ -139,9 +139,8 @@ export default function EventsHome() {
             <h1 className="text-xl font-bold text-indigo-900">
               Upcoming Events
             </h1>
-          </div>
 
-          <div className="flex items-right p-2 gap-1.5 text-xs text-gray-500">
+            <div className="flex items-right gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus.startsWith("Saved at") && (
   <>
@@ -155,7 +154,9 @@ export default function EventsHome() {
   </span>
 )}
           </div>
-    
+          </div>
+
+
           {/* EVENT LIST */}
           <div className="space-y-2">
             {upcomingEvents.length === 0 ? (
@@ -189,19 +190,14 @@ export default function EventsHome() {
               status: e.target.value as "onGoing" | "completed",
             }
           : item
-      )
-    )
-  }
-  style={{
-    backgroundColor: badge.bg,
-    color: badge.color,
-    borderColor: badge.border,
-  }}
-  className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
->
-  <option value="onGoing">On Going</option>
-  <option value="completed">Completed</option>
-</select>
+          )
+          )
+        }
+        className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
+      >
+        <option value="onGoing">On Going</option>
+        <option value="completed">Completed</option>
+      </select>
 
             <button
               type="button"
