@@ -72,6 +72,8 @@ export default function EventsHome() {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
     const { confirmDelete, deleteModal } = useConfirmDelete();
+    const [issueRange, setIssueRange] = useState("Issue: ");
+    const [greeting, setGreeting] = useState("Dear Member, below is...");
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
