@@ -104,7 +104,7 @@ export default function EventsHome() {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-    const upcomingEVents =events.filter((ev) => ev.status === "onGoing");
+    const upcomingEvents =events.filter((ev) => ev.status === "onGoing");
     const completedEvents = events.filter((ev) => ev.status === "completed");
 
     const toggleEventSatus = (id: string) => {
