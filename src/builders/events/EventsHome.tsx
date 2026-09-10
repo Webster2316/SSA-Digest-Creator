@@ -29,7 +29,7 @@ interface EventItem {
   id: string;
   title: string;
 date: string;
-registrationStatus: "Available"
+registrationStatus: "Open"
 | "LimitedSlots"
 | "Waitlist"
 | "ClosingSoon"
@@ -42,14 +42,19 @@ speakers: SpeakerItems[];
 };
 
 
-const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
-    Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
+const registrationStatusOpt: Record<string, { text: string; bg: string; color: string; border: string }> = {
+    Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" }, // email secretariat
     LimitedSlots: { text: "Limited Seats", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
-    Available: { text: "Available", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Open: { text: "Open", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }, 
     Waitlist: {text: "Waitlist", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708"},
     ClosingSoon: { text: "Closing Soon", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }
   };
-
+  
+const eventStatus:  Record<string, { text: string; bg: string; color: string; border: string }> = {
+  Confirmed: { text: "Confirmed", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }, 
+  Tentative: { text: "Tentative", bg: "#f2bbbf", color: "#700710", border: "#700710" },
+}
+//Open, Tentative, Confirmed, //separate registration status and event status
 const committeOptions:  Record<string, { text: string; bg: string; color: string; border: string }> = {
   DEC : {text: "Decarbonisation", bg: "#8ede96", color: "#1d7d26", border: "#1d7d26"},
   DIG : {text: "Digitalisation", bg: "#9eb2de", color: "#103687", border: "#103687"},
@@ -139,7 +144,7 @@ export default function EventsHome() {
           id: uid(),
           title,
           date: "",
-          registrationStatus: "Available",
+          registrationStatus: "Open",
           registrationLink: "",
           committees: [],
           details: "",
@@ -221,7 +226,7 @@ export default function EventsHome() {
               </div>
             ) : (
               events.map((ev) => {
-                const badge = statusOptions[ev.registrationStatus];
+                const badge = registrationStatusOpt[ev.registrationStatus];
     
                 return (
                   <div
@@ -243,7 +248,7 @@ export default function EventsHome() {
         item.id === ev.id
           ? {
               ...item,
-              registrationStatus: e.target.value as EventItem["registrationStatus"],
+              registrationStatusOpt: e.target.value as EventItem["registrationStatus"],
             }
           : item
       )
@@ -251,7 +256,7 @@ export default function EventsHome() {
   }
   className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
 >
-  <option value="Available">Available</option>
+  <option value="Open">Open</option>
   <option value="LimitedSlots">Limited Seats</option>
   <option value="ClosingSoon">Closing Soon</option>
   <option value="Waitlist">Waitlist</option>

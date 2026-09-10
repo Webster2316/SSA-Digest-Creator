@@ -49,8 +49,8 @@ interface SpeakerItems{
 
   interface EventsEditorProps {
     eventId: string;
-    events: EventsItem[];
-    setEvents: React.Dispatch<RecordingState.SetStateAction<EventItem[]>>;
+    events: EventItem[];
+    setEvents: React.Dispatch<React.SetStateAction<EventItem[]>>;
     onBack: () => void;
   }
   
@@ -74,22 +74,24 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
 }
 
   
-export default function EventsHome({ eventId, events, setEvents, onBack }: EventsEditorProps) {
+export default function EventsEditor({ eventId, events, setEvents, onBack }: EventsEditorProps) {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
     const { confirmDelete, deleteModal } = useConfirmDelete();
 
 //
-const event = events.find((ev) => event.id === eventId);
+const event = events.find((ev) => ev.id === eventId);
 if (!event) {
     return <div>Event not found.</div>;
   }
+
+  
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //loading
     useEffect(() => {
         (async () => {
           try {
-            const res = await fetch("/api/load-digest?key=events-builder-data?uid={event.id}");
+            const res = await fetch("/api/load-digest?key=events-builder-data");
             if (res.ok) {
               const data = await res.json();
              if(data?.events) {
@@ -156,7 +158,7 @@ if (!event) {
         ]);
       }
 
-      const updateEvent = (updates: Partial<EventsItem>) => {
+      const updateEvent = (updates: Partial<EventItem>) => {
         setEvents((prev) => 
         prev.map((ev)=>
         ev.id === eventId ? { ...ev, ...updates } : ev
