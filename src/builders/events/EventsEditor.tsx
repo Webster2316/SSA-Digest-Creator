@@ -79,7 +79,8 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
   YEG : {text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57"},
 }
 
-  
+const committees = event.committees ?? [];
+const speakers = event.speakers ?? [];
 export default function EventsEditor({ eventId, events, setEvents, onBack }: EventsEditorProps) {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
@@ -295,7 +296,7 @@ if (!event) {
                       {Object.entries(committeOptions).map(
                         ([key, option]) => {
                           const selected =
-                            event.committees.includes(key);
+                          (event.committees ?? []).includes(key);
       
                           return (
                             <button
@@ -304,7 +305,7 @@ if (!event) {
                               onClick={() =>
                                 updateEvent({
                                   committees: selected
-                                    ? event.committees.filter(
+                                    ?   (event.committees ?? []).filter(
                                         (x) => x !== key
                                       )
                                     : [...event.committees, key],
@@ -432,7 +433,7 @@ if (!event) {
                       {Object.entries(committeOptions).map(
                         ([key, option]) => {
                           const selected =
-                            event.committees.includes(key);
+                          (event.committees ?? []).includes(key);
       
                           return (
                             <button
@@ -441,10 +442,10 @@ if (!event) {
                               onClick={() =>
                                 updateEvent({
                                   committees: selected
-                                    ? event.committees.filter(
+                                    ? e   (event.committees ?? []).filter(
                                         (x) => x !== key
                                       )
-                                    : [...event.committees, key],
+                                    : [...(event.committees ?? []), key],
                                 })
                               }
                               className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
