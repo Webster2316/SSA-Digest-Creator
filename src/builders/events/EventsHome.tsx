@@ -122,6 +122,8 @@ export default function EventsHome() {
               },
               body: JSON.stringify({
                 events,
+                header
+
               }),
             }
           );

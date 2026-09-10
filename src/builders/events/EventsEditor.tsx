@@ -63,7 +63,7 @@ shortDescription: string;
   const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
     Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
     LimitedSlots: { text: "Limited Seats", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
-    Available: { text: "Available", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Open: { text: "Open", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
     Waitlist: {text: "Waitlist", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708"},
     ClosingSoon: { text: "Closing Soon", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }
   };
@@ -91,6 +91,7 @@ if (!event) {
     return <div>Event not found.</div>;
   }
 
+  const eventBadge = eventStatus[event.eventStatus ?? "Tentative"] ?? eventStatus.Tentative;
   const isTentative = event.eventStatus === "Tentative";
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ if (!event) {
             id: uid(),
             title,
             date: "",
-            registrationStatus: "Available",
+            registrationStatus: "Open",
             registrationLink: "",
             committees: [],
             details: "",
@@ -249,12 +250,12 @@ if (!event) {
                 <span
                   className="inline-block px-2.5 py-1 rounded border text-xs font-semibold"
                   style={{
-                    backgroundColor: eventStatus[event.eventStatus].bg,
-                    color: eventStatus[event.eventStatus].color,
-                    borderColor: eventStatus[event.eventStatus].border,
+                    backgroundColor: eventBadge.bg,
+                    color: eventBadge.color,
+                    borderColor: eventBadge.border,
                   }}
                 >
-                  {eventStatus[event.eventStatus].text}
+                  {eventBadge.text}
                 </span>
               </div>
       
