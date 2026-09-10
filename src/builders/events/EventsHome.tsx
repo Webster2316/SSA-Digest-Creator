@@ -122,7 +122,7 @@ export default function EventsHome() {
               },
               body: JSON.stringify({
                 events,
-                header
+                greeting
 
               }),
             }
@@ -140,7 +140,7 @@ export default function EventsHome() {
       }, 700);
     
       return () => clearTimeout(t);
-    }, [events, loaded]);
+    }, [events, loaded, greeting]);
 
     const handleAddEvents = (title:string) => {
       setEvents((prev) => [
