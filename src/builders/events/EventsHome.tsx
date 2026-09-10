@@ -97,6 +97,12 @@ export default function EventsHome() {
            if(data?.events) {
             setEvents(data.events);
            }
+           if(data?.greeting) {
+            setGreeting(data.greeting);
+           }
+           if(data?.issueRange) {
+            setIssueRange(data.issueRange);
+           }
           }
         } catch (e) {
           console.error("Failed to load events builder:", e);
@@ -122,7 +128,8 @@ export default function EventsHome() {
               },
               body: JSON.stringify({
                 events,
-                greeting
+                greeting,
+                issueRange
 
               }),
             }
@@ -140,7 +147,7 @@ export default function EventsHome() {
       }, 700);
     
       return () => clearTimeout(t);
-    }, [events, loaded, greeting]);
+    }, [events, loaded, greeting, issueRange]);
 
     const handleAddEvents = (title:string) => {
       setEvents((prev) => [
