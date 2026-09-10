@@ -161,7 +161,7 @@ if (!event) {
             }
           } catch (e) {
             console.error("Failed to save events builder:", e);
-            setSaveStatus("error");
+            setSaveStatus("error"); 
           }
         }, 700);
       
