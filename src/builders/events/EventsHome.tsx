@@ -29,7 +29,8 @@ interface EventItem {
   id: string;
   title: string;
   date: string
-registrationStatus: "Available"
+  dateMode: "exact" | "month",
+registrationStatus: "Open"
 | "LimitedSlots"
 | "Waitlist"
 | "ClosingSoon"
