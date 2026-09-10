@@ -28,7 +28,8 @@ interface SpeakerItems{
 interface EventItem {
   id: string;
   title: string;
-date: string;
+  dateMode: "exact" | "month",
+  date: String,
 registrationStatus: "Open"
 | "LimitedSlots"
 | "Waitlist"
@@ -143,6 +144,7 @@ export default function EventsHome() {
         {
           id: uid(),
           title,
+          dateMode: "exact" | "month",
           date: "",
           registrationStatus: "Open",
           registrationLink: "",
@@ -153,6 +155,17 @@ export default function EventsHome() {
         },
       ]);
     }
+
+    const sortedEvents = [...events].sort((a,b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+
+      const aDate = a.dateMode === "month" ? `${a.date}-01`: a.date;
+      const bDate = b.dateMode === "month" ? `${b.date}-01`: b.date;
+
+      return aDate.localCompare(bDate);
+    })
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     if (selectedEventId) {
@@ -225,7 +238,7 @@ export default function EventsHome() {
                 </p>
               </div>
             ) : (
-              events.map((ev) => {
+              sortedEvents.map((ev) => {
                 const badge = registrationStatusOpt[ev.registrationStatus];
     
                 return (

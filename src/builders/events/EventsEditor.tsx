@@ -85,7 +85,7 @@ if (!event) {
     return <div>Event not found.</div>;
   }
 
-  
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //loading
     useEffect(() => {
@@ -214,12 +214,32 @@ Save failed
     onChange={(e) => updateEvent({ title: e.target.value })}
   />
 </Field>
-    <input 
+
+<select
+  value={event.dateMode}
+  onChange={(e) =>
+    updateEvent({
+      dateMode: e.target.value as "exact" | "month",
+      date: "",
+    })
+  }
+>
+  <option value="exact">Exact Date</option>
+  <option value="month">Month & Year Only</option>
+</select>
+{event.dateMode === "exact" ? (
+  <input
     type="date"
     value={event.date}
-    onChange={(e) => updateEvent({ date: e.target.value})} 
-    />
-
+    onChange={(e) => updateEvent({ date: e.target.value })}
+  />
+) : (
+  <input
+    type="month"
+    value={event.date}
+    onChange={(e) => updateEvent({ date: e.target.value })}
+  />
+)}
     <select
     value={event.registrationStatus}
     onChange={(e) =>
