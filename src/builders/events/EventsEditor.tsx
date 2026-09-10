@@ -32,9 +32,9 @@ type TagStyle = {
 const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
   Confirmed: {
     text: "Confirmed",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+    bg: "#e1ffba",
+    color: "#416e07",
+    border: "#416e07",
   },
   Tentative: {
     text: "Tentative",
