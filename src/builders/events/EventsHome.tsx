@@ -896,34 +896,62 @@ export default function EventsHome() {
 
         {/* PREVIEW + EXPORT TAB */}
         {tab === "preview" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-800">
-                  Email Preview
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  This preview uses the same HTML that will be exported.
-                </p>
-              </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
+              >
+                {copied ? <Check size={15} /> : <Copy size={15} />}
+                {copied ? "Copied!" : "Copy HTML"}
+              </button>
 
               <button
                 type="button"
                 onClick={exportHtml}
-                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-700 text-white text-sm font-medium rounded-md hover:bg-indigo-800"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
               >
                 <Code2 size={15} />
                 Export HTML
               </button>
+
+              {isEdited && (
+                <button
+                  type="button"
+                  onClick={() => setRawHtmlEdit(null)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
+                >
+                  <RotateCcw size={15} /> Discard edits
+                </button>
+              )}
             </div>
 
-            <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
-              <iframe
-                title="Upcoming Events Preview"
-                srcDoc={buildFullHtml()}
-                className="w-full h-[1000px] bg-white border-0 rounded"
-              />
-            </div>
+            {isEdited && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
+                Showing your manual edits. The Builder tab won't reflect this — hand edits are export-only. Click{" "}
+                <strong>Discard edits</strong> to go back to the generated version.
+              </p>
+            )}
+
+            <p className="text-xs text-gray-500 mb-2">Live preview:</p>
+            <iframe
+              title="Upcoming Events Preview"
+              srcDoc={html}
+              className="w-full border border-gray-300 rounded"
+              style={{ height: "700px" }}
+            />
+
+            <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1">
+              <Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):
+            </p>
+            <textarea
+              className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
+              style={{ height: "220px" }}
+              value={html}
+              onChange={(e) => setRawHtmlEdit(e.target.value)}
+              spellCheck={false}
+            />
           </div>
         )}
 
