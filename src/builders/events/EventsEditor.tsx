@@ -44,36 +44,43 @@ const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
   },
 };
 
-const registrationStatusOpt: Record<EventItem["registrationStatus"], TagStyle> = {
-  Full: {
-    text: "Full",
-    bg: "#8ccf90",
-    color: "#007d21",
-    border: "#007d21",
-  },
-  LimitedSlots: {
-    text: "Limited Seats",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
-  },
+const registrationStatusOpt: Record<
+  EventItem["registrationStatus"],
+  TagStyle
+> = {
   Open: {
     text: "Open",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+    bg: "#e7f5e9",
+    color: "#287333",
+    border: "#76b77c",
   },
-  Waitlist: {
-    text: "Waitlist",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+
+  LimitedSlots: {
+    text: "Limited Seats",
+    bg: "#fff5d8",
+    color: "#8a6c00",
+    border: "#d7b441",
   },
+
   ClosingSoon: {
     text: "Closing Soon",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+    bg: "#fff0e7",
+    color: "#9a4a16",
+    border: "#efba98",
+  },
+
+  Waitlist: {
+    text: "Waitlist",
+    bg: "#f2eef8",
+    color: "#5c3b7e",
+    border: "#cfc0df",
+  },
+
+  Full: {
+    text: "Full",
+    bg: "#f3f0f5",
+    color: "#5a5f6d",
+    border: "#c7ccd6",
   },
 };
 
