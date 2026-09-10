@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Trash2,
-  SquareArrowOutUpRight,
   Plus,
   Loader2,
   Save,
@@ -10,14 +9,18 @@ import {
   Copy,
   Check,
   RotateCcw,
+  Archive,
+  CalendarDays,
+  Pin,
 } from "lucide-react";
-import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
+import RichTextEditor from "../../shared/richTextEditor";
+import RecordsPanel from "../../shared/recordsPanel";
+import RecordViewer from "../../shared/recordViewer";
+import useConfirmDelete from "../../shared/useConfirmDelete";
 import { uid, esc, inputCls } from "../../shared/utils";
-import NamePopUp from "./NamePopUpModal";
-import EventsEditor from "./EventsEditor";
 
-interface SpeakerItems {
+interface SpeakerItem {
   id: string;
   name: string;
   designation: string;
@@ -27,21 +30,21 @@ interface SpeakerItems {
 interface EventItem {
   id: string;
   title: string;
-  date: string;
+  date: string; // "YYYY-MM-DD" when dateMode is "exact", "YYYY-MM" when "month"
   dateMode: "exact" | "month";
+  eventStatus: "Tentative" | "Confirmed";
   registrationStatus:
     | "Open"
     | "LimitedSlots"
     | "Waitlist"
     | "ClosingSoon"
     | "Full";
-  eventStatus: "Tentative" | "Confirmed";
-  shortDescription: string;
   registrationLink: string;
   committees: string[];
   details: string;
   programme: string;
-  speakers: SpeakerItems[];
+  speakers: SpeakerItem[];
+  customOrder: boolean;
 }
 
 type TagStyle = {
@@ -78,7 +81,7 @@ const eventStatusOptions: Record<string, TagStyle> = {
   Confirmed: {
     text: "Confirmed",
     bg: "#f2dc9d",
-    color: "#8a6c00",
+    color: "#bf9708",
     border: "#bf9708",
   },
   Tentative: {
@@ -180,6 +183,26 @@ function getDateTime() {
   });
 }
 
+function makeEvent(overrides: Partial<EventItem> = {}): EventItem {
+  return Object.assign(
+    {
+      id: uid(),
+      title: "",
+      date: "",
+      dateMode: "month" as const,
+      eventStatus: "Tentative" as const,
+      registrationStatus: "Open" as const,
+      registrationLink: "",
+      committees: [] as string[],
+      details: "",
+      programme: "",
+      speakers: [] as SpeakerItem[],
+      customOrder: false,
+    },
+    overrides
+  );
+}
+
 function normaliseEvent(ev: any): EventItem {
   const allowedRegistrationStatuses: EventItem["registrationStatus"][] = [
     "Open",
@@ -201,25 +224,61 @@ function normaliseEvent(ev: any): EventItem {
     title: ev?.title ?? "",
     date: ev?.date ?? "",
     dateMode: ev?.dateMode === "exact" ? "exact" : "month",
-    registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
-    shortDescription: ev?.shortDescription ?? "",
+    registrationStatus,
     registrationLink: ev?.registrationLink ?? "",
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
     details: ev?.details ?? "",
     programme: ev?.programme ?? "",
     speakers: Array.isArray(ev?.speakers) ? ev.speakers : [],
+    customOrder: !!ev?.customOrder,
   };
 }
 
 /* =====================================================
-   BADGE / TAG RENDERING — sharp corners (radius:3px),
-   matches the template's "Open" / "Marine Fuels" tags
+   SORTING — pinned events keep their slot, everything
+   else auto-sorts by date (mirrors Training Bulletin's
+   course sorting/pin behaviour)
 ====================================================== */
 
-function renderStatusTag(style: TagStyle) {
+function getSortableDate(event: EventItem) {
+  if (!event.date) return null;
+  return event.dateMode === "month" ? `${event.date}-01` : event.date;
+}
+
+function sortWithPinned(list: EventItem[]) {
+  const sorted = [...list].sort((a, b) => {
+    const da = getSortableDate(a);
+    const db = getSortableDate(b);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da.localeCompare(db);
+  });
+
+  const pinned = sorted.filter((e) => e.customOrder);
+  const normal = sorted.filter((e) => !e.customOrder);
+
+  return [...pinned, ...normal];
+}
+
+/* =====================================================
+   BADGE RENDERING
+====================================================== */
+
+function renderEventStatusBadge(status: EventItem["eventStatus"]) {
+  const style = eventStatusOptions[status];
   return `
-    <span style="display:inline-block;padding:4px 9px;border-radius:3px;background:${style.bg};border:1px solid ${style.border};font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;">
+    <span data-f="event-status" data-status="${esc(status)}" style="display:inline-block;padding:4px 9px;border-radius:3px;background:${style.bg};border:1px solid ${style.border};font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;">
+      ${esc(style.text)}
+    </span>
+  `;
+}
+
+function renderRegistrationStatusBadge(status: EventItem["registrationStatus"]) {
+  const style = registrationStatusOpt[status] ?? registrationStatusOpt.Open;
+  return `
+    <span data-f="registration-status" data-status="${esc(status)}" style="display:inline-block;padding:4px 9px;border-radius:3px;background:${style.bg};border:1px solid ${style.border};font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;">
       ${esc(style.text)}
     </span>
   `;
@@ -244,12 +303,16 @@ function renderCommitteeTags(codes: string[]) {
     .join("");
 }
 
-function getDateParts(event: EventItem) {
-  if (!event.date) {
-    return { day: "TBC", monthYear: "" };
-  }
+/* =====================================================
+   DATE CELLS — confirmed events show an exact day number;
+   tentative events show a smaller month/year, matching
+   the reference template
+====================================================== */
 
-  const [year, month, day] = event.date.split("-");
+function getExactDateParts(dateStr: string) {
+  if (!dateStr) return { day: "TBC", monthYear: "" };
+
+  const [year, month, day] = dateStr.split("-");
   const monthNumber = Number(month);
   const monthText =
     monthNumber >= 1 && monthNumber <= 12
@@ -258,28 +321,38 @@ function getDateParts(event: EventItem) {
           .toUpperCase()
       : "";
 
-  if (event.dateMode === "month") {
-    return { day: monthText || "TBC", monthYear: year || "" };
-  }
-
   return {
     day: day ? String(Number(day)) : "TBC",
     monthYear: [monthText, year].filter(Boolean).join(" "),
   };
 }
 
-// Matches the template's date block: big day number + "SEP 2026" underneath.
-function renderDateCell(event: EventItem) {
-  const { day, monthYear } = getDateParts(event);
+function getMonthYearParts(dateStr: string) {
+  if (!dateStr) return { month: "TBC", year: "" };
+
+  const [year, month] = dateStr.split("-");
+  const monthNumber = Number(month);
+  const monthText =
+    monthNumber >= 1 && monthNumber <= 12
+      ? new Date(2000, monthNumber - 1, 1)
+          .toLocaleString("en-US", { month: "short" })
+          .toUpperCase()
+      : "TBC";
+
+  return { month: monthText, year: year || "" };
+}
+
+function renderConfirmedDateCell(event: EventItem) {
+  const { day, monthYear } = getExactDateParts(event.date);
 
   return `
-    <td class="event-date-cell" width="110" valign="middle" align="center" style="width:110px;background:${COLOR_DATE_BG};padding:14px 8px;text-align:center;">
-      <span style="display:block;font-family:${FONT_STACK};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(
+    <td class="event-date-cell" width="110" valign="middle" align="center" style="background:${COLOR_DATE_BG};padding:14px 8px;text-align:center;">
+      <span data-f="date-day" style="display:block;font-family:${FONT_STACK};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(
         day
       )}</span>
       ${
         monthYear
-          ? `<span style="display:block;margin-top:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9ecfb;">${esc(
+          ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9ecfb;">${esc(
               monthYear
             )}</span>`
           : ""
@@ -288,7 +361,26 @@ function renderDateCell(event: EventItem) {
   `;
 }
 
-function renderSpeakers(speakers: SpeakerItems[]) {
+function renderTentativeDateCell(event: EventItem) {
+  const { month, year } = getMonthYearParts(event.date);
+
+  return `
+    <td class="event-date-cell" width="110" valign="middle" align="center" style="background:${COLOR_DATE_BG};padding:14px 8px;text-align:center;">
+      <span data-f="date-month" style="display:block;font-family:${FONT_STACK};font-size:14px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;line-height:1.2;">${esc(
+        month
+      )}</span>
+      ${
+        year
+          ? `<span data-f="date-year" style="display:block;margin-top:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.2px;color:#d9ecfb;">${esc(
+              year
+            )}</span>`
+          : ""
+      }
+    </td>
+  `;
+}
+
+function renderSpeakers(speakers: SpeakerItem[]) {
   if (!speakers?.length) return "&nbsp;";
 
   return speakers
@@ -309,68 +401,69 @@ function renderSpeakers(speakers: SpeakerItems[]) {
 }
 
 /* =====================================================
-   CONFIRMED EVENT — mirrors the reference template
-   exactly: date/title/registration-status row, then
-   details+committee/register row, then programme+speakers
+   EVENT BLOCKS
+   Row 1 badge is always the EVENT status (Tentative /
+   Confirmed) — registration status lives in the actions
+   box for confirmed events, with a Full → "Email
+   Secretariat" fallback, matching the reference template.
 ====================================================== */
 
 function renderConfirmedEvent(event: EventItem) {
-  const registration =
-    registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
   const committees = renderCommitteeTags(event.committees ?? []);
   const speakersHtml = renderSpeakers(event.speakers ?? []);
   const detailsHtml = event.details?.trim() || "&nbsp;";
   const programmeHtml = event.programme?.trim() || "&nbsp;";
+  const isFull = event.registrationStatus === "Full";
 
-  const actionHtml =
-    event.registrationStatus === "Full"
-      ? `
-        <div style="margin-top:12px;font-family:${FONT_STACK};font-size:11px;line-height:16px;color:${COLOR_BODY};">
-          Registration is full. Please contact the Secretariat.
-        </div>
-        <div style="margin-top:10px;">
-          <a href="mailto:sarah@ssa.org.sg" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Email Secretariat</a>
-        </div>
-      `
-      : `
-        <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation">
-          <tr>
-            <td>
-              <a class="register-link" href="${esc(
-                event.registrationLink || "#"
-              )}" target="_blank" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Register Now</a>
-            </td>
-          </tr>
-        </table>
-      `;
+  const actionHtml = isFull
+    ? `
+      <p data-f="full-registration-note" style="margin:0 0 10px;font-family:${FONT_STACK};font-size:9px;color:#6b7280;line-height:1.45;text-align:center;">
+        Registration is currently full.<br>Please contact the SSA Secretariat for enquiries.
+      </p>
+      <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+        <tr>
+          <td>
+            <a class="register-link" data-f="registration-link" href="mailto:sarah@ssa.org.sg" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Email Secretariat</a>
+          </td>
+        </tr>
+      </table>
+    `
+    : `
+      <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+        <tr>
+          <td>
+            <a class="register-link" data-f="registration-link" href="${esc(
+              event.registrationLink || "#"
+            )}" target="_blank" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Register Now</a>
+          </td>
+        </tr>
+      </table>
+    `;
 
   return `
-    <tr data-block="event" data-id="${esc(event.id)}">
+    <tr data-block="event" data-event-status="Confirmed" data-id="${esc(event.id)}">
       <td style="padding:0;border-bottom:8px solid ${COLOR_PAGE_BG};">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid ${COLOR_BORDER};">
-
-          <!-- ROW 1: DATE | TITLE | REGISTRATION STATUS -->
           <tr>
-            ${renderDateCell(event)}
+            ${renderConfirmedDateCell(event)}
 
             <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
-              <span style="font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
+              <span data-f="title" style="font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
                 ${esc(event.title || "Untitled Event")}
               </span>
             </td>
 
             <td class="event-status-cell" width="125" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
-              ${renderStatusTag(registration)}
+              ${renderEventStatusBadge("Confirmed")}
             </td>
           </tr>
         </table>
 
-        <!-- ROW 2: EVENT DETAILS | COMMITTEE + REGISTER -->
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid ${COLOR_ROW_BORDER};">
           <tr>
             <td class="event-details-cell" valign="top" style="padding:20px 22px;background:${COLOR_DETAILS_BG};">
               <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Event Details</p>
-              <div class="rich-text" style="font-family:${FONT_STACK};font-size:13px;color:${COLOR_BODY};line-height:1.65;">
+              <div data-f="event-details" class="rich-text" style="font-family:${FONT_STACK};font-size:13px;color:${COLOR_BODY};line-height:1.65;">
                 ${detailsHtml}
               </div>
             </td>
@@ -378,28 +471,29 @@ function renderConfirmedEvent(event: EventItem) {
             <td class="event-actions-cell" width="160" valign="middle" align="center" style="padding:18px 14px;background:${COLOR_ACTIONS_BG};border-left:1px solid ${COLOR_ROW_BORDER};text-align:center;">
               ${
                 committees
-                  ? `<div style="width:100%;text-align:center;margin-bottom:10px;">${committees}</div>`
+                  ? `<div data-f="committees" style="width:100%;text-align:center;margin-bottom:14px;">${committees}</div>`
                   : ""
               }
-              <div style="width:100%;border-top:1px solid #dde4ec;margin-bottom:14px;font-size:1px;line-height:1px;">&nbsp;</div>
+              <div style="margin-bottom:10px;">${renderRegistrationStatusBadge(
+                event.registrationStatus
+              )}</div>
               ${actionHtml}
             </td>
           </tr>
         </table>
 
-        <!-- ROW 3: PROGRAMME TOPICS | SPEAKERS -->
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid ${COLOR_ROW_BORDER};">
           <tr>
             <td class="programme-cell" valign="top" style="padding:20px 22px;background:#ffffff;">
               <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Programme Topics</p>
-              <div class="rich-text" style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.65;">
+              <div data-f="programme" class="rich-text" style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.65;">
                 ${programmeHtml}
               </div>
             </td>
 
             <td class="speakers-cell" width="200" valign="top" style="padding:20px 22px;background:${COLOR_DETAILS_BG};border-left:1px solid ${COLOR_ROW_BORDER};">
               <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Speakers</p>
-              <div style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.6;">
+              <div data-f="speakers" style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.6;">
                 ${speakersHtml}
               </div>
             </td>
@@ -410,36 +504,29 @@ function renderConfirmedEvent(event: EventItem) {
   `;
 }
 
-/* =====================================================
-   TENTATIVE EVENT — condensed one-row version of the
-   same design language (no reference template supplied
-   for this state yet — flag if you have one to match)
-====================================================== */
-
 function renderTentativeEvent(event: EventItem) {
-  const eventStatus = eventStatusOptions.Tentative;
   const committees = renderCommitteeTags(event.committees ?? []);
 
   return `
-    <tr data-block="event" data-id="${esc(event.id)}">
+    <tr data-block="event" data-event-status="Tentative" data-id="${esc(event.id)}">
       <td style="padding:0;border-bottom:8px solid ${COLOR_PAGE_BG};">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid ${COLOR_BORDER};">
           <tr>
-            ${renderDateCell(event)}
+            ${renderTentativeDateCell(event)}
 
             <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
-              <span style="font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
+              <span data-f="title" style="display:block;font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
                 ${esc(event.title || "Untitled Event")}
               </span>
               ${
                 committees
-                  ? `<div style="margin-top:8px;line-height:1.6;">${committees}</div>`
+                  ? `<div data-f="committees" style="margin-top:8px;">${committees}</div>`
                   : ""
               }
             </td>
 
             <td class="event-status-cell" width="125" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
-              ${renderStatusTag(eventStatus)}
+              ${renderEventStatusBadge("Tentative")}
             </td>
           </tr>
         </table>
@@ -449,19 +536,19 @@ function renderTentativeEvent(event: EventItem) {
 }
 
 export default function EventsHome() {
+  const [tab, setTab] = useState<"events" | "preview">("events");
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("idle");
-  const { confirmDelete, deleteModal } = useConfirmDelete();
   const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
   const [greeting, setGreeting] = useState(
     "Dear Members,\n\nWe are pleased to invite you to our upcoming and future planned events."
   );
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"builder" | "preview">("builder");
+  const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
   const [copied, setCopied] = useState(false);
   const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
+  const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
+  const [collapsedItem, setCollapsedItem] = useState<Record<string, boolean>>({});
+  const { confirmDelete, deleteModal } = useConfirmDelete();
 
   // LOAD
   useEffect(() => {
@@ -482,6 +569,10 @@ export default function EventsHome() {
 
           if (typeof data?.issueRange === "string") {
             setIssueRange(data.issueRange);
+          }
+
+          if (data?.collapsedItem) {
+            setCollapsedItem(data.collapsedItem);
           }
 
           if (typeof data?.rawHtmlEdit === "string") {
@@ -513,7 +604,9 @@ export default function EventsHome() {
             events,
             greeting,
             issueRange,
+            collapsedItem,
             rawHtmlEdit,
+            builtHtml: html,
           }),
         });
 
@@ -529,38 +622,73 @@ export default function EventsHome() {
     }, 700);
 
     return () => clearTimeout(t);
-  }, [events, greeting, issueRange, rawHtmlEdit, loaded]);
+  }, [events, greeting, issueRange, collapsedItem, rawHtmlEdit, loaded]);
 
-  const handleAddEvents = (title: string) => {
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        title,
-        dateMode: "month",
-        date: "",
-        eventStatus: "Tentative",
-        registrationStatus: "Open",
-        shortDescription: "",
-        registrationLink: "",
-        committees: [],
-        details: "",
-        programme: "",
-        speakers: [],
-      },
-    ]);
+  const toggleCollapsed = (id: string) => {
+    setCollapsedItem((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const sortedEvents = [...events].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
+  const updateEvent = (id: string, patch: Partial<EventItem>) => {
+    setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+  };
 
-    const aDate = a.dateMode === "month" ? `${a.date}-01` : a.date;
-    const bDate = b.dateMode === "month" ? `${b.date}-01` : b.date;
+  const toggleCommittee = (id: string, code: string) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id !== id) return e;
+        const has = e.committees.includes(code);
+        return {
+          ...e,
+          committees: has
+            ? e.committees.filter((c) => c !== code)
+            : [...e.committees, code],
+        };
+      })
+    );
+  };
 
-    return aDate.localeCompare(bDate);
-  });
+  const addSpeaker = (eventId: string) => {
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.id === eventId
+          ? {
+              ...e,
+              speakers: [
+                ...(e.speakers || []),
+                { id: uid(), name: "", designation: "", company: "" },
+              ],
+            }
+          : e
+      )
+    );
+  };
+
+  const updateSpeaker = (eventId: string, speakerId: string, patch: Partial<SpeakerItem>) => {
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.id === eventId
+          ? {
+              ...e,
+              speakers: (e.speakers || []).map((s) =>
+                s.id === speakerId ? { ...s, ...patch } : s
+              ),
+            }
+          : e
+      )
+    );
+  };
+
+  const removeSpeaker = (eventId: string, speakerId: string) => {
+    setEvents((prev) =>
+      prev.map((e) =>
+        e.id === eventId
+          ? { ...e, speakers: (e.speakers || []).filter((s) => s.id !== speakerId) }
+          : e
+      )
+    );
+  };
+
+  const sortedEvents = sortWithPinned(events);
 
   const buildFullHtml = () => {
     const eventsHtml = sortedEvents
@@ -690,272 +818,418 @@ export default function EventsHome() {
     }
   };
 
-  const exportHtml = () => {
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "SSA-Upcoming-Events.html";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-  };
-
-  if (selectedEventId) {
-    return (
-      <EventsEditor
-        eventId={selectedEventId}
-        events={events}
-        setEvents={setEvents}
-        onBack={() => setSelectedEventId(null)}
-      />
-    );
-  }
+  const tabBtn = (key: "events" | "preview", label: string, Icon: any) => (
+    <button
+      type="button"
+      onClick={() => setTab(key)}
+      className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 ${
+        tab === key
+          ? "border-indigo-700 text-indigo-800"
+          : "border-transparent text-gray-500 hover:text-gray-700"
+      }`}
+    >
+      <Icon size={15} />
+      {label}
+    </button>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         {/* HEADER */}
-        <div className="flex items-center gap-3 mb-4">
-          <img
-            src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-            alt="SSA Logo"
-            className="h-8 w-auto"
-          />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <img
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+              alt="SSA Logo"
+              className="h-8 w-auto"
+            />
+            <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
+          </div>
 
-          <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
-
-          <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (
               <>
                 <Loader2 size={13} className="animate-spin" /> Saving…
               </>
             )}
-
             {saveStatus.startsWith("Saved at") && (
               <>
                 <Save size={13} />
                 {saveStatus}
               </>
             )}
-
             {saveStatus === "error" && (
               <span className="text-red-600">Save failed</span>
             )}
           </div>
         </div>
 
-        {/* TABS */}
-        <div className="flex gap-1 mb-5 border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setTab("builder")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "builder"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Builder
-          </button>
+        {/* ISSUE RANGE + GREETING */}
+        <div className="bg-white rounded-lg border border-gray-200 mb-3 p-3 space-y-4">
+          <Field label="Issue Range">
+            <input
+              className={inputCls}
+              value={issueRange}
+              onChange={(e) => setIssueRange(e.target.value)}
+            />
+          </Field>
 
-          <button
-            type="button"
-            onClick={() => setTab("preview")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "preview"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Eye size={15} />
-            Preview & Export
-          </button>
+          <Field label="Header Greeting">
+            <textarea
+              className={inputCls}
+              rows={3}
+              value={greeting}
+              onChange={(e) => setGreeting(e.target.value)}
+            />
+          </Field>
         </div>
 
-        {/* BUILDER TAB */}
-        {tab === "builder" && (
-          <div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
-              <Field label="Issue Range">
-                <input
-                  className={inputCls}
-                  value={issueRange}
-                  onChange={(e) => setIssueRange(e.target.value)}
-                />
-              </Field>
-
-              <Field label="Header Greeting">
-                <textarea
-                  className={inputCls}
-                  rows={3}
-                  value={greeting}
-                  onChange={(e) => setGreeting(e.target.value)}
-                />
-              </Field>
+        {viewingRecordId === null ? (
+          <>
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white rounded-t-lg px-2">
+              <div className="flex">
+                {tabBtn("events", "Events", CalendarDays)}
+                {tabBtn("preview", "Preview & Export", Eye)}
+              </div>
+              <button
+                onClick={() => setViewingRecordId(-1)}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
+              >
+                <Archive size={15} /> Issue Archive
+              </button>
             </div>
 
-            {/* EVENT LIST */}
-            <div className="space-y-2">
-              {events.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-                  <p className="text-sm text-gray-500">No upcoming events yet.</p>
-                </div>
-              ) : (
-                sortedEvents.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-gray-800 truncate">
-                        {ev.title || "Untitled Event"}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        {ev.date || "No date set"}
-                      </div>
-                    </div>
+            <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <select
-                        value={ev.eventStatus ?? "Tentative"}
-                        onChange={(e) =>
-                          setEvents((prev) =>
-                            prev.map((item) =>
-                              item.id === ev.id
-                                ? {
-                                    ...item,
-                                    eventStatus: e.target
-                                      .value as EventItem["eventStatus"],
-                                    dateMode:
-                                      e.target.value === "Confirmed"
-                                        ? "exact"
-                                        : "month",
+              {/* EVENTS TAB */}
+              {tab === "events" && (
+                <div className="space-y-4">
+                  {sortedEvents.length === 0 ? (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                      <p className="text-sm text-gray-500">No upcoming events yet.</p>
+                    </div>
+                  ) : (
+                    sortedEvents.map((ev) => (
+                      <div key={ev.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        <div className="flex justify-between items-center mb-2 gap-2">
+                          <span className="text-xs font-semibold text-indigo-700 truncate">
+                            {ev.title.trim() || "Untitled Event"}
+                          </span>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => toggleCollapsed(ev.id)}
+                              className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
+                            >
+                              {collapsedItem[ev.id] ? "Expand" : "Collapse"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => updateEvent(ev.id, { customOrder: !ev.customOrder })}
+                              className={`p-1 rounded hover:bg-gray-100 ${
+                                ev.customOrder ? "text-indigo-700" : "text-gray-400"
+                              }`}
+                              title={
+                                ev.customOrder
+                                  ? "Locked in place — click to auto-sort by date"
+                                  : "Auto-sorted — click to lock position"
+                              }
+                            >
+                              <Pin size={16} />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                confirmDelete({
+                                  itemType: "event",
+                                  itemName: ev.title,
+                                  action: () =>
+                                    setEvents((prev) => prev.filter((e) => e.id !== ev.id)),
+                                })
+                              }
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              title="Delete event"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {!collapsedItem[ev.id] && (
+                          <>
+                            <Field label="Title">
+                              <input
+                                className={inputCls}
+                                value={ev.title}
+                                onChange={(e) => updateEvent(ev.id, { title: e.target.value })}
+                              />
+                            </Field>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <Field label="Event Status">
+                                <select
+                                  className={inputCls}
+                                  value={ev.eventStatus}
+                                  onChange={(e) => {
+                                    const val = e.target.value as EventItem["eventStatus"];
+                                    updateEvent(ev.id, {
+                                      eventStatus: val,
+                                      dateMode: val === "Confirmed" ? "exact" : "month",
+                                    });
+                                  }}
+                                >
+                                  <option value="Tentative">Tentative</option>
+                                  <option value="Confirmed">Confirmed</option>
+                                </select>
+                              </Field>
+
+                              <Field label="Date Type">
+                                <select
+                                  className={inputCls}
+                                  value={ev.dateMode}
+                                  onChange={(e) =>
+                                    updateEvent(ev.id, {
+                                      dateMode: e.target.value as EventItem["dateMode"],
+                                      date: "",
+                                    })
                                   }
-                                : item
-                            )
-                          )
-                        }
-                        className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
-                      >
-                        <option value="Tentative">Tentative</option>
-                        <option value="Confirmed">Confirmed</option>
-                      </select>
+                                >
+                                  <option value="month">Month &amp; Year</option>
+                                  <option value="exact">Exact Date</option>
+                                </select>
+                              </Field>
+                            </div>
 
+                            <Field label={ev.dateMode === "exact" ? "Date" : "Month & Year"}>
+                              <input
+                                type={ev.dateMode === "exact" ? "date" : "month"}
+                                className={inputCls}
+                                value={ev.date}
+                                onChange={(e) => updateEvent(ev.id, { date: e.target.value })}
+                              />
+                            </Field>
+
+                            <Field label="Committees">
+                              <div className="flex flex-wrap gap-1.5">
+                                {Object.entries(committeeOptions).map(([code, opt]) => {
+                                  const active = ev.committees.includes(code);
+                                  return (
+                                    <button
+                                      key={code}
+                                      type="button"
+                                      onClick={() => toggleCommittee(ev.id, code)}
+                                      className={`px-2.5 py-1 text-xs font-semibold rounded border ${
+                                        active
+                                          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                                          : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                                      }`}
+                                    >
+                                      {opt.text}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </Field>
+
+                            {ev.eventStatus === "Confirmed" && (
+                              <>
+                                <Field label="Registration Status">
+                                  <select
+                                    className={inputCls}
+                                    value={ev.registrationStatus}
+                                    onChange={(e) =>
+                                      updateEvent(ev.id, {
+                                        registrationStatus: e.target
+                                          .value as EventItem["registrationStatus"],
+                                      })
+                                    }
+                                  >
+                                    <option value="Open">Open</option>
+                                    <option value="LimitedSlots">Limited Seats</option>
+                                    <option value="ClosingSoon">Closing Soon</option>
+                                    <option value="Waitlist">Waitlist</option>
+                                    <option value="Full">Full</option>
+                                  </select>
+                                </Field>
+
+                                {ev.registrationStatus !== "Full" && (
+                                  <Field label="Registration Link">
+                                    <input
+                                      className={inputCls}
+                                      value={ev.registrationLink}
+                                      onChange={(e) =>
+                                        updateEvent(ev.id, { registrationLink: e.target.value })
+                                      }
+                                    />
+                                  </Field>
+                                )}
+
+                                <Field label="Event Details">
+                                  <RichTextEditor
+                                    value={ev.details}
+                                    onChange={(htmlVal: string) =>
+                                      updateEvent(ev.id, { details: htmlVal })
+                                    }
+                                  />
+                                </Field>
+
+                                <Field label="Programme Topics">
+                                  <RichTextEditor
+                                    value={ev.programme}
+                                    onChange={(htmlVal: string) =>
+                                      updateEvent(ev.id, { programme: htmlVal })
+                                    }
+                                  />
+                                </Field>
+
+                                <Field label="Speakers">
+                                  <div className="space-y-2">
+                                    {(ev.speakers || []).map((sp) => (
+                                      <div key={sp.id} className="flex gap-2 items-center">
+                                        <input
+                                          className={inputCls}
+                                          placeholder="Name"
+                                          value={sp.name}
+                                          onChange={(e) =>
+                                            updateSpeaker(ev.id, sp.id, { name: e.target.value })
+                                          }
+                                        />
+                                        <input
+                                          className={inputCls}
+                                          placeholder="Designation"
+                                          value={sp.designation}
+                                          onChange={(e) =>
+                                            updateSpeaker(ev.id, sp.id, {
+                                              designation: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        <input
+                                          className={inputCls}
+                                          placeholder="Company"
+                                          value={sp.company}
+                                          onChange={(e) =>
+                                            updateSpeaker(ev.id, sp.id, {
+                                              company: e.target.value,
+                                            })
+                                          }
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeSpeaker(ev.id, sp.id)}
+                                          className="p-1.5 text-red-500 hover:bg-red-50 rounded shrink-0"
+                                        >
+                                          <Trash2 size={15} />
+                                        </button>
+                                      </div>
+                                    ))}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => addSpeaker(ev.id)}
+                                      className="text-xs text-indigo-700 font-medium flex items-center gap-1"
+                                    >
+                                      <Plus size={13} /> Add Speaker
+                                    </button>
+                                  </div>
+                                </Field>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setEvents([...events, makeEvent()])}
+                    className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+                  >
+                    <Plus size={16} /> Add Event
+                  </button>
+                </div>
+              )}
+
+              {/* PREVIEW + EXPORT TAB */}
+              {tab === "preview" && (
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
+                    >
+                      {copied ? <Check size={15} /> : <Copy size={15} />}
+                      {copied ? "Copied!" : "Copy HTML"}
+                    </button>
+
+                    {isEdited && (
                       <button
                         type="button"
-                        onClick={() => setSelectedEventId(ev.id)}
-                        className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-                        title="Open event"
+                        onClick={() => setRawHtmlEdit(null)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
                       >
-                        <SquareArrowOutUpRight size={16} />
+                        <RotateCcw size={15} /> Discard edits
                       </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          confirmDelete({
-                            itemType: "event",
-                            itemName: ev.title,
-                            action: () =>
-                              setEvents((prev) =>
-                                prev.filter((e) => e.id !== ev.id)
-                              ),
-                          })
-                        }
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                        title="Delete event"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    )}
                   </div>
-                ))
+
+                  {isEdited && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
+                      Showing your manual edits. The Events tab won't reflect this — hand edits
+                      are copy-only. Click <strong>Discard edits</strong> to go back to the
+                      generated version.
+                    </p>
+                  )}
+
+                  <p className="text-xs text-gray-500 mb-2">Live preview:</p>
+                  <iframe
+                    title="Upcoming Events Preview"
+                    srcDoc={html}
+                    className="w-full border border-gray-300 rounded"
+                    style={{ height: "700px" }}
+                  />
+
+                  <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1">
+                    <Code2 size={13} /> Raw HTML (editable — changes here update the preview and
+                    copy button above):
+                  </p>
+                  <textarea
+                    className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
+                    style={{ height: "220px" }}
+                    value={html}
+                    onChange={(e) => setRawHtmlEdit(e.target.value)}
+                    spellCheck={false}
+                  />
+                </div>
               )}
             </div>
 
-            {/* ADD EVENT */}
+            {deleteModal}
+          </>
+        ) : viewingRecordId === -1 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordsPanel
+              builderKey="events-builder-data"
+              onSelect={(id: number) => setViewingRecordId(id)}
+            />
             <button
-              type="button"
-              onClick={() => setIsNameModalOpen(true)}
-              className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+              onClick={() => setViewingRecordId(null)}
+              className="mt-3 text-sm text-gray-500 hover:text-indigo-700"
             >
-              <Plus size={16} /> Add Event
+              ← Back to builder
             </button>
-
-            <NamePopUp
-              isOpen={isNameModalOpen}
-              onClose={() => setIsNameModalOpen(false)}
-              onAdd={handleAddEvents}
-            />
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordViewer recordId={viewingRecordId} onBack={() => setViewingRecordId(null)} />
           </div>
         )}
-
-        {/* PREVIEW + EXPORT TAB */}
-        {tab === "preview" && (
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
-              >
-                {copied ? <Check size={15} /> : <Copy size={15} />}
-                {copied ? "Copied!" : "Copy HTML"}
-              </button>
-
-              <button
-                type="button"
-                onClick={exportHtml}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
-              >
-                <Code2 size={15} />
-                Export HTML
-              </button>
-
-              {isEdited && (
-                <button
-                  type="button"
-                  onClick={() => setRawHtmlEdit(null)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded font-medium hover:bg-gray-50"
-                >
-                  <RotateCcw size={15} /> Discard edits
-                </button>
-              )}
-            </div>
-
-            {isEdited && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
-                Showing your manual edits. The Builder tab won't reflect this — hand edits are export-only. Click{" "}
-                <strong>Discard edits</strong> to go back to the generated version.
-              </p>
-            )}
-
-            <p className="text-xs text-gray-500 mb-2">Live preview:</p>
-            <iframe
-              title="Upcoming Events Preview"
-              srcDoc={html}
-              className="w-full border border-gray-300 rounded"
-              style={{ height: "700px" }}
-            />
-
-            <p className="text-xs text-gray-500 mt-4 mb-2 flex items-center gap-1">
-              <Code2 size={13} /> Raw HTML (editable — changes here update the preview and copy button above):
-            </p>
-            <textarea
-              className="w-full border border-gray-300 rounded p-2 text-xs font-mono"
-              style={{ height: "220px" }}
-              value={html}
-              onChange={(e) => setRawHtmlEdit(e.target.value)}
-              spellCheck={false}
-            />
-          </div>
-        )}
-
-        {deleteModal}
       </div>
     </div>
   );
