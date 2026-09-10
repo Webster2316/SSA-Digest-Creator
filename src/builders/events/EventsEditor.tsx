@@ -79,6 +79,23 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
   YEG : {text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57"},
 }
 
+//helper 
+const normaliseEvent = (ebv: any): EventItem => ({
+
+  id: ev.id,
+  title: ev.title ?? "",
+  date: ev.date ?? "",
+  dateMode: ev.dateMode ?? "month",
+  eventStatus: ev.eventStatus ?? "Tentative",
+  registrationStatus: ev.registrationStatus ?? "Open",
+  shortDescription: ev.shortDescription ?? "",
+  registrationLink: ev.registrationLink ?? "",
+  committees: Array.isArray(ev.committees) ? ev.committees : [],
+  details: ev.details ?? "",
+  programme: ev.programme ?? "",
+  speakers: Array.isArray(ev.speakers) ? ev.speakers : [],
+})
+
 
 export default function EventsEditor({ eventId, events, setEvents, onBack }: EventsEditorProps) {
     const [loaded, setLoaded] = useState(false);
@@ -105,7 +122,7 @@ if (!event) {
             if (res.ok) {
               const data = await res.json();
              if(data?.events) {
-              setEvents(data.events);
+              setEvents(data.events.map(normaliseEvent));
              }
             
             }
@@ -528,7 +545,7 @@ if (!event) {
                     </div>
       
       
-                    {event.speakers.length === 0 ? (
+                    {speakers.length === 0 ? (
                       <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
                         <p className="text-xs text-gray-400">
                           No speakers added yet.
@@ -536,7 +553,7 @@ if (!event) {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {event.speakers.map(
+                        {speakers.map(
                           (speaker, index) => (
                             <div
                               key={speaker.id}
@@ -553,7 +570,7 @@ if (!event) {
                                   onClick={() =>
                                     updateEvent({
                                       speakers:
-                                        event.speakers.filter(
+                                        speakers.filter(
                                           (x) =>
                                             x.id !==
                                             speaker.id
@@ -576,7 +593,7 @@ if (!event) {
                                   onChange={(e) =>
                                     updateEvent({
                                       speakers:
-                                        event.speakers.map(
+                                      speakers.map(
                                           (x) =>
                                             x.id ===
                                             speaker.id
@@ -604,7 +621,7 @@ if (!event) {
                                   onChange={(e) =>
                                     updateEvent({
                                       speakers:
-                                        event.speakers.map(
+                                        speakers.map(
                                           (x) =>
                                             x.id ===
                                             speaker.id
@@ -631,7 +648,7 @@ if (!event) {
                                   onChange={(e) =>
                                     updateEvent({
                                       speakers:
-                                        event.speakers.map(
+                                        speakers.map(
                                           (x) =>
                                             x.id ===
                                             speaker.id
