@@ -95,6 +95,8 @@ if (!event) {
   const eventBadge = eventStatus[event.eventStatus ?? "Tentative"] ?? eventStatus.Tentative;
   const isTentative = event.eventStatus === "Tentative";
 
+  const committees = event.committees ?? [];
+  const speakers = event.speakers ?? [];
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //loading
     useEffect(() => {
