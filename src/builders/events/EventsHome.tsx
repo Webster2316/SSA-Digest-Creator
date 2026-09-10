@@ -6,7 +6,8 @@ import {
   Loader2,
   Save,
   Eye,
-  Code2,
+  Copy,
+  Check,
 } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
@@ -474,6 +475,7 @@ We encourage you to register your interest and join us at these upcoming session
 We look forward to bringing our members together and strengthening our collective engagement across the association.`);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [tab, setTab] = useState<"builder" | "preview">("builder");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -791,18 +793,15 @@ ${eventHtml}
 </html>`;
   };
 
-  const exportHtml = () => {
-    const html = buildFullHtml();
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "SSA-Upcoming-Events.html";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(buildFullHtml());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      console.error("Failed to copy HTML:", e);
+      setCopied(false);
+    }
   };
 
   if (selectedEventId) {
@@ -999,10 +998,11 @@ ${eventHtml}
 
               <button
                 type="button"
-                onClick={exportHtml}
-                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-700 text-white text-sm font-medium rounded-md hover:bg-indigo-800"
+                onClick={handleCopy}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
               >
-                <Code2 size={15} /> Export HTML
+                {copied ? <Check size={15} /> : <Copy size={15} />}
+                {copied ? "Copied!" : "Copy HTML"}
               </button>
             </div>
 
