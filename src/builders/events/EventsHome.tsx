@@ -7,6 +7,9 @@ import {
   Save,
   Eye,
   Code2,
+  Copy,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
@@ -457,6 +460,8 @@ export default function EventsHome() {
   );
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [tab, setTab] = useState<"builder" | "preview">("builder");
+  const [copied, setCopied] = useState(false);
+  const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
 
   // LOAD
   useEffect(() => {
@@ -477,6 +482,10 @@ export default function EventsHome() {
 
           if (typeof data?.issueRange === "string") {
             setIssueRange(data.issueRange);
+          }
+
+          if (typeof data?.rawHtmlEdit === "string") {
+            setRawHtmlEdit(data.rawHtmlEdit);
           }
         }
       } catch (e) {
@@ -504,6 +513,7 @@ export default function EventsHome() {
             events,
             greeting,
             issueRange,
+            rawHtmlEdit,
           }),
         });
 
@@ -519,7 +529,7 @@ export default function EventsHome() {
     }, 700);
 
     return () => clearTimeout(t);
-  }, [events, greeting, issueRange, loaded]);
+  }, [events, greeting, issueRange, rawHtmlEdit, loaded]);
 
   const handleAddEvents = (title: string) => {
     setEvents((prev) => [
@@ -666,8 +676,21 @@ export default function EventsHome() {
 </html>`;
   };
 
+  const generatedHtml = buildFullHtml();
+  const isEdited = rawHtmlEdit !== null;
+  const html = isEdited ? rawHtmlEdit : generatedHtml;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (e) {
+      setCopied(false);
+    }
+  };
+
   const exportHtml = () => {
-    const html = buildFullHtml();
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
 
