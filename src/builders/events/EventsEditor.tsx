@@ -79,8 +79,7 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
   YEG : {text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57"},
 }
 
-const committees = event.committees ?? [];
-const speakers = event.speakers ?? [];
+
 export default function EventsEditor({ eventId, events, setEvents, onBack }: EventsEditorProps) {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
