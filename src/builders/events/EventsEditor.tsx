@@ -60,10 +60,10 @@ shortDescription: string;
     Confirmed: { text: "Confirmed", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }, 
     Tentative: { text: "Tentative", bg: "#f2bbbf", color: "#700710", border: "#700710" },
   }
-  const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
-    Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
+  const registrationStatusOpt: Record<string, { text: string; bg: string; color: string; border: string }> = {
+    Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" }, // email secretariat
     LimitedSlots: { text: "Limited Seats", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
-    Open: { text: "Open", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
+    Open: { text: "Open", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }, 
     Waitlist: {text: "Waitlist", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708"},
     ClosingSoon: { text: "Closing Soon", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }
   };
@@ -80,7 +80,7 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
 }
 
 //helper 
-const normaliseEvent = (ebv: any): EventItem => ({
+const normaliseEvent = (ev: any): EventItem => ({
 
   id: ev.id,
   title: ev.title ?? "",
@@ -168,22 +168,6 @@ if (!event) {
         return () => clearTimeout(t);
       }, [events, loaded]);
   
-      const handleAddEvents = (title:string) => {
-        setEvents((prev) => [
-          ...prev,
-          {
-            id: uid(),
-            title,
-            date: "",
-            registrationStatus: "Open",
-            registrationLink: "",
-            committees: [],
-            details: "",
-            programme: "",
-            speakers: [],
-          },
-        ]);
-      }
 
       const updateEvent = (updates: Partial<EventItem>) => {
         setEvents((prev) => 
@@ -314,7 +298,7 @@ if (!event) {
                       {Object.entries(committeOptions).map(
                         ([key, option]) => {
                           const selected =
-                          (event.committees ?? []).includes(key);
+                          committees.includes(key);
       
                           return (
                             <button
@@ -323,10 +307,9 @@ if (!event) {
                               onClick={() =>
                                 updateEvent({
                                   committees: selected
-                                    ?   (event.committees ?? []).filter(
-                                        (x) => x !== key
-                                      )
-                                    : [...event.committees, key],
+                                    ?   committees.filter(
+                                        (x) => x !== key)
+                                        : [...committees, key],
                                 })
                               }
                               className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
@@ -460,10 +443,10 @@ if (!event) {
                               onClick={() =>
                                 updateEvent({
                                   committees: selected
-                                    ? e   (event.committees ?? []).filter(
+                                    ? (committees ?? []).filter(
                                         (x) => x !== key
                                       )
-                                    : [...(event.committees ?? []), key],
+                                    : [...committees ?? [], key],
                                 })
                               }
                               className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
@@ -527,7 +510,7 @@ if (!event) {
                         onClick={() =>
                           updateEvent({
                             speakers: [
-                              ...event.speakers,
+                              ...speakers,
                               {
                                 id: uid(),
                                 name: "",
@@ -589,7 +572,7 @@ if (!event) {
                               <Field label="Name">
                                 <input
                                   className={inputCls}
-                                  value={speaker.name}
+                                  value={speaker.name ?? ""}
                                   onChange={(e) =>
                                     updateEvent({
                                       speakers:
