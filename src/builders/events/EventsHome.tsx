@@ -66,36 +66,43 @@ const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
   },
 };
 
-const registrationStatusOpt: Record<EventItem["registrationStatus"], TagStyle> = {
-  Full: {
-    text: "Full",
-    bg: "#8ccf90",
-    color: "#007d21",
-    border: "#007d21",
-  },
-  LimitedSlots: {
-    text: "Limited Seats",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
-  },
+const registrationStatusOpt: Record<
+  EventItem["registrationStatus"],
+  TagStyle
+> = {
   Open: {
     text: "Open",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+    bg: "#e7f5e9",
+    color: "#287333",
+    border: "#76b77c",
   },
-  Waitlist: {
-    text: "Waitlist",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+
+  LimitedSlots: {
+    text: "Limited Seats",
+    bg: "#fff5d8",
+    color: "#8a6c00",
+    border: "#d7b441",
   },
+
   ClosingSoon: {
     text: "Closing Soon",
-    bg: "#f2dc9d",
-    color: "#bf9708",
-    border: "#bf9708",
+    bg: "#fff0e7",
+    color: "#9a4a16",
+    border: "#efba98",
+  },
+
+  Waitlist: {
+    text: "Waitlist",
+    bg: "#f2eef8",
+    color: "#5c3b7e",
+    border: "#cfc0df",
+  },
+
+  Full: {
+    text: "Full",
+    bg: "#f3f0f5",
+    color: "#5a5f6d",
+    border: "#c7ccd6",
   },
 };
 
@@ -751,7 +758,7 @@ We look forward to bringing our members together and strengthening our collectiv
         <!-- SECTION TITLE -->
         <tr>
           <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:24px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
+            <span style="font-family:${FONT};font-size:12pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
           </td>
         </tr>
 
@@ -996,7 +1003,8 @@ ${eventHtml}
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-gray-800">Email Preview</h2>
-                <button
+            <div>
+            <button
                 type="button"
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
@@ -1007,6 +1015,7 @@ ${eventHtml}
                 <p className="text-xs text-gray-500">
                  Live Preview 
                 </p>
+            </div>
               </div>
 
             </div>
