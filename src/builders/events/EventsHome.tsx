@@ -860,14 +860,14 @@ ${eventHtml}
         <div className="flex gap-1 mb-5 border-b border-gray-200">
           <button
             type="button"
-            onClick={() => setTab("builder")}
+            onClick={() => setTab("Events")}
             className={`px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "builder"
+              tab === "Events"
                 ? "border-indigo-700 text-indigo-700"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            Builder
+            Events
           </button>
 
           <button
@@ -883,7 +883,7 @@ ${eventHtml}
           </button>
         </div>
 
-        {tab === "builder" && (
+        {tab === "Events" && (
           <>
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
               <Field label="Issue Range">
