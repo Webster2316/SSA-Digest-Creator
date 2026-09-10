@@ -15,12 +15,6 @@ import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "./NamePopUpModal";
 import EventsEditor from "./EventsEditor";
 
-export interface SpeakerItem {
-  id: string;
-  name: string;
-  designation: string;
-  company: string;
-}
 
 export interface EventDocument {
   label: string;
@@ -43,7 +37,7 @@ export interface EventItem {
   committees: string[];
   details: string;
   programme: string;
-  speakers: SpeakerItem[];
+  speakers: string;
   documents: EventDocument[];
 }
 
@@ -150,7 +144,18 @@ function normaliseEvent(ev: any): EventItem {
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
     details: ev?.details ?? "",
     programme: ev?.programme ?? "",
-    speakers: Array.isArray(ev?.speakers) ? ev.speakers : [],
+    speakers: typeof ev?.speakers === "string"
+    ? ev.speakers
+    : Array.isArray(ev?.speakers)
+      ? ev.speakers
+          .map(
+            (s: any) =>
+              `<p><strong>${esc(s.name ?? "")}</strong><br>${esc(
+                s.designation ?? ""
+              )}<br>${esc(s.company ?? "")}</p>`
+          )
+          .join("")
+      : "",
     documents: Array.isArray(ev?.documents) ? ev.documents : [],
   };
 }
@@ -294,7 +299,7 @@ function renderTentativeEvent(event: EventItem) {
 function renderConfirmedEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
   const committees = renderCommitteeTags(event.committees ?? []);
-  const speakers = renderSpeakers(event.speakers ?? []);
+  const speakersHtml = event.speakers?.trim() || "&nbsp;";
   const documents = renderDocuments(event.documents ?? []);
   const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed");
   const registrationBadge = renderBadge(
@@ -432,7 +437,7 @@ function renderConfirmedEvent(event: EventItem) {
                 >
                   <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">Speakers</p>
                   <div data-f="speakers" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.6;">
-                    ${speakers}
+                    ${speakersHtml}
                   </div>
                 </td>
               </tr>
@@ -746,7 +751,7 @@ We look forward to bringing our members together and strengthening our collectiv
         <!-- SECTION TITLE -->
         <tr>
           <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:14pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
+            <span style="font-family:${FONT};font-size:24px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
           </td>
         </tr>
 

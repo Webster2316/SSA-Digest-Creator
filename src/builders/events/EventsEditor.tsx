@@ -104,7 +104,6 @@ export default function EventsEditor({
   }
 
   const committees = event.committees ?? [];
-  const speakers = event.speakers ?? [];
   const documents = event.documents ?? [];
   const eventBadge = eventStatusOptions[event.eventStatus] ?? eventStatusOptions.Tentative;
   const registrationBadge =
@@ -422,113 +421,16 @@ export default function EventsEditor({
                 />
               </Field>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-semibold text-gray-600">Speakers</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateEvent({
-                        speakers: [
-                          ...speakers,
-                          {
-                            id: uid(),
-                            name: "",
-                            designation: "",
-                            company: "",
-                          },
-                        ],
-                      })
-                    }
-                    className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
-                  >
-                    <Plus size={14} /> Add Speaker
-                  </button>
-                </div>
-
-                {speakers.length === 0 ? (
-                  <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <p className="text-xs text-gray-400">No speakers added yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {speakers.map((speaker, index) => (
-                      <div
-                        key={speaker.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-semibold text-indigo-700">
-                            Speaker {index + 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateEvent({
-                                speakers: speakers.filter(
-                                  (item) => item.id !== speaker.id
-                                ),
-                              })
-                            }
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                            title="Delete speaker"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-
-                        <Field label="Name">
-                          <input
-                            className={inputCls}
-                            value={speaker.name ?? ""}
-                            onChange={(e) =>
-                              updateEvent({
-                                speakers: speakers.map((item) =>
-                                  item.id === speaker.id
-                                    ? { ...item, name: e.target.value }
-                                    : item
-                                ),
-                              })
-                            }
-                          />
-                        </Field>
-
-                        <Field label="Designation">
-                          <input
-                            className={inputCls}
-                            value={speaker.designation ?? ""}
-                            onChange={(e) =>
-                              updateEvent({
-                                speakers: speakers.map((item) =>
-                                  item.id === speaker.id
-                                    ? { ...item, designation: e.target.value }
-                                    : item
-                                ),
-                              })
-                            }
-                          />
-                        </Field>
-
-                        <Field label="Company">
-                          <input
-                            className={inputCls}
-                            value={speaker.company ?? ""}
-                            onChange={(e) =>
-                              updateEvent({
-                                speakers: speakers.map((item) =>
-                                  item.id === speaker.id
-                                    ? { ...item, company: e.target.value }
-                                    : item
-                                ),
-                              })
-                            }
-                          />
-                        </Field>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Field label="Speakers">
+  <RichTextEditor
+    value={event.speakers ?? ""}
+    onChange={(html) =>
+      updateEvent({
+        speakers: html,
+      })
+    }
+  />
+</Field>
             </>
           )}
         </div>
