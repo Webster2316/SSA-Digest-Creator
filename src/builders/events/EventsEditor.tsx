@@ -139,7 +139,7 @@ export default function EventsEditor({
             className="h-8 w-auto"
           />
 
-          <h1 className="text-xl font-bold text-indigo-900">Edit Event</h1>
+          <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
 
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (
