@@ -486,7 +486,7 @@ We encourage you to register your interest and join us at these upcoming session
 
 We look forward to bringing our members together and strengthening our collective engagement across the association.`);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"builder" | "preview">("builder");
+  const [tab, setTab] = useState<"Events" | "preview">("Events");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
