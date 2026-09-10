@@ -28,18 +28,19 @@ interface SpeakerItems{
 interface EventItem {
   id: string;
   title: string;
-  dateMode: "exact" | "month",
-  date: String,
-registrationStatus: "Open"
+  date: string
+registrationStatus: "Available"
 | "LimitedSlots"
 | "Waitlist"
 | "ClosingSoon"
 | "Full";
+eventStatus: "Tentative" | "Confirmed";
+shortDescription: string;
 registrationLink: string;
 committees: string[];
 details: string;
 programme: string;
-speakers: SpeakerItems[];
+speakers:SpeakerItems[];
 };
 
 
@@ -146,6 +147,7 @@ export default function EventsHome() {
           title,
           dateMode: "exact" | "month",
           date: "",
+          eventStatus: "Tentative",
           registrationStatus: "Open",
           registrationLink: "",
           committees: [],
@@ -239,7 +241,7 @@ export default function EventsHome() {
               </div>
             ) : (
               sortedEvents.map((ev) => {
-                const badge = registrationStatusOpt[ev.registrationStatus];
+                const badge = eventStatus[ev.eventStatus];
     
                 return (
                   <div
@@ -254,7 +256,7 @@ export default function EventsHome() {
                     
 
                     <select
-  value={ev.registrationStatus}
+  value={ev.eventStatus}
   onChange={(e) =>
     setEvents((prev) =>
       prev.map((item) =>
@@ -269,11 +271,8 @@ export default function EventsHome() {
   }
   className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
 >
-  <option value="Open">Open</option>
-  <option value="LimitedSlots">Limited Seats</option>
-  <option value="ClosingSoon">Closing Soon</option>
-  <option value="Waitlist">Waitlist</option>
-  <option value="Full">Full</option>
+<option value="Tentative">Tentative</option>
+<option value="Confirmed">Confirmed</option>
 </select>
 
       <button
@@ -329,5 +328,11 @@ export default function EventsHome() {
         </div>
       </div>
     );
+    <DocumentUploadModal
+    isOpen={docModalTarget !== null}
+    onClose={() => setDocModalTarget(null)}
+    onAdd={handleAddDocs}
+  />
+      {deleteModal}
     
 }

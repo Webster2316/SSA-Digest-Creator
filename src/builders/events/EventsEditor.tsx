@@ -39,6 +39,8 @@ interface SpeakerItems{
   | "Waitlist"
   | "ClosingSoon"
   | "Full";
+  eventStatus: "Tentative" | "Confirmed";
+shortDescription: string;
   registrationLink: string;
   committees: string[];
   details: string;
@@ -53,7 +55,10 @@ interface SpeakerItems{
     setEvents: React.Dispatch<React.SetStateAction<EventItem[]>>;
     onBack: () => void;
   }
-  
+  const eventStatus:  Record<string, { text: string; bg: string; color: string; border: string }> = {
+    Confirmed: { text: "Confirmed", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" }, 
+    Tentative: { text: "Tentative", bg: "#f2bbbf", color: "#700710", border: "#700710" },
+  }
   const statusOptions: Record<string, { text: string; bg: string; color: string; border: string }> = {
     Full: { text: "Full", bg: "#8ccf90", color: "#007d21", border: "#007d21" },
     LimitedSlots: { text: "Limited Seats", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
@@ -77,6 +82,7 @@ const committeOptions:  Record<string, { text: string; bg: string; color: string
 export default function EventsEditor({ eventId, events, setEvents, onBack }: EventsEditorProps) {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
+    const [eventItem, updateEvent]= useState("");
     const { confirmDelete, deleteModal } = useConfirmDelete();
 
 //
@@ -249,6 +255,10 @@ Save failed
     >
 
     </select>
+
+    <Field label="Content">
+                <RichTextEditor value={it.content} onChange={(html) => updateEvent(eventItem.map((x) => x.id === it.id ? { ...x, content: html } : x))} />
+              </Field>
 
 </div>
 
