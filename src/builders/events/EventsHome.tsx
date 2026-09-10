@@ -33,6 +33,7 @@ interface EventItem {
     | "ClosingSoon"
     | "Full";
   eventStatus: "Tentative" | "Confirmed";
+  shortDescription: string;
   registrationLink: string;
   committees: string[];
   details: string;
@@ -47,11 +48,34 @@ type TagStyle = {
   border: string;
 };
 
-const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
+/* =====================================================
+   DESIGN TOKENS — matched to the SSA email template
+====================================================== */
+
+const FONT_STACK =
+  "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+
+const COLOR_DATE_BG = "#220550";
+const COLOR_TITLE = "#281e7e";
+const COLOR_ISSUE_BAR_BG = "#262261";
+const COLOR_FOOTER_BG = "#281e7e";
+const COLOR_GREETING_TEXT = "#1f3b7a";
+const COLOR_BORDER = "#d4dde8";
+const COLOR_ROW_BORDER = "#e2e8f0";
+const COLOR_LABEL = "#8492a6";
+const COLOR_BODY = "#374151";
+const COLOR_PAGE_BG = "#f0f4f8";
+const COLOR_DETAILS_BG = "#fafbfd";
+const COLOR_ACTIONS_BG = "#f7f9fc";
+
+const BANNER_URL =
+  "https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png";
+
+const eventStatusOptions: Record<string, TagStyle> = {
   Confirmed: {
     text: "Confirmed",
     bg: "#f2dc9d",
-    color: "#bf9708",
+    color: "#8a6c00",
     border: "#bf9708",
   },
   Tentative: {
@@ -62,10 +86,7 @@ const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
   },
 };
 
-const registrationStatusOpt: Record<
-  EventItem["registrationStatus"],
-  TagStyle
-> = {
+const registrationStatusOpt: Record<string, TagStyle> = {
   Open: {
     text: "Open",
     bg: "#e7f5e9",
@@ -74,15 +95,9 @@ const registrationStatusOpt: Record<
   },
   LimitedSlots: {
     text: "Limited Seats",
-    bg: "#fff6df",
+    bg: "#fff5d8",
     color: "#8a6c00",
     border: "#d7b441",
-  },
-  Waitlist: {
-    text: "Waitlist",
-    bg: "#f2eef8",
-    color: "#5c3b7e",
-    border: "#cfc0df",
   },
   ClosingSoon: {
     text: "Closing Soon",
@@ -90,60 +105,66 @@ const registrationStatusOpt: Record<
     color: "#9a4a16",
     border: "#efba98",
   },
+  Waitlist: {
+    text: "Waitlist",
+    bg: "#f2eef8",
+    color: "#5c3b7e",
+    border: "#cfc0df",
+  },
   Full: {
     text: "Full",
-    bg: "#f2bbbf",
-    color: "#700710",
-    border: "#700710",
+    bg: "#f3f0f5",
+    color: "#5a5f6d",
+    border: "#c7ccd6",
   },
 };
 
 const committeeOptions: Record<string, TagStyle> = {
   DEC: {
     text: "Decarbonisation",
-    bg: "#8ede96",
+    bg: "#d8f3dc",
     color: "#1d7d26",
     border: "#1d7d26",
   },
   DIG: {
     text: "Digitalisation",
-    bg: "#9eb2de",
+    bg: "#dbe3f7",
     color: "#103687",
     border: "#103687",
   },
   INT: {
     text: "International",
-    bg: "#f2dc9d",
-    color: "#bf9708",
+    bg: "#f7ecc9",
+    color: "#8a6c00",
     border: "#bf9708",
   },
   TEC: {
     text: "Technical",
-    bg: "#c78585",
-    color: "#871010",
+    bg: "#f2d9d9",
+    color: "#6d0808",
     border: "#871010",
   },
   LEG: {
     text: "Legal and Insurance",
-    bg: "#b48fbd",
+    bg: "#e6d9ea",
     color: "#510763",
     border: "#510763",
   },
   SVC: {
     text: "Services",
-    bg: "#e9eba4",
-    color: "#717312",
+    bg: "#f2f4cf",
+    color: "#64660e",
     border: "#717312",
   },
   MFC: {
     text: "Marine Fuels",
-    bg: "#91c4b5",
+    bg: "#b5e2d4",
     color: "#238266",
     border: "#238266",
   },
   YEG: {
     text: "YEG",
-    bg: "#d498c1",
+    bg: "#f2dcec",
     color: "#7a0b57",
     border: "#7a0b57",
   },
@@ -157,12 +178,18 @@ function getDateTime() {
 }
 
 function normaliseEvent(ev: any): EventItem {
-  const registrationStatus: EventItem["registrationStatus"] =
+  const allowedRegistrationStatuses: EventItem["registrationStatus"][] = [
+    "Open",
+    "LimitedSlots",
+    "Waitlist",
+    "ClosingSoon",
+    "Full",
+  ];
+
+  const registrationStatus =
     ev?.registrationStatus === "Available"
       ? "Open"
-      : ["Open", "LimitedSlots", "Waitlist", "ClosingSoon", "Full"].includes(
-          ev?.registrationStatus
-        )
+      : allowedRegistrationStatuses.includes(ev?.registrationStatus)
       ? ev.registrationStatus
       : "Open";
 
@@ -173,6 +200,7 @@ function normaliseEvent(ev: any): EventItem {
     dateMode: ev?.dateMode === "exact" ? "exact" : "month",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+    shortDescription: ev?.shortDescription ?? "",
     registrationLink: ev?.registrationLink ?? "",
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
     details: ev?.details ?? "",
@@ -181,22 +209,17 @@ function normaliseEvent(ev: any): EventItem {
   };
 }
 
-function monthName(month: string) {
-  const monthNo = Number(month);
-  if (!monthNo || monthNo < 1 || monthNo > 12) return "";
-  return new Date(2000, monthNo - 1, 1)
-    .toLocaleString("en-US", { month: "short" })
-    .toUpperCase();
-}
+/* =====================================================
+   BADGE / TAG RENDERING — sharp corners (radius:3px),
+   matches the template's "Open" / "Marine Fuels" tags
+====================================================== */
 
-function formatFullDate(date: string) {
-  if (!date || date.length < 10) return "";
-  const [year, month, day] = date.split("-");
-  const monthLong = new Date(2000, Number(month) - 1, 1).toLocaleString(
-    "en-US",
-    { month: "long" }
-  );
-  return `${Number(day)} ${monthLong} ${year}`;
+function renderStatusTag(style: TagStyle) {
+  return `
+    <span style="display:inline-block;padding:4px 9px;border-radius:3px;background:${style.bg};border:1px solid ${style.border};font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;">
+      ${esc(style.text)}
+    </span>
+  `;
 }
 
 function renderCommitteeTags(codes: string[]) {
@@ -205,619 +228,221 @@ function renderCommitteeTags(codes: string[]) {
   return codes
     .map((code) => {
       const option = committeeOptions[code];
-      if (!option) return "";
+      if (!option) {
+        return `<span style="display:inline-block;margin:0 4px 6px 0;padding:5px 9px;border-radius:3px;border:1px solid #d1d5db;font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#4b5563;">${esc(
+          code
+        )}</span>`;
+      }
+
+      return `<span style="display:inline-block;margin:0 4px 6px 0;padding:5px 9px;border-radius:3px;background:${option.bg};border:1px solid ${option.border};font-family:${FONT_STACK};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${option.color};">${esc(
+        option.text
+      )}</span>`;
+    })
+    .join("");
+}
+
+function getDateParts(event: EventItem) {
+  if (!event.date) {
+    return { day: "TBC", monthYear: "" };
+  }
+
+  const [year, month, day] = event.date.split("-");
+  const monthNumber = Number(month);
+  const monthText =
+    monthNumber >= 1 && monthNumber <= 12
+      ? new Date(2000, monthNumber - 1, 1)
+          .toLocaleString("en-US", { month: "short" })
+          .toUpperCase()
+      : "";
+
+  if (event.dateMode === "month") {
+    return { day: monthText || "TBC", monthYear: year || "" };
+  }
+
+  return {
+    day: day ? String(Number(day)) : "TBC",
+    monthYear: [monthText, year].filter(Boolean).join(" "),
+  };
+}
+
+// Matches the template's date block: big day number + "SEP 2026" underneath.
+function renderDateCell(event: EventItem) {
+  const { day, monthYear } = getDateParts(event);
+
+  return `
+    <td class="event-date-cell" width="110" valign="middle" align="center" style="width:110px;background:${COLOR_DATE_BG};padding:14px 8px;text-align:center;">
+      <span style="display:block;font-family:${FONT_STACK};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(
+        day
+      )}</span>
+      ${
+        monthYear
+          ? `<span style="display:block;margin-top:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9ecfb;">${esc(
+              monthYear
+            )}</span>`
+          : ""
+      }
+    </td>
+  `;
+}
+
+function renderSpeakers(speakers: SpeakerItems[]) {
+  if (!speakers?.length) return "&nbsp;";
+
+  return speakers
+    .map((speaker, index) => {
+      const name = esc(speaker?.name ?? "");
+      const designation = esc(speaker?.designation ?? "");
+      const company = esc(speaker?.company ?? "");
+      const meta = [designation, company].filter(Boolean).join("<br>");
 
       return `
-        <span
-          style="
-            display:inline-block;
-            margin:0 4px 4px 0;
-            padding:5px 9px;
-            border-radius:3px;
-            background:${option.bg};
-            border:1px solid ${option.border};
-            font-size:9px;
-            font-weight:700;
-            letter-spacing:0.8px;
-            text-transform:uppercase;
-            color:${option.color};
-          "
-        >
-          ${esc(option.text)}
-        </span>
+        <p style="margin:0 0 ${index === speakers.length - 1 ? "0" : "12px"};">
+          ${name ? `<strong>${name}</strong><br>` : ""}
+          ${meta}
+        </p>
       `;
     })
     .join("");
 }
 
-function renderTentativeEvent(event: EventItem) {
-  const [year = "", month = ""] = (event.date ?? "").split("-");
-  const monthText = monthName(month) || "TBC";
-  const yearText = year || "";
-  const committeeHtml = renderCommitteeTags(event.committees ?? []);
-  const status = eventStatusOptions.Tentative;
-
-  return `
-    <!-- =====================================================
-         TENTATIVE EVENT BLOCK
-         MONTH/YEAR | EVENT NAME + OPTIONAL COMMITTEE | TENTATIVE
-    ====================================================== -->
-
-    <tr data-block="event" data-event-status="Tentative" data-id="${esc(event.id)}">
-      <td style="padding:0;border-bottom:8px solid #f0f4f8;">
-
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="background:#ffffff;border-top:1px solid #d4dde8;"
-        >
-          <tr>
-
-            <td
-              class="event-date-cell"
-              width="110"
-              valign="middle"
-              align="center"
-              style="
-                background:#220550;
-                padding:14px 8px;
-                text-align:center;
-              "
-            >
-              <span
-                data-f="date-month"
-                style="
-                  display:block;
-                  font-size:14px;
-                  font-weight:700;
-                  letter-spacing:1.2px;
-                  text-transform:uppercase;
-                  color:#ffffff;
-                  line-height:1.2;
-                "
-              >
-                ${esc(monthText)}
-              </span>
-
-              ${
-                yearText
-                  ? `
-              <span
-                data-f="date-year"
-                style="
-                  display:block;
-                  margin-top:3px;
-                  font-size:10px;
-                  font-weight:700;
-                  letter-spacing:1.2px;
-                  color:#d9ecfb;
-                "
-              >
-                ${esc(yearText)}
-              </span>`
-                  : ""
-              }
-            </td>
-
-            <td
-              class="event-title-cell"
-              valign="middle"
-              style="padding:14px 18px;"
-            >
-              <span
-                data-f="title"
-                style="
-                  display:block;
-                  font-size:16px;
-                  font-weight:700;
-                  color:#281e7e;
-                  line-height:1.4;
-                "
-              >
-                ${esc(event.title || "Untitled Event")}
-              </span>
-
-              ${
-                committeeHtml
-                  ? `
-              <div
-                data-f="committees"
-                style="margin-top:8px;"
-              >
-                ${committeeHtml}
-              </div>`
-                  : ""
-              }
-            </td>
-
-            <td
-              class="event-status-cell"
-              width="125"
-              valign="middle"
-              align="right"
-              style="padding:14px 18px 14px 8px;"
-            >
-              <span
-                data-f="event-status"
-                data-status="Tentative"
-                style="
-                  display:inline-block;
-                  padding:4px 9px;
-                  border-radius:3px;
-                  background:${status.bg};
-                  border:1px solid ${status.border};
-                  font-size:9px;
-                  font-weight:700;
-                  letter-spacing:1px;
-                  text-transform:uppercase;
-                  color:${status.color};
-                  white-space:nowrap;
-                "
-              >
-                Tentative
-              </span>
-            </td>
-
-          </tr>
-        </table>
-
-      </td>
-    </tr>
-
-    <!-- =====================================================
-         END TENTATIVE EVENT BLOCK
-    ====================================================== -->
-  `;
-}
+/* =====================================================
+   CONFIRMED EVENT — mirrors the reference template
+   exactly: date/title/registration-status row, then
+   details+committee/register row, then programme+speakers
+====================================================== */
 
 function renderConfirmedEvent(event: EventItem) {
-  const [year = "", month = "", day = ""] = (event.date ?? "").split("-");
-  const monthText = monthName(month);
-  const status =
-    registrationStatusOpt[event.registrationStatus ?? "Open"] ??
-    registrationStatusOpt.Open;
-  const committeeHtml = renderCommitteeTags(event.committees ?? []);
-  const speakers = event.speakers ?? [];
+  const registration =
+    registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
+  const committees = renderCommitteeTags(event.committees ?? []);
+  const speakersHtml = renderSpeakers(event.speakers ?? []);
+  const detailsHtml = event.details?.trim() || "&nbsp;";
+  const programmeHtml = event.programme?.trim() || "&nbsp;";
 
-  const speakersHtml = speakers.length
-    ? speakers
-        .map(
-          (speaker, index) => `
-            <p style="margin:0 0 ${index === speakers.length - 1 ? "0" : "12px"};">
-              <strong>${esc(speaker.name || "Speaker Name")}</strong><br>
-              ${esc(speaker.designation || "")}${
-                speaker.designation && speaker.company ? "<br>" : ""
-              }
-              ${esc(speaker.company || "")}
-            </p>
-          `
-        )
-        .join("")
-    : `<p style="margin:0;">To be confirmed.</p>`;
-
-  const isFull = event.registrationStatus === "Full";
-
-  const actionHtml = isFull
-    ? `
-      <p
-        style="
-          margin:0 0 10px;
-          font-size:9px;
-          color:#6b7280;
-          line-height:1.45;
-          text-align:center;
-        "
-      >
-        Registration is currently full.<br>
-        Please contact the SSA Secretariat for enquiries.
-      </p>
-
-      <table
-        class="register-table"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-      >
-        <tr>
-          <td>
-            <a
-              class="register-link"
-              href="mailto:sarah@ssa.org.sg"
-              style="
-                display:inline-block;
-                padding:8px 12px;
-                background:#1b76bc;
-                border-radius:3px;
-                font-size:10px;
-                font-weight:700;
-                letter-spacing:0.8px;
-                text-transform:uppercase;
-                color:#ffffff;
-                text-decoration:none;
-                white-space:nowrap;
-                mso-padding-alt:8px 12px;
-              "
-            >
-              Email Secretariat
-            </a>
-          </td>
-        </tr>
-      </table>
-    `
-    : event.registrationLink
-    ? `
-      <table
-        class="register-table"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-      >
-        <tr>
-          <td>
-            <a
-              class="register-link"
-              data-f="registration-link"
-              href="${esc(event.registrationLink)}"
-              target="_blank"
-              style="
-                display:inline-block;
-                padding:8px 12px;
-                background:#1b76bc;
-                border-radius:3px;
-                font-size:10px;
-                font-weight:700;
-                letter-spacing:0.8px;
-                text-transform:uppercase;
-                color:#ffffff;
-                text-decoration:none;
-                white-space:nowrap;
-                mso-padding-alt:8px 12px;
-              "
-            >
-              Register Now
-            </a>
-          </td>
-        </tr>
-      </table>
-    `
-    : "";
+  const actionHtml =
+    event.registrationStatus === "Full"
+      ? `
+        <div style="margin-top:12px;font-family:${FONT_STACK};font-size:11px;line-height:16px;color:${COLOR_BODY};">
+          Registration is full. Please contact the Secretariat.
+        </div>
+        <div style="margin-top:10px;">
+          <a href="mailto:sarah@ssa.org.sg" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Email Secretariat</a>
+        </div>
+      `
+      : `
+        <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation">
+          <tr>
+            <td>
+              <a class="register-link" href="${esc(
+                event.registrationLink || "#"
+              )}" target="_blank" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Register Now</a>
+            </td>
+          </tr>
+        </table>
+      `;
 
   return `
-    <!-- =====================================================
-         CONFIRMED EVENT BLOCK
-         FOLLOWS THE PROVIDED REFERENCE HTML
-    ====================================================== -->
+    <tr data-block="event" data-id="${esc(event.id)}">
+      <td style="padding:0;border-bottom:8px solid ${COLOR_PAGE_BG};">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid ${COLOR_BORDER};">
 
-    <tr data-block="event" data-event-status="Confirmed" data-id="${esc(event.id)}">
-      <td style="padding:0;border-bottom:8px solid #f0f4f8;">
-
-        <!-- =====================================================
-             ROW 1
-             DATE | TITLE | REGISTRATION STATUS
-        ====================================================== -->
-
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="background:#ffffff;border-top:1px solid #d4dde8;"
-        >
+          <!-- ROW 1: DATE | TITLE | REGISTRATION STATUS -->
           <tr>
+            ${renderDateCell(event)}
 
-            <td
-              class="event-date-cell"
-              width="110"
-              valign="middle"
-              align="center"
-              style="
-                background:#220550;
-                padding:14px 8px;
-                text-align:center;
-              "
-            >
-              <span
-                data-f="date-day"
-                style="
-                  display:block;
-                  font-size:20px;
-                  font-weight:700;
-                  color:#ffffff;
-                  line-height:1.15;
-                "
-              >
-                ${day ? esc(String(Number(day))) : "TBC"}
-              </span>
-
-              <span
-                data-f="date-month"
-                style="
-                  display:block;
-                  margin-top:3px;
-                  font-size:10px;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#d9ecfb;
-                "
-              >
-                ${esc([monthText, year].filter(Boolean).join(" ") || "")}
-              </span>
-            </td>
-
-            <td
-              class="event-title-cell"
-              valign="middle"
-              style="padding:14px 18px;"
-            >
-              <span
-                data-f="title"
-                style="
-                  font-size:16px;
-                  font-weight:700;
-                  color:#281e7e;
-                  line-height:1.4;
-                "
-              >
+            <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
+              <span style="font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
                 ${esc(event.title || "Untitled Event")}
               </span>
             </td>
 
-            <td
-              class="event-status-cell"
-              width="125"
-              valign="middle"
-              align="right"
-              style="padding:14px 18px 14px 8px;"
-            >
-              <span
-                data-f="registration-status"
-                data-status="${esc(event.registrationStatus)}"
-                style="
-                  display:inline-block;
-                  padding:4px 9px;
-                  border-radius:3px;
-                  background:${status.bg};
-                  border:1px solid ${status.border};
-                  font-size:9px;
-                  font-weight:700;
-                  letter-spacing:1px;
-                  text-transform:uppercase;
-                  color:${status.color};
-                  white-space:nowrap;
-                "
-              >
-                ${esc(status.text)}
-              </span>
+            <td class="event-status-cell" width="125" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
+              ${renderStatusTag(registration)}
             </td>
-
           </tr>
         </table>
 
-        <!-- =====================================================
-             ROW 2
-             EVENT DETAILS | COMMITTEE + REGISTER
-        ====================================================== -->
-
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="border-top:1px solid #e2e8f0;"
-        >
+        <!-- ROW 2: EVENT DETAILS | COMMITTEE + REGISTER -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid ${COLOR_ROW_BORDER};">
           <tr>
-
-            <td
-              class="event-details-cell"
-              valign="top"
-              style="
-                padding:20px 22px;
-                background:#fafbfd;
-              "
-            >
-              <p
-                style="
-                  margin:0 0 10px;
-                  font-size:10px;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#8492a6;
-                "
-              >
-                Event Details
-              </p>
-
-              <div
-                data-f="event-details"
-                style="
-                  font-size:13px;
-                  color:#374151;
-                  line-height:1.65;
-                "
-              >
-                ${
-                  event.details?.trim()
-                    ? event.details
-                    : `
-                      <p style="margin:0 0 4px;">
-                        <strong>Date:</strong> ${
-                          formatFullDate(event.date) || "To be confirmed"
-                        }
-                      </p>
-                    `
-                }
+            <td class="event-details-cell" valign="top" style="padding:20px 22px;background:${COLOR_DETAILS_BG};">
+              <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Event Details</p>
+              <div class="rich-text" style="font-family:${FONT_STACK};font-size:13px;color:${COLOR_BODY};line-height:1.65;">
+                ${detailsHtml}
               </div>
             </td>
 
-            <td
-              class="event-actions-cell"
-              width="160"
-              valign="middle"
-              align="center"
-              style="
-                padding:18px 14px;
-                background:#f7f9fc;
-                border-left:1px solid #e2e8f0;
-                text-align:center;
-              "
-            >
+            <td class="event-actions-cell" width="160" valign="middle" align="center" style="padding:18px 14px;background:${COLOR_ACTIONS_BG};border-left:1px solid ${COLOR_ROW_BORDER};text-align:center;">
               ${
-                committeeHtml
-                  ? `
-              <div
-                data-f="committees"
-                style="
-                  width:100%;
-                  text-align:center;
-                  margin-bottom:14px;
-                "
-              >
-                ${committeeHtml}
-              </div>
-
-              <div
-                style="
-                  width:100%;
-                  border-top:1px solid #dde4ec;
-                  margin-bottom:14px;
-                  font-size:1px;
-                  line-height:1px;
-                "
-              >&nbsp;</div>`
+                committees
+                  ? `<div style="width:100%;text-align:center;margin-bottom:10px;">${committees}</div>`
                   : ""
               }
-
+              <div style="width:100%;border-top:1px solid #dde4ec;margin-bottom:14px;font-size:1px;line-height:1px;">&nbsp;</div>
               ${actionHtml}
             </td>
-
           </tr>
         </table>
 
-        <!-- =====================================================
-             ROW 3
-             PROGRAMME TOPICS | SPEAKERS
-        ====================================================== -->
-
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="border-top:1px solid #e2e8f0;"
-        >
+        <!-- ROW 3: PROGRAMME TOPICS | SPEAKERS -->
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid ${COLOR_ROW_BORDER};">
           <tr>
-
-            <td
-              class="programme-cell"
-              valign="top"
-              style="
-                padding:20px 22px;
-                background:#ffffff;
-              "
-            >
-              <p
-                style="
-                  margin:0 0 10px;
-                  font-size:10pt;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#8492a6;
-                "
-              >
-                Programme Topics
-              </p>
-
-              <div
-                data-f="programme"
-                style="
-                  font-size:10pt;
-                  color:#374151;
-                  line-height:1.65;
-                "
-              >
-                ${
-                  event.programme?.trim()
-                    ? event.programme
-                    : `<p style="margin:0;">To be confirmed.</p>`
-                }
+            <td class="programme-cell" valign="top" style="padding:20px 22px;background:#ffffff;">
+              <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Programme Topics</p>
+              <div class="rich-text" style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.65;">
+                ${programmeHtml}
               </div>
             </td>
 
-            <td
-              class="speakers-cell"
-              width="200"
-              valign="top"
-              style="
-                padding:20px 22px;
-                background:#fafbfd;
-                border-left:1px solid #e2e8f0;
-              "
-            >
-              <p
-                style="
-                  margin:0 0 10px;
-                  font-size:10pt;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#8492a6;
-                "
-              >
-                Speakers
-              </p>
-
-              <div
-                data-f="speakers"
-                style="
-                  font-size:10pt;
-                  color:#374151;
-                  line-height:1.6;
-                "
-              >
+            <td class="speakers-cell" width="200" valign="top" style="padding:20px 22px;background:${COLOR_DETAILS_BG};border-left:1px solid ${COLOR_ROW_BORDER};">
+              <p style="margin:0 0 10px;font-family:${FONT_STACK};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${COLOR_LABEL};">Speakers</p>
+              <div style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_BODY};line-height:1.6;">
                 ${speakersHtml}
               </div>
             </td>
-
           </tr>
         </table>
-
       </td>
     </tr>
-
-    <!-- =====================================================
-         END CONFIRMED EVENT BLOCK
-    ====================================================== -->
   `;
 }
 
-function renderGreeting(text: string) {
-  const safe = esc(text ?? "").trim();
+/* =====================================================
+   TENTATIVE EVENT — condensed one-row version of the
+   same design language (no reference template supplied
+   for this state yet — flag if you have one to match)
+====================================================== */
 
-  if (!safe) return "";
+function renderTentativeEvent(event: EventItem) {
+  const eventStatus = eventStatusOptions.Tentative;
+  const committees = renderCommitteeTags(event.committees ?? []);
 
-  return safe
-    .split(/\n\s*\n/)
-    .map(
-      (paragraph, index, all) => `
-        <p style="margin:0 0 ${index === all.length - 1 ? "0" : "12px"};">
-          ${paragraph.replace(/\n/g, "<br>")}
-        </p>
-      `
-    )
-    .join("");
+  return `
+    <tr data-block="event" data-id="${esc(event.id)}">
+      <td style="padding:0;border-bottom:8px solid ${COLOR_PAGE_BG};">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid ${COLOR_BORDER};">
+          <tr>
+            ${renderDateCell(event)}
+
+            <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
+              <span style="font-family:${FONT_STACK};font-size:16px;font-weight:700;color:${COLOR_TITLE};line-height:1.4;">
+                ${esc(event.title || "Untitled Event")}
+              </span>
+              ${
+                committees
+                  ? `<div style="margin-top:8px;line-height:1.6;">${committees}</div>`
+                  : ""
+              }
+            </td>
+
+            <td class="event-status-cell" width="125" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
+              ${renderStatusTag(eventStatus)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  `;
 }
 
 export default function EventsHome() {
@@ -826,37 +451,23 @@ export default function EventsHome() {
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const { confirmDelete, deleteModal } = useConfirmDelete();
-
-  const [issueRange, setIssueRange] = useState(
-    "Monthly Issue: September 2026"
-  );
-
+  const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
   const [greeting, setGreeting] = useState(
-    `Dear Members,
-
-We are pleased to invite you to our upcoming and future planned events, designed to bring our members together and provide an opportunity to engage directly with our Chairs, Councillors and Committee Experts.
-
-These in-person sessions will provide an overview of the work being undertaken across our committees, while creating opportunities for members to exchange insights, connect with fellow industry professionals and learn more about how to engage with our activities.
-
-We encourage you to register your interest and join us at these upcoming sessions.
-
-We look forward to bringing our members together and strengthening our collective engagement across the association.`
+    "Dear Members,\n\nWe are pleased to invite you to our upcoming and future planned events."
   );
-
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [tab, setTab] = useState<"builder" | "preview">("builder");
 
+  // LOAD
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(
-          "/api/load-digest?key=events-builder-data"
-        );
+        const res = await fetch("/api/load-digest?key=events-builder-data");
 
         if (res.ok) {
           const data = await res.json();
 
-          if (Array.isArray(data?.events)) {
+          if (data?.events) {
             setEvents(data.events.map(normaliseEvent));
           }
 
@@ -876,6 +487,7 @@ We look forward to bringing our members together and strengthening our collectiv
     })();
   }, []);
 
+  // AUTOSAVE
   useEffect(() => {
     if (!loaded) return;
 
@@ -883,20 +495,17 @@ We look forward to bringing our members together and strengthening our collectiv
 
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(
-          "/api/save-digest?key=events-builder-data",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              events,
-              greeting,
-              issueRange,
-            }),
-          }
-        );
+        const res = await fetch("/api/save-digest?key=events-builder-data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            events,
+            greeting,
+            issueRange,
+          }),
+        });
 
         if (res.ok) {
           setSaveStatus(`Saved at ${getDateTime()}`);
@@ -918,10 +527,11 @@ We look forward to bringing our members together and strengthening our collectiv
       {
         id: uid(),
         title,
-        date: "",
         dateMode: "month",
+        date: "",
         eventStatus: "Tentative",
         registrationStatus: "Open",
+        shortDescription: "",
         registrationLink: "",
         committees: [],
         details: "",
@@ -936,15 +546,8 @@ We look forward to bringing our members together and strengthening our collectiv
     if (!a.date) return 1;
     if (!b.date) return -1;
 
-    const aDate =
-      a.dateMode === "month" && a.date.length === 7
-        ? `${a.date}-01`
-        : a.date;
-
-    const bDate =
-      b.dateMode === "month" && b.date.length === 7
-        ? `${b.date}-01`
-        : b.date;
+    const aDate = a.dateMode === "month" ? `${a.date}-01` : a.date;
+    const bDate = b.dateMode === "month" ? `${b.date}-01` : b.date;
 
     return aDate.localeCompare(bDate);
   });
@@ -958,349 +561,117 @@ We look forward to bringing our members together and strengthening our collectiv
       )
       .join("");
 
+    const safeGreeting = esc(greeting).replace(/\n/g, "<br>");
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <!--[if !mso]><!-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="x-apple-disable-message-reformatting">
-  <!--<![endif]-->
-
   <title>SSA Upcoming Events</title>
-
-  <!--[if mso]>
-  <noscript>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  </noscript>
-  <![endif]-->
-
   <style type="text/css">
-    body,
-    table,
-    td,
-    a {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
-
-    table,
-    td {
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    img {
-      -ms-interpolation-mode: bicubic;
-      border: 0;
-      display: block;
-      outline: none;
-      text-decoration: none;
-    }
-
-    body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #f0f4f8;
-    }
-
-    a[x-apple-data-detectors] {
-      color: inherit !important;
-      text-decoration: none !important;
-    }
+    body, table, td, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img { -ms-interpolation-mode:bicubic; border:0; display:block; outline:none; text-decoration:none; }
+    body { margin:0 !important; padding:0 !important; background-color:${COLOR_PAGE_BG}; }
+    .rich-text p { margin:0 0 8px 0; }
+    .rich-text ul, .rich-text ol { margin:8px 0; padding-left:18px; }
+    .rich-text li { margin-bottom:5px; }
 
     @media only screen and (max-width: 620px) {
-
-      .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
+      .email-container { width:100% !important; max-width:100% !important; }
+      .header-img { width:100% !important; height:auto !important; }
+      .pad-sides { padding-left:16px !important; padding-right:16px !important; }
+      .event-date-cell, .event-title-cell, .event-status-cell,
+      .event-details-cell, .event-actions-cell,
+      .programme-cell, .speakers-cell {
+        display:block !important; width:100% !important; box-sizing:border-box !important;
       }
-
-      .header-img {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .pad-sides {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-
-      .event-date-cell,
-      .event-title-cell,
-      .event-status-cell,
-      .event-details-cell,
-      .event-actions-cell,
-      .programme-cell,
-      .speakers-cell {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      .event-date-cell {
-        text-align: left !important;
-        padding: 10px 12px !important;
-      }
-
-      .event-title-cell {
-        padding: 14px 16px 10px 16px !important;
-      }
-
-      .event-status-cell {
-        text-align: left !important;
-        padding: 0 16px 14px 16px !important;
-      }
-
-      .event-details-cell {
-        padding: 18px 16px !important;
-      }
-
-      .event-actions-cell {
-        padding: 0 16px 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .programme-cell {
-        padding: 18px 16px !important;
-      }
-
-      .speakers-cell {
-        padding: 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .register-table {
-        width: 100% !important;
-      }
-
-      .register-link {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-      }
-
-      .footer-cell {
-        padding: 20px 16px !important;
-      }
+      .event-date-cell { text-align:left !important; padding:10px 12px !important; }
+      .event-title-cell { padding:14px 16px 10px 16px !important; }
+      .event-status-cell { text-align:left !important; padding:0 16px 14px 16px !important; }
+      .event-details-cell { padding:18px 16px !important; }
+      .event-actions-cell { padding:0 16px 18px 16px !important; border-left:0 !important; border-top:1px solid ${COLOR_ROW_BORDER} !important; }
+      .programme-cell { padding:18px 16px !important; }
+      .speakers-cell { padding:18px 16px !important; border-left:0 !important; border-top:1px solid ${COLOR_ROW_BORDER} !important; }
+      .register-table { width:100% !important; }
+      .register-link { display:block !important; width:100% !important; box-sizing:border-box !important; text-align:center !important; }
+      .footer-cell { padding:20px 16px !important; }
     }
   </style>
 </head>
+<body style="margin:0;padding:0;background-color:${COLOR_PAGE_BG};font-family:${FONT_STACK};color:#000000;font-size:15px;line-height:1.6;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:${COLOR_PAGE_BG};">
+    <tr>
+      <td align="center" style="padding:32px 20px;">
 
-<body
-  style="
-    margin:0;
-    padding:0;
-    background-color:#f0f4f8;
-    font-family:'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif;
-    color:#000000;
-    font-size:15px;
-    line-height:1.6;
-  "
->
+        <table class="email-container" width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="width:100%;max-width:680px;background:#ffffff;border:1px solid ${COLOR_BORDER};">
 
-<table
-  width="100%"
-  cellpadding="0"
-  cellspacing="0"
-  border="0"
-  role="presentation"
-  style="background-color:#f0f4f8;"
->
-  <tr>
-    <td
-      align="center"
-      style="
-        padding-top:32px;
-        padding-bottom:32px;
-        padding-left:20px;
-        padding-right:20px;
-      "
-    >
+          <!-- BANNER -->
+          <tr>
+            <td style="padding:0;font-size:0;line-height:0;">
+              <img class="header-img" src="${BANNER_URL}" width="680" alt="SSA Upcoming Events" style="display:block;width:100%;max-width:680px;height:auto;border:0;">
+            </td>
+          </tr>
 
-      <!--[if mso]>
-      <table
-        width="680"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-      >
-        <tr>
-          <td width="680">
-      <![endif]-->
+          <!-- ISSUE BAR -->
+          <tr>
+            <td style="background:${COLOR_ISSUE_BAR_BG};padding:14px 24px;">
+              <span style="font-family:${FONT_STACK};font-size:14pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">
+                ${esc(issueRange)}
+              </span>
+            </td>
+          </tr>
 
-      <table
-        class="email-container"
-        width="680"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-        style="
-          width:100%;
-          max-width:680px;
-          background:#ffffff;
-          border:1px solid #d4dde8;
-        "
-      >
+          <!-- GREETING -->
+          <tr>
+            <td class="pad-sides" style="background:#ffffff;padding:20px 24px;border-bottom:1px solid ${COLOR_BORDER};">
+              <div style="font-family:${FONT_STACK};font-size:10pt;color:${COLOR_GREETING_TEXT};line-height:1.6;">
+                ${safeGreeting}
+              </div>
+            </td>
+          </tr>
 
-        <!-- =====================================================
-             BANNER
-        ====================================================== -->
+          <!-- EVENTS -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            ${
+              eventsHtml ||
+              `<tr><td style="padding:28px 24px;text-align:center;font-family:${FONT_STACK};font-size:13px;color:${COLOR_LABEL};">No upcoming events.</td></tr>`
+            }
+          </table>
 
-        <tr>
-          <td style="padding:0;font-size:0;line-height:0;">
-            <img
-              class="header-img"
-              src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png"
-              width="680"
-              alt="SSA Upcoming Events"
-              style="
-                display:block;
-                width:100%;
-                max-width:680px;
-                height:auto;
-                border:0;
-              "
-            >
-          </td>
-        </tr>
+          <!-- FOOTER -->
+          <tr>
+            <td class="footer-cell" style="background:${COLOR_FOOTER_BG};padding:24px 28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0;font-family:${FONT_STACK};font-size:12px;color:#ffffff;line-height:1.7;">
+                      Singapore Shipping Association
+                      <br>
+                      For enquiries, please contact sarah@ssa.org.sg
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-        <!-- =====================================================
-             SECTION TITLE
-        ====================================================== -->
-
-        <tr>
-          <td
-            style="
-              background:#262261;
-              padding:14px 24px;
-            "
-          >
-            <span
-              style="
-                font-family:'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif;
-                font-size:14pt;
-                font-weight:700;
-                letter-spacing:1.5px;
-                text-transform:uppercase;
-                color:#ffffff;
-              "
-            >
-              ${esc(issueRange)}
-            </span>
-          </td>
-        </tr>
-
-        <!-- =====================================================
-             GREETING
-        ====================================================== -->
-
-        <tr>
-          <td
-            class="pad-sides"
-            style="
-              background:#ffffff;
-              padding:20px 24px;
-              border-bottom:1px solid #d4dde8;
-            "
-          >
-            <div
-              data-f="greeting"
-              style="
-                font-family:'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif;
-                font-size:10pt;
-                color:#1f3b7a;
-                line-height:1.6;
-              "
-            >
-              ${renderGreeting(greeting)}
-            </div>
-          </td>
-        </tr>
-
-        ${eventsHtml}
-
-        <!-- =====================================================
-             FOOTER
-        ====================================================== -->
-
-        <tr>
-          <td
-            class="footer-cell"
-            style="
-              background:#281e7e;
-              padding:24px 28px;
-            "
-          >
-            <table
-              width="100%"
-              cellpadding="0"
-              cellspacing="0"
-              border="0"
-              role="presentation"
-            >
-              <tr>
-                <td align="center">
-                  <p
-                    style="
-                      margin:0;
-                      font-family:'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif;
-                      font-size:12px;
-                      color:#ffffff;
-                      line-height:1.7;
-                    "
-                  >
-                    Singapore Shipping Association
-                    <br>
-                    For enquiries, please contact sarah@ssa.org.sg
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-      </table>
-
-      <!--[if mso]>
-          </td>
-        </tr>
-      </table>
-      <![endif]-->
-
-    </td>
-  </tr>
-</table>
-
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
   };
 
   const exportHtml = () => {
     const html = buildFullHtml();
-    const blob = new Blob([html], {
-      type: "text/html;charset=utf-8",
-    });
-
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
 
+    const link = document.createElement("a");
     link.href = url;
     link.download = "SSA-Upcoming-Events.html";
     document.body.appendChild(link);
@@ -1324,7 +695,6 @@ We look forward to bringing our members together and strengthening our collectiv
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
-
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-4">
           <img
@@ -1333,15 +703,12 @@ We look forward to bringing our members together and strengthening our collectiv
             className="h-8 w-auto"
           />
 
-          <h1 className="text-xl font-bold text-indigo-900">
-            Upcoming Events
-          </h1>
+          <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
 
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (
               <>
-                <Loader2 size={13} className="animate-spin" />
-                Saving…
+                <Loader2 size={13} className="animate-spin" /> Saving…
               </>
             )}
 
@@ -1353,9 +720,7 @@ We look forward to bringing our members together and strengthening our collectiv
             )}
 
             {saveStatus === "error" && (
-              <span className="text-red-600">
-                Save failed
-              </span>
+              <span className="text-red-600">Save failed</span>
             )}
           </div>
         </div>
@@ -1388,8 +753,9 @@ We look forward to bringing our members together and strengthening our collectiv
           </button>
         </div>
 
+        {/* BUILDER TAB */}
         {tab === "builder" && (
-          <>
+          <div>
             <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
               <Field label="Issue Range">
                 <input
@@ -1402,7 +768,7 @@ We look forward to bringing our members together and strengthening our collectiv
               <Field label="Header Greeting">
                 <textarea
                   className={inputCls}
-                  rows={8}
+                  rows={3}
                   value={greeting}
                   onChange={(e) => setGreeting(e.target.value)}
                 />
@@ -1413,106 +779,88 @@ We look forward to bringing our members together and strengthening our collectiv
             <div className="space-y-2">
               {events.length === 0 ? (
                 <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-                  <p className="text-sm text-gray-500">
-                    No upcoming events yet.
-                  </p>
+                  <p className="text-sm text-gray-500">No upcoming events yet.</p>
                 </div>
               ) : (
-                sortedEvents.map((ev) => {
-                  const badge =
-                    eventStatusOptions[ev.eventStatus] ??
-                    eventStatusOptions.Tentative;
-
-                  return (
-                    <div
-                      key={ev.id}
-                      className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between"
-                    >
-                      <div className="min-w-0">
-                        <span className="block text-sm font-semibold text-gray-800 truncate">
-                          {ev.title || "Untitled Event"}
-                        </span>
-
-                        {ev.date && (
-                          <span className="block text-xs text-gray-400 mt-0.5">
-                            {ev.date}
-                          </span>
-                        )}
+                sortedEvents.map((ev) => (
+                  <div
+                    key={ev.id}
+                    className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between gap-4"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-gray-800 truncate">
+                        {ev.title || "Untitled Event"}
                       </div>
-
-                      <div className="flex items-center gap-2 ml-3">
-                        <select
-                          value={ev.eventStatus}
-                          onChange={(e) => {
-                            const nextStatus =
-                              e.target.value as EventItem["eventStatus"];
-
-                            setEvents((prev) =>
-                              prev.map((item) =>
-                                item.id === ev.id
-                                  ? {
-                                      ...item,
-                                      eventStatus: nextStatus,
-                                      dateMode:
-                                        nextStatus === "Tentative"
-                                          ? "month"
-                                          : "exact",
-                                    }
-                                  : item
-                              )
-                            );
-                          }}
-                          className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
-                          style={{
-                            backgroundColor: badge.bg,
-                            color: badge.color,
-                            borderColor: badge.border,
-                          }}
-                        >
-                          <option value="Tentative">Tentative</option>
-                          <option value="Confirmed">Confirmed</option>
-                        </select>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedEventId(ev.id)}
-                          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-                          title="Open event"
-                        >
-                          <SquareArrowOutUpRight size={16} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            confirmDelete({
-                              itemType: "event",
-                              itemName: ev.title,
-                              action: () =>
-                                setEvents((prev) =>
-                                  prev.filter((e) => e.id !== ev.id)
-                                ),
-                            })
-                          }
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                          title="Delete event"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {ev.date || "No date set"}
                       </div>
                     </div>
-                  );
-                })
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <select
+                        value={ev.eventStatus ?? "Tentative"}
+                        onChange={(e) =>
+                          setEvents((prev) =>
+                            prev.map((item) =>
+                              item.id === ev.id
+                                ? {
+                                    ...item,
+                                    eventStatus: e.target
+                                      .value as EventItem["eventStatus"],
+                                    dateMode:
+                                      e.target.value === "Confirmed"
+                                        ? "exact"
+                                        : "month",
+                                  }
+                                : item
+                            )
+                          )
+                        }
+                        className="px-2.5 py-1 text-xs font-semibold rounded border border-gray-300 bg-gray-100 text-gray-700 cursor-pointer"
+                      >
+                        <option value="Tentative">Tentative</option>
+                        <option value="Confirmed">Confirmed</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEventId(ev.id)}
+                        className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
+                        title="Open event"
+                      >
+                        <SquareArrowOutUpRight size={16} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          confirmDelete({
+                            itemType: "event",
+                            itemName: ev.title,
+                            action: () =>
+                              setEvents((prev) =>
+                                prev.filter((e) => e.id !== ev.id)
+                              ),
+                          })
+                        }
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        title="Delete event"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 
+            {/* ADD EVENT */}
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}
               className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
             >
-              <Plus size={16} />
-              Add Event
+              <Plus size={16} /> Add Event
             </button>
 
             <NamePopUp
@@ -1520,18 +868,19 @@ We look forward to bringing our members together and strengthening our collectiv
               onClose={() => setIsNameModalOpen(false)}
               onAdd={handleAddEvents}
             />
-          </>
+          </div>
         )}
 
+        {/* PREVIEW + EXPORT TAB */}
         {tab === "preview" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-sm font-semibold text-gray-800">
                   Email Preview
                 </h2>
-                <p className="text-xs text-gray-500">
-                  This is the same HTML that will be exported.
+                <p className="text-xs text-gray-500 mt-0.5">
+                  This preview uses the same HTML that will be exported.
                 </p>
               </div>
 
@@ -1547,7 +896,7 @@ We look forward to bringing our members together and strengthening our collectiv
 
             <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
               <iframe
-                title="SSA Upcoming Events Preview"
+                title="Upcoming Events Preview"
                 srcDoc={buildFullHtml()}
                 className="w-full h-[1000px] bg-white border-0 rounded"
               />
