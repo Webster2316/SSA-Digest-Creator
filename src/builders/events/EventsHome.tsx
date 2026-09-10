@@ -996,12 +996,7 @@ ${eventHtml}
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-gray-800">Email Preview</h2>
-                <p className="text-xs text-gray-500">
-                  Preview is fixed at the original 680px email width.
-                </p>
-              </div>
-
-              <button
+                <button
                 type="button"
                 onClick={handleCopy}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
@@ -1009,6 +1004,11 @@ ${eventHtml}
                 {copied ? <Check size={15} /> : <Copy size={15} />}
                 {copied ? "Copied!" : "Copy HTML"}
               </button>
+                <p className="text-xs text-gray-500">
+                 Live Preview 
+                </p>
+              </div>
+
             </div>
 
             <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
