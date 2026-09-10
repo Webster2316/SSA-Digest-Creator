@@ -86,6 +86,8 @@ export default function EventsHome() {
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
 
+
+
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     //loading
     useEffect(() => {
@@ -273,7 +275,7 @@ export default function EventsHome() {
         item.id === ev.id
           ? {
               ...item,
-              registrationStatusOpt: e.target.value as EventItem["registrationStatus"],
+              eventStatus: e.target.value as EventItem["eventStatus"],
             }
           : item
       )
