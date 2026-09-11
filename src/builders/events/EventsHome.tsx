@@ -633,7 +633,6 @@ function renderConfirmedEvent(event: EventItem) {
                   align="center"
                   style="padding:18px 14px;background:#f7f9fc;border-left:1px solid #e2e8f0;text-align:center;"
                 >
-                  ${committees ? `<div data-f="committees" style="width:100%;text-align:center;margin-bottom:14px;">${committees}</div><div style="width:100%;border-top:1px solid #dde4ec;margin-bottom:14px;font-size:1px;line-height:1px;">&nbsp;</div>` : ""}
                   <div style="margin-bottom:${registerAction ? "10px" : "0"};">${registrationBadge}</div>
                   ${registerAction}
                   ${documents}
