@@ -104,7 +104,7 @@ export default function EventsEditor({
 }: EventsEditorProps) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
 
-  const [newCustomCommittee, setnewCustomCommittee] = useState("");
+  const [newCustomCommittee, setNewCustomCommittee] = useState("");
   const event = events.find((ev) => ev.id === eventId);
 
   if (!event) {
@@ -112,7 +112,7 @@ export default function EventsEditor({
   }
 
   const committees = event.committees ?? [];
-  const customeCommitteeTags = events.customeCommitteeTags ?? [];
+  const customCommitteeTags = event.customCommitteeTags ?? [];
   const documents = event.documents ?? [];
   const eventBadge = eventStatusOptions[event.eventStatus] ?? eventStatusOptions.Tentative;
   const registrationBadge =
@@ -302,7 +302,7 @@ export default function EventsEditor({
 
         setNewCustomCommittee("");
       }}
-      className="flex items-center gap-1.5 px-3 py-2 bg-indigo-700 text-white text-xs font-medium rounded hover:bg-indigo-800 shrink-0"
+      className="flex items-center gap-1 px-2 py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-black-800 shrink-0"
     >
       <Plus size={14} />
       Add
@@ -526,10 +526,10 @@ export default function EventsEditor({
     <input
       className={inputCls}
       placeholder="Type..."
-      value={event.CustomCommitteeTag ?? ""}
+      value={event.CustomCommitteeTags ?? ""}
       onChange={(e) =>
         updateEvent({
-          CustomCommitteeTag: e.target.value,
+          CustomCommitteeTags: e.target.value,
         })
       }
     />
@@ -553,7 +553,7 @@ export default function EventsEditor({
     </button>
   </Field>
 
-  {event.CustomCommitteeTag?.trim() && (
+  {event.CustomCommitteeTags?.trim() && (
     <div className="mt-2">
       <span
         className="inline-block px-3 py-1.5 rounded border text-xs font-medium"
@@ -563,7 +563,7 @@ export default function EventsEditor({
           borderColor: "#6b7280",
         }}
       >
-        {event.CustomCommitteeTag}
+        {event.CustomCommitteeTags}
       </span>
     </div>
   )}
