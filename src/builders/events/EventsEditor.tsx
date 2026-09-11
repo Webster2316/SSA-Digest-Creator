@@ -124,6 +124,7 @@ export default function EventsEditor({
     );
   };
 
+
   const addDocuments = (docs: EventDocument[]) => {
     updateEvent({
       documents: [...documents, ...docs],
@@ -483,57 +484,35 @@ export default function EventsEditor({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2">
-                  Committee(s) <span className="font-normal text-gray-400">(optional)</span>
-                </label>
+                          <div className="mt-3">
+  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+    Custom Committee
+  </label>
 
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(committeeOptions).map(([key, option]) => {
-                    const selected = committees.includes(key);
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() =>
-                          updateEvent({
-                            committees: selected
-                              ? committees.filter((item) => item !== key)
-                              : [...committees, key],
-                          })
-                        }
-                        className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
-                          selected
-                            ? "ring-2 ring-indigo-300 opacity-100"
-                            : "opacity-55 hover:opacity-100"
-                        }`}
-                        style={{
-                          backgroundColor: option.bg,
-                          color: option.color,
-                          borderColor: option.border,
-                        }}
-                      >
-                        {option.text}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="flex gap-2">
-                  <div className="mt-3">
-  <Field label="Custom Committee">
+  <div className="flex gap-2">
     <input
       className={inputCls}
-      placeholder="Type..."
-      value={event.CustomCommitteeTags ?? ""}
-      onChange={(e) =>
-        updateEvent({
-          CustomCommitteeTags: e.target.value,
-        })
-      }
+      placeholder="Type committee name..."
+      value={newCustomCommittee}
+      onChange={(e) => setNewCustomCommittee(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+
+          const value = newCustomCommittee.trim();
+
+          if (!value) return;
+
+          updateEvent({
+            customCommitteeTags: [...customCommitteeTags, value],
+          });
+
+          setNewCustomCommittee("");
+        }
+      }}
     />
-  <button
+
+    <button
       type="button"
       onClick={() => {
         const value = newCustomCommittee.trim();
@@ -546,31 +525,41 @@ export default function EventsEditor({
 
         setNewCustomCommittee("");
       }}
-      className="flex items-center gap-1.5 px-3 py-2 bg-indigo-700 text-white text-xs font-medium rounded hover:bg-indigo-800 shrink-0"
+      className="flex items-center gap-1 px-2 py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-black-800 shrink-0"
     >
       <Plus size={14} />
       Add
     </button>
-  </Field>
+  </div>
 
-  {event.CustomCommitteeTags?.trim() && (
-    <div className="mt-2">
-      <span
-        className="inline-block px-3 py-1.5 rounded border text-xs font-medium"
-        style={{
-          backgroundColor: "#f5f5f5",
-          color: "#4b5563",
-          borderColor: "#6b7280",
-        }}
-      >
-        {event.CustomCommitteeTags}
-      </span>
+  {customCommitteeTags.length > 0 && (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {customCommitteeTags.map((tag, index) => (
+        <div
+          key={`${tag}-${index}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-600 bg-gray-50 text-gray-700 text-xs font-medium"
+        >
+          <span>{tag}</span>
+
+          <button
+            type="button"
+            onClick={() =>
+              updateEvent({
+                customCommitteeTags: customCommitteeTags.filter(
+                  (_, i) => i !== index
+                ),
+              })
+            }
+            className="text-gray-400 hover:text-red-600"
+            title="Remove custom committee"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
+      ))}
     </div>
   )}
 </div>
-
-                  </div>
-              </div>
 
               <Field label="Event Details">
                 <RichTextEditor
