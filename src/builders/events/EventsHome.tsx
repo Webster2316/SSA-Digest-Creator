@@ -362,17 +362,7 @@ function renderTentativeEvent(event: EventItem) {
                 ${esc(event.title || "Untitled Event")}
               </span>
 
-              ${
-                committees
-                  ? `
-                    <div
-                      data-f="committees"
-                      style="margin-top:7px;"
-                    >
-                      ${committees}
-                    </div>
-                  `
-                  : ""
+
               }
             </td>
 
@@ -403,40 +393,53 @@ function renderTentativeEvent(event: EventItem) {
 
             <!-- EVENT DETAILS -->
             <td
-              class="event-details-cell"
-              width="50%"
-              valign="top"
+            class="event-details-cell"
+            valign="top"
+            style="padding:20px 22px;background:#fafbfd;"
+          >
+            <p
               style="
-                padding:20px 22px;
-                background:#fafbfd;
+                margin:0 0 10px;
+                font-family:${FONT};
+                font-size:10px;
+                font-weight:700;
+                letter-spacing:1.5px;
+                text-transform:uppercase;
+                color:#8492a6;
               "
             >
-              <p
-                style="
-                  margin:0 0 10px;
-                  font-family:${FONT};
-                  font-size:10px;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#8492a6;
-                "
-              >
-                Event Details
-              </p>
-
-              <div
-                data-f="event-details"
-                style="
-                  font-family:${FONT};
-                  font-size:13px;
-                  color:#374151;
-                  line-height:1.65;
-                "
-              >
-                ${event.details?.trim() || "&nbsp;"}
-              </div>
-            </td>
+              Event Details
+            </p>
+          
+            <div
+              data-f="event-details"
+              style="
+                font-family:${FONT};
+                font-size:13px;
+                color:#374151;
+                line-height:1.65;
+              "
+            >
+              ${event.details?.trim() || "&nbsp;"}
+            </div>
+          
+            ${
+              committees
+                ? `
+                  <div
+                    data-f="committees"
+                    style="
+                      margin-top:14px;
+                      padding-top:12px;
+                      border-top:1px solid #e2e8f0;
+                    "
+                  >
+                    ${committees}
+                  </div>
+                `
+                : ""
+            }
+          </td>
 
 
             <!-- DRAFT PROGRAMME SYNOPSIS -->
@@ -575,17 +578,54 @@ function renderConfirmedEvent(event: EventItem) {
               style="border-top:1px solid #e2e8f0;"
             >
               <tr>
-                <td
-                  class="event-details-cell"
-                  valign="top"
-                  style="padding:20px 22px;background:#fafbfd;"
-                >
-                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">Event Details</p>
-                  <div data-f="event-details" style="font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">
-                    ${event.details?.trim() || "&nbsp;"}
-                  </div>
-                </td>
+               <td
+  class="event-details-cell"
+  valign="top"
+  style="padding:20px 22px;background:#fafbfd;"
+>
+  <p
+    style="
+      margin:0 0 10px;
+      font-family:${FONT};
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      color:#8492a6;
+    "
+  >
+    Event Details
+  </p>
 
+  <div
+    data-f="event-details"
+    style="
+      font-family:${FONT};
+      font-size:13px;
+      color:#374151;
+      line-height:1.65;
+    "
+  >
+    ${event.details?.trim() || "&nbsp;"}
+  </div>
+
+  ${
+    committees
+      ? `
+        <div
+          data-f="committees"
+          style="
+            margin-top:14px;
+            padding-top:12px;
+            border-top:1px solid #e2e8f0;
+          "
+        >
+          ${committees}
+        </div>
+      `
+      : ""
+  }
+</td>
                 <td
                   class="event-actions-cell"
                   width="160"
@@ -601,7 +641,55 @@ function renderConfirmedEvent(event: EventItem) {
               </tr>
             </table>
 
-            <!-- ROW 3: PROGRAMME TOPICS | SPEAKERS -->
+            <!-- ROW 3: SPEAKERS -->
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              border="0"
+              role="presentation"
+              style="border-top:1px solid #e2e8f0;"
+            >
+              <tr>
+                <td
+                  class="speakers-cell"
+                  valign="top"
+                  style="
+                    padding:20px 22px;
+                    background:#ffffff;
+                  "
+                >
+                  <p
+                    style="
+                      margin:0 0 10px;
+                      font-family:${FONT};
+                      font-size:10pt;
+                      font-weight:700;
+                      letter-spacing:1.5px;
+                      text-transform:uppercase;
+                      color:#8492a6;
+                    "
+                  >
+                    Speakers
+                  </p>
+            
+                  <div
+                    data-f="speakers"
+                    style="
+                      font-family:${FONT};
+                      font-size:10pt;
+                      color:#374151;
+                      line-height:1.6;
+                    "
+                  >
+                    ${speakersHtml}
+                  </div>
+                </td>
+              </tr>
+            </table>
+            
+            
+            <!-- ROW 4: PROGRAMME TOPICS -->
             <table
               width="100%"
               cellpadding="0"
@@ -614,23 +702,35 @@ function renderConfirmedEvent(event: EventItem) {
                 <td
                   class="programme-cell"
                   valign="top"
-                  style="padding:20px 22px;background:#ffffff;"
+                  style="
+                    padding:20px 22px;
+                    background:#fafbfd;
+                  "
                 >
-                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">Programme Topics</p>
-                  <div data-f="programme" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.65;">
+                  <p
+                    style="
+                      margin:0 0 10px;
+                      font-family:${FONT};
+                      font-size:10pt;
+                      font-weight:700;
+                      letter-spacing:1.5px;
+                      text-transform:uppercase;
+                      color:#8492a6;
+                    "
+                  >
+                    Programme Topics
+                  </p>
+            
+                  <div
+                    data-f="programme"
+                    style="
+                      font-family:${FONT};
+                      font-size:10pt;
+                      color:#374151;
+                      line-height:1.65;
+                    "
+                  >
                     ${event.programme?.trim() || "&nbsp;"}
-                  </div>
-                </td>
-
-                <td
-                  class="speakers-cell"
-                  width="200"
-                  valign="top"
-                  style="padding:20px 22px;background:#fafbfd;border-left:1px solid #e2e8f0;"
-                >
-                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">Speakers</p>
-                  <div data-f="speakers" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.6;">
-                    ${speakersHtml}
                   </div>
                 </td>
               </tr>
