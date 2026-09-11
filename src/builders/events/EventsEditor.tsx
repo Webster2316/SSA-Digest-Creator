@@ -104,6 +104,7 @@ export default function EventsEditor({
 }: EventsEditorProps) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
 
+  const [newCustomCommittee, setnewCustomCommittee] = useState("");
   const event = events.find((ev) => ev.id === eventId);
 
   if (!event) {
@@ -111,6 +112,7 @@ export default function EventsEditor({
   }
 
   const committees = event.committees ?? [];
+  const customeCommitteeTags = events.customeCommitteeTags ?? [];
   const documents = event.documents ?? [];
   const eventBadge = eventStatusOptions[event.eventStatus] ?? eventStatusOptions.Tentative;
   const registrationBadge =
@@ -259,38 +261,82 @@ export default function EventsEditor({
                   })}
                 </div>
 
-                  <div className="flex gap-2">
-                  <div className="mt-3">
-  <Field label="Custom Committee">
+                <div className="mt-3">
+  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+    Custom Committee
+  </label>
+
+  <div className="flex gap-2">
     <input
       className={inputCls}
-      placeholder="Type..."
-      value={event.CustomCommitteeTag ?? ""}
-      onChange={(e) =>
-        updateEvent({
-          CustomCommitteeTag: e.target.value,
-        })
-      }
-    />
-  </Field>
+      placeholder="Type committee name..."
+      value={newCustomCommittee}
+      onChange={(e) => setNewCustomCommittee(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
 
-  {event.CustomCommitteeTag?.trim() && (
-    <div className="mt-2">
-      <span
-        className="inline-block px-3 py-1.5 rounded border text-xs font-medium"
-        style={{
-          backgroundColor: "#f5f5f5",
-          color: "#4b5563",
-          borderColor: "#6b7280",
-        }}
-      >
-        {event.CustomCommitteeTag}
-      </span>
+          const value = newCustomCommittee.trim();
+
+          if (!value) return;
+
+          updateEvent({
+            customCommitteeTags: [...customCommitteeTags, value],
+          });
+
+          setNewCustomCommittee("");
+        }
+      }}
+    />
+
+    <button
+      type="button"
+      onClick={() => {
+        const value = newCustomCommittee.trim();
+
+        if (!value) return;
+
+        updateEvent({
+          customCommitteeTags: [...customCommitteeTags, value],
+        });
+
+        setNewCustomCommittee("");
+      }}
+      className="flex items-center gap-1.5 px-3 py-2 bg-indigo-700 text-white text-xs font-medium rounded hover:bg-indigo-800 shrink-0"
+    >
+      <Plus size={14} />
+      Add
+    </button>
+  </div>
+
+  {customCommitteeTags.length > 0 && (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {customCommitteeTags.map((tag, index) => (
+        <div
+          key={`${tag}-${index}`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-600 bg-gray-50 text-gray-700 text-xs font-medium"
+        >
+          <span>{tag}</span>
+
+          <button
+            type="button"
+            onClick={() =>
+              updateEvent({
+                customCommitteeTags: customCommitteeTags.filter(
+                  (_, i) => i !== index
+                ),
+              })
+            }
+            className="text-gray-400 hover:text-red-600"
+            title="Remove custom committee"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
+      ))}
     </div>
   )}
 </div>
-
-                  </div>
          
               </div>
 
@@ -487,6 +533,24 @@ export default function EventsEditor({
         })
       }
     />
+  <button
+      type="button"
+      onClick={() => {
+        const value = newCustomCommittee.trim();
+
+        if (!value) return;
+
+        updateEvent({
+          customCommitteeTags: [...customCommitteeTags, value],
+        });
+
+        setNewCustomCommittee("");
+      }}
+      className="flex items-center gap-1.5 px-3 py-2 bg-indigo-700 text-white text-xs font-medium rounded hover:bg-indigo-800 shrink-0"
+    >
+      <Plus size={14} />
+      Add
+    </button>
   </Field>
 
   {event.CustomCommitteeTag?.trim() && (

@@ -35,7 +35,7 @@ export interface EventItem {
   eventStatus: "Tentative" | "Confirmed";
   registrationLink: string;
   committees: string[];
-  customCommitteeTag: string;
+  customCommitteeTag: string[];
   details: string;
   programme: string;
   speakers: string;
@@ -150,7 +150,7 @@ function normaliseEvent(ev: any): EventItem {
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     registrationLink: ev?.registrationLink ?? "",
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
-    customCommitteeTag: ev?.customCommitteeTag ?? "",
+    customCommitteeTag: Array.isArray(ev?.customCommitteeTag) ? ev.customCommitteeTag : [],
     details: ev?.details ?? "",
     programme: ev?.programme ?? "",
     speakers: typeof ev?.speakers === "string"
@@ -220,12 +220,11 @@ function renderCommitteeTags(codes: string[]) {
 }
 
 
-function renderCustomCommitteeTag(text: string) {
-const label = text?.trim();
+function renderCustomCommitteeTag(tags: string[]) {
 
-if (!label) return "";
+if (!tags.length) return "";
 
-return  `<span style="
+return tags.filter((tag) => tag.trim()).map((tag) => `<span style="
 display:inline-block;
 margin:0 4px 4px 0;
 padding:5px 9px;
@@ -238,7 +237,9 @@ font-weight:700;
 letter-spacing:0.8px;
 text-transform:uppercase;
 color:#383838;
-">${esc(label)}</span>`;
+">${esc(tag.trim())}</span>`
+)
+.join("");
 };
 
 function renderDocuments(documents: EventDocument[]) {
@@ -271,7 +272,7 @@ function renderSpeakers(speakers: SpeakerItem[]) {
 function renderTentativeEvent(event: EventItem) {
   // const { month, year } = getMonthYearParts(event.date);
   const { day, monthYear } = getDateParts(event.date);
-  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? "");
+  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? []);
   const status = eventStatusOptions.Tentative;
 
   return `
@@ -342,7 +343,7 @@ function renderTentativeEvent(event: EventItem) {
 
 function renderConfirmedEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
-  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? "");
+  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? []);
   const speakersHtml = event.speakers?.trim() || "&nbsp;";
   const documents = renderDocuments(event.documents ?? []);
   const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed");
@@ -590,10 +591,10 @@ We look forward to bringing our members together and strengthening our collectiv
         registrationStatus: "Open",
         registrationLink: "",
         committees: [],
-        customCommitteeTag: "",
+        customCommitteeTag: [],
         details: "",
         programme: "",
-        speakers: [],
+        speakers: "",
         documents: [],
       },
     ]);
