@@ -123,7 +123,7 @@ export default function EventsEditor({
       prev.map((ev) => (ev.id === eventId ? { ...ev, ...updates } : ev))
     );
   };
-
+  
 
   const addDocuments = (docs: EventDocument[]) => {
     updateEvent({
@@ -484,7 +484,44 @@ export default function EventsEditor({
                 </div>
               </div>
 
-                          <div className="mt-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-2">
+                  Committee(s) <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(committeeOptions).map(([key, option]) => {
+                    const selected = committees.includes(key);
+
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() =>
+                          updateEvent({
+                            committees: selected
+                              ? committees.filter((item) => item !== key)
+                              : [...committees, key],
+                          })
+                        }
+                        className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
+                          selected
+                            ? "ring-2 ring-indigo-300 opacity-100"
+                            : "opacity-55 hover:opacity-100"
+                        }`}
+                        style={{
+                          backgroundColor: option.bg,
+                          color: option.color,
+                          borderColor: option.border,
+                        }}
+                      >
+                        {option.text}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-3">
   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
     Custom Committee
   </label>
@@ -560,6 +597,7 @@ export default function EventsEditor({
     </div>
   )}
 </div>
+              </div>
 
               <Field label="Event Details">
                 <RichTextEditor
