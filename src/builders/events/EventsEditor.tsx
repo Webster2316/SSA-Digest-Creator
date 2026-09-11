@@ -195,7 +195,7 @@ export default function EventsEditor({
           ====================================================== */}
           {event.eventStatus === "Tentative" && (
             <>
-              <Field label="Month & Year">
+              {/* <Field label="Month & Year">
                 <input
                   type="month"
                   className={inputCls}
@@ -207,7 +207,20 @@ export default function EventsEditor({
                     })
                   }
                 />
-              </Field>
+              </Field> */}
+                   <Field label="Event Date">
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={event.date ?? ""}
+                    onChange={(e) =>
+                      updateEvent({
+                        date: e.target.value,
+                        dateMode: "exact",
+                      })
+                    }
+                  />
+                </Field>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-2">
@@ -245,7 +258,55 @@ export default function EventsEditor({
                     );
                   })}
                 </div>
+
+                  <div className="flex gap-2">
+                  <div className="mt-3">
+  <Field label="Custom Committee">
+    <input
+      className={inputCls}
+      placeholder="Type..."
+      value={event.CustomCommitteeTag ?? ""}
+      onChange={(e) =>
+        updateEvent({
+          CustomCommitteeTag: e.target.value,
+        })
+      }
+    />
+  </Field>
+
+  {event.CustomCommitteeTag?.trim() && (
+    <div className="mt-2">
+      <span
+        className="inline-block px-3 py-1.5 rounded border text-xs font-medium"
+        style={{
+          backgroundColor: "#f5f5f5",
+          color: "#4b5563",
+          borderColor: "#6b7280",
+        }}
+      >
+        {event.CustomCommitteeTag}
+      </span>
+    </div>
+  )}
+</div>
+
+                  </div>
+         
               </div>
+
+              <Field label="Event Details">
+                <RichTextEditor
+                  value={event.details ?? ""}
+                  onChange={(html) => updateEvent({ details: html })}
+                />
+              </Field>
+
+              <Field label="Draft Programme Synopsis">
+                <RichTextEditor
+                  value={event.programme ?? ""}
+                  onChange={(html) => updateEvent({ programme: html })}
+                />
+              </Field>
             </>
           )}
 
@@ -294,7 +355,7 @@ export default function EventsEditor({
                 </Field>
               </div>
 
-              {/* Registration link and documents are kept together. */}
+              {/* Registration link and documents are kept together. ?? same line */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div>
                   {event.registrationStatus !== "Full" ? (
@@ -315,7 +376,7 @@ export default function EventsEditor({
                       </label>
                       <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
                         <p className="text-xs text-gray-500 leading-5">
-                          Full events will show “Email Secretariat” instead of Register Now.
+                          Email Secretariat if interested.
                         </p>
                       </div>
                     </div>
@@ -412,6 +473,39 @@ export default function EventsEditor({
                     );
                   })}
                 </div>
+
+                <div className="flex gap-2">
+                  <div className="mt-3">
+  <Field label="Custom Committee">
+    <input
+      className={inputCls}
+      placeholder="Type..."
+      value={event.CustomCommitteeTag ?? ""}
+      onChange={(e) =>
+        updateEvent({
+          CustomCommitteeTag: e.target.value,
+        })
+      }
+    />
+  </Field>
+
+  {event.CustomCommitteeTag?.trim() && (
+    <div className="mt-2">
+      <span
+        className="inline-block px-3 py-1.5 rounded border text-xs font-medium"
+        style={{
+          backgroundColor: "#f5f5f5",
+          color: "#4b5563",
+          borderColor: "#6b7280",
+        }}
+      >
+        {event.CustomCommitteeTag}
+      </span>
+    </div>
+  )}
+</div>
+
+                  </div>
               </div>
 
               <Field label="Event Details">

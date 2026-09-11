@@ -35,6 +35,7 @@ export interface EventItem {
   eventStatus: "Tentative" | "Confirmed";
   registrationLink: string;
   committees: string[];
+  customCommitteeTag: string;
   details: string;
   programme: string;
   speakers: string;
@@ -149,6 +150,7 @@ function normaliseEvent(ev: any): EventItem {
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     registrationLink: ev?.registrationLink ?? "",
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
+    customCommitteeTag: ev?.customCommitteeTag ?? "",
     details: ev?.details ?? "",
     programme: ev?.programme ?? "",
     speakers: typeof ev?.speakers === "string"
@@ -217,6 +219,28 @@ function renderCommitteeTags(codes: string[]) {
     .join("");
 }
 
+
+function renderCustomCommitteeTag(text: string) {
+const label = text?.trim();
+
+if (!label) return "";
+
+return  `<span style="
+display:inline-block;
+margin:0 4px 4px 0;
+padding:5px 9px;
+border-radius:3px;
+background:#f5f5f5;
+border:1px solid #383838;
+font-family:${FONT};
+font-size:9px;
+font-weight:700;
+letter-spacing:0.8px;
+text-transform:uppercase;
+color:#383838;
+">${esc(label)}</span>`;
+};
+
 function renderDocuments(documents: EventDocument[]) {
   if (!documents.length) return "";
 
@@ -245,8 +269,9 @@ function renderSpeakers(speakers: SpeakerItem[]) {
 }
 
 function renderTentativeEvent(event: EventItem) {
-  const { month, year } = getMonthYearParts(event.date);
-  const committees = renderCommitteeTags(event.committees ?? []);
+  // const { month, year } = getMonthYearParts(event.date);
+  const { day, monthYear } = getDateParts(event.date);
+  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? "");
   const status = eventStatusOptions.Tentative;
 
   return `
@@ -265,25 +290,37 @@ function renderTentativeEvent(event: EventItem) {
               style="background:#ffffff;border-top:1px solid #d4dde8;"
             >
               <tr>
-                <td
-                  class="event-date-cell"
-                  width="110"
-                  valign="middle"
-                  align="center"
-                  style="background:#220550;padding:14px 8px;text-align:center;"
-                >
-                  <span style="display:block;font-family:${FONT};font-size:14px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;line-height:1.2;">${esc(month)}</span>
-                  ${year ? `<span style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.2px;color:#d9ecfb;">${esc(year)}</span>` : ""}
-                </td>
+              <td
+              class="event-date-cell"
+              width="110"
+              valign="middle"
+              align="center"
+              style="background:#220550;padding:14px 8px;text-align:center;"
+            >
+              <span data-f="date-day" style="display:block;font-family:${FONT};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
+              ${monthYear ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9ecfb;">${esc(monthYear)}</span>` : ""}
+            </td>
 
-                <td
-                  class="event-title-cell"
-                  valign="middle"
-                  style="padding:14px 18px;"
-                >
-                  <span data-f="title" style="display:block;font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
-                  ${committees ? `<div data-f="committees" style="margin-top:8px;">${committees}</div>` : ""}
-                </td>
+            <td
+            class="event-title-cell"
+            valign="middle"
+            style="padding:14px 18px;"
+          >
+            <span
+              data-f="title"
+              style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;"
+            >
+              ${esc(event.title || "Untitled Event")}
+            </span>
+          
+            ${
+              committees
+                ? `<div data-f="committees" style="margin-top:7px;">
+                    ${committees}
+                  </div>`
+                : ""
+            }
+          </td>
 
                 <td
                   class="event-status-cell"
@@ -305,7 +342,7 @@ function renderTentativeEvent(event: EventItem) {
 
 function renderConfirmedEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
-  const committees = renderCommitteeTags(event.committees ?? []);
+  const committees = renderCommitteeTags(event.committees ?? []) + renderCustomCommitteeTag(event.customCommitteeTag ?? "");
   const speakersHtml = event.speakers?.trim() || "&nbsp;";
   const documents = renderDocuments(event.documents ?? []);
   const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed");
@@ -553,6 +590,7 @@ We look forward to bringing our members together and strengthening our collectiv
         registrationStatus: "Open",
         registrationLink: "",
         committees: [],
+        customCommitteeTag: "",
         details: "",
         programme: "",
         speakers: [],
@@ -912,7 +950,7 @@ ${eventHtml}
                 </div>
               ) : (
                 sortedEvents.map((ev) => {
-                  const badge = eventStatusOptions[ev.eventStatus] ?? eventStatusOptions.Tentative;
+                  const badge = eventStatusOptions[ev.eventStatus]; //?? eventStatusOptions.Tentative;
 
                   return (
                     <div
@@ -934,7 +972,7 @@ ${eventHtml}
                                   ? {
                                       ...item,
                                       eventStatus: nextStatus,
-                                      dateMode: nextStatus === "Tentative" ? "month" : "exact",
+                                      // dateMode: nextStatus === "Tentative" ? "month" : "exact",
                                     }
                                   : item
                               )
