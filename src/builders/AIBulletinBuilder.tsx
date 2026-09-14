@@ -494,21 +494,15 @@ img{-ms-interpolation-mode:bicubic;border:0;outline:none;text-decoration:none;di
 table{border-collapse:collapse;}
 body{margin:0!important;padding:0!important;width:100%!important;background-color:#eef2f5;font-family:${FONT};}
 a{text-decoration:none;}
-@media screen and (max-width:620px){
-.email-container{width:100%!important;max-width:100%!important;}
-.content-padding{padding-left:16px!important;padding-right:16px!important;}
-.issue-padding{padding-left:16px!important;padding-right:16px!important;}
-.issue-title{font-size:24px!important;}
-}
 </style>
 </head>
 <body style="margin:0;padding:0;background-color:#eef2f5">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#eef2f5" style="width:100%;background-color:#eef2f5">
 <tr><td align="center" valign="top" style="padding:30px 10px">
-<table role="presentation" width="680" cellpadding="0" cellspacing="0" border="0" class="email-container" bgcolor="#ffffff" style="width:680px;max-width:680px;background-color:#ffffff;border:1px solid #d4dde8;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-container" bgcolor="#ffffff" style="width:100%;max-width:680px;margin:0 auto;background-color:#ffffff;border:1px solid #d4dde8;">
 
 <tr><td align="center" valign="middle" bgcolor="#e4e7f2" style="background-color:#e4e7f2;padding:0">
-<img src="https://raw.githubusercontent.com/Webster2316/AI_Bulletin_Draft/refs/heads/main/Banner3.png" width="680" height="183" alt="SSA AI bulletin Banner" class="banner-image" style="display:block;width:680px;height:183px;max-width:100%;border:0;" />
+<img src="https://raw.githubusercontent.com/Webster2316/AI_Bulletin_Draft/refs/heads/main/Banner3.png" width="680" height="183" alt="SSA AI bulletin Banner" class="banner-image" style="display:block;width:100%;height:auto;max-width:680px;border:0;" />
 </td></tr>
 
 <tr><td align="left" valign="top" bgcolor="#1b76bc" class="issue-padding" style="padding:22px 24px;background-color:#1b76bc">
@@ -573,7 +567,7 @@ function parseAwarenessSubItems(block) {
     const status = sub.getAttribute("data-status") || "";
     const statusColor = sub.getAttribute("data-status-color") || "";
     const statusCustom = sub.getAttribute("data-status-custom") || "";
-    return { id, header, body, tag, status, statusColor, statusCustom };
+    return { id, header, body, tag, status, statusColor, statusCustom, docs };
   });
 }
 
@@ -591,7 +585,7 @@ function parseAwarenessItems(doc) {
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttribute("data-status-custom") || "";
     const subItems = parseAwarenessSubItems(block);
-    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false, subItems };
+    return { id, header, body, tag, status, statusColor, statusCustom, isPreset: false, subItems, docs };
   });
 }
 
@@ -609,7 +603,7 @@ function parseTrainingItems(doc) {
     const statusColor = block.getAttribute("data-status-color") || "";
     const statusCustom = block.getAttribute("data-status-custom") || "";
     const summaryTag = tagField ? tagField.querySelector("td")?.innerHTML.trim() || null : null;
-    return { id, name, partnershipLine, status, statusColor, statusCustom, body, summaryTag };
+    return { id, name, partnershipLine, status, statusColor, statusCustom, body, summaryTag, docs };
   });
 }
 
@@ -656,6 +650,7 @@ function parseAdoptionItems(doc) {
       statusColor,
       statusCustom,
       isPreset: false,
+      docs,
     };
   });
 }
@@ -665,7 +660,6 @@ function parseHtmlToState(htmlStr) {
 
   const issueTagEl = doc.querySelector('[data-f="issue-tag"]');
   const issueTag = issueTagEl ? issueTagEl.textContent.trim() : "";
-  const docs = parseDocuments(block);
   const trainingSectionTitleEl = doc.querySelector('[data-f="training-section-title"]');
   const trainingSectionTitle = trainingSectionTitleEl ? trainingSectionTitleEl.textContent.trim() : "";
 
