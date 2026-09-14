@@ -51,7 +51,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey
           </div>
   
           <DigestDropZone 
-          builderKey={BuilderKey}
+  builderKey={builderKey}
           onLinksReady={handleLinksReady} />
   
           <div className="mt-4 pt-4 border-t border-gray-200">
