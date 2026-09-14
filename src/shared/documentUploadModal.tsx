@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Link as LinkIcon } from "lucide-react";
 import DigestDropZone, { FileUploadResult } from "./digestDropZone";
-import { neon } from '@neondatabase/serverless';
+
 
 export type BuilderKey =  "ssa-digest-data" | "ai-bulletin-data" | "events-builder-data";
 interface DocRow {
@@ -18,7 +18,7 @@ interface DocumentUploadModalProps {
 //debugger
 
 
-const { key } = req.body;
+
 
 export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey, }: DocumentUploadModalProps) {
     const [manualLabel, setManualLabel] = useState("");
@@ -42,7 +42,6 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey
         setManualUrl("");
         onClose();
     }
-    console.log("DocumentUploadModal builderKey:", key);
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-4" onClick={(e) => e.stopPropagation()}>

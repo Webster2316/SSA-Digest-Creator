@@ -632,6 +632,7 @@ export default function EventsEditor({
         isOpen={isDocModalOpen}
         onClose={() => setIsDocModalOpen(false)}
         onAdd={addDocuments}
+        builderKey="events-builder-data"
       />
     </div>
   );

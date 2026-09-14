@@ -1224,7 +1224,7 @@ requestAnimationFrame(() => {
   isOpen={docModalTarget !== null}
   onClose={() => setDocModalTarget(null)}
   onAdd={handleAddDocs}
-  builderkey="ssa-digest-data"
+  builderKey="ssa-digest-data"
 />
     {deleteModal}
   </>
