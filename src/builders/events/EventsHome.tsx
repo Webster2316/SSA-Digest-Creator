@@ -1306,7 +1306,6 @@ ${eventHtml}
               isOpen={isNameModalOpen}
               onClose={() => setIsNameModalOpen(false)}
               onAdd={handleAddEvents}
-              builderkey="events-builder-data"
             />
           </>
         )}
