@@ -5,12 +5,12 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed"});
     }
 
-    const { files } = req.body;
+    const { key, files } = req.body;
 
     const response = await fetch(process.env.POWER_AUTOMATE_FLOW_URL, {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ files }),
+      body: JSON.stringify({ key, files }),
     });
     
     const result = await response.json();
