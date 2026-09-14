@@ -1570,6 +1570,7 @@ export default function AIBulletinBuilder() {
   isOpen={docModalTarget !== null}
   onClose={() => setDocModalTarget(null)}
   onAdd={handleAddDocs}
+  builderkey="ai-bulletin-data"
 />
 {deleteModal}
           </>

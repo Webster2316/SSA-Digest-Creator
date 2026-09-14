@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { X, Link as LinkIcon } from "lucide-react";
-import DigestDropZone, { FileUploadResult } from "./dragAndDrop";
+import DigestDropZone, { FileUploadResult } from "./digestDropZone";
 
+
+export type BuilderKeys =  "ssa-digest-data" | "ai-bulletin-data" | "events-builder-data";
 interface DocRow {
     label: string;
     url: string;
@@ -11,9 +13,11 @@ interface DocumentUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAdd: (docs: DocRow[]) => void;
+    builderkey: BuilderKey
 }
 
-export default function DocumentUploadModal({ isOpen, onClose, onAdd }: DocumentUploadModalProps) {
+
+export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey, }: DocumentUploadModalProps) {
     const [manualLabel, setManualLabel] = useState("");
     const [manualUrl, setManualUrl] = useState("");
 
@@ -46,7 +50,9 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd }: Document
             </button>
           </div>
   
-          <DigestDropZone onLinksReady={handleLinksReady} />
+          <DigestDropZone 
+          builderKey={BuilderKey}
+          onLinksReady={handleLinksReady} />
   
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
