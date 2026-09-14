@@ -426,16 +426,29 @@ function renderTentativeEvent(event: EventItem) {
             ${
               committees
                 ? `
-                  <div
-                    data-f="committees"
-                    style="
-                      margin-top:14px;
-                      padding-top:12px;
-                      border-top:1px solid #e2e8f0;
-                    "
-                  >
-                    ${committees}
-                  </div>
+                <div
+                data-f="committees"
+                style="
+                  margin-top:14px;
+                  padding-top:12px;
+                  border-top:1px solid #e2e8f0;
+                "
+              >
+              <p
+              style="
+                margin:0 0 10px;
+                font-family:${FONT};
+                font-size:10px;
+                font-weight:700;
+                letter-spacing:1.5px;
+                text-transform:uppercase;
+                color:#8492a6;
+              "
+            >
+          Organising Committee(s)
+            </p>
+                ${committees}
+              </div>
                 `
                 : ""
             }
@@ -620,6 +633,19 @@ function renderConfirmedEvent(event: EventItem) {
             border-top:1px solid #e2e8f0;
           "
         >
+        <p
+        style="
+          margin:0 0 10px;
+          font-family:${FONT};
+          font-size:10px;
+          font-weight:700;
+          letter-spacing:1.5px;
+          text-transform:uppercase;
+          color:#8492a6;
+        "
+      >
+    Organising Committee(s)
+      </p>
           ${committees}
         </div>
       `
