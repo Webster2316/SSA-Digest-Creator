@@ -15,7 +15,8 @@ interface DocumentUploadModalProps {
     onAdd: (docs: DocRow[]) => void;
     builderKey: BuilderKey
 }
-
+//debugger
+console.log("DocumentUploadModal builderKey:", builderKey);
 
 export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey, }: DocumentUploadModalProps) {
     const [manualLabel, setManualLabel] = useState("");
