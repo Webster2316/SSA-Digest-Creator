@@ -49,7 +49,17 @@ export default function DigestDropZone({onLinksReady, builderKey }: DigestDropZo
                 });
 
                 const data = await res.json();
+
+                if (!res.ok) {
+                  console.error("Upload API error:", data);
+                  throw new Error(data.error ?? `Upload failed: ${res.status}`);
+                }
+                
                 const results: FileUploadResult[] = data.results ?? data;
+                
+                if (!Array.isArray(results)) {
+                  throw new Error("Upload API returned an invalid result");
+                }
 
                 setFileStatuses(results);
 
@@ -71,7 +81,7 @@ export default function DigestDropZone({onLinksReady, builderKey }: DigestDropZo
             [onLinksReady, builderKey]
           );
 
-          const handleDrop = (e: React.DragEvent<HTMLDivElementAS>) => {
+          const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
             e.preventDefault();
             setIsDragging(false);
             handleFiles(e.dataTransfer.files);
