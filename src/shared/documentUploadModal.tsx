@@ -13,7 +13,7 @@ interface DocumentUploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAdd: (docs: DocRow[]) => void;
-    builderkey: BuilderKey
+    builderKey: BuilderKey
 }
 
 
