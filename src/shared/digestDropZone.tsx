@@ -10,8 +10,8 @@ export interface FileUploadResult {
 }
 
 interface DigestDropZoneProps {
-    onLinksReady?: (uploaded: FileUploadResult[]) => void;
-    builderKey: string;
+  onLinksReady?: (uploaded: FileUploadResult[]) => void;
+  builderKey: string;
 }
 
 function fileToBase64(file: File): Promise<string> {
@@ -23,58 +23,55 @@ return new Promise((resolve, reject) => {
 });
 }
 
-export default function DigestDropZone({onLinksReady, builderKey}: DigestDropZoneProps) {
+export default function DigestDropZone({onLinksReady, builderKey }: DigestDropZoneProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [fileStatuses, setFileStatuses] = useState<FileUploadResult[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
-          const handleFiles = useCallback(
-              async (fileList: FileList) => {
-                  const files = Array.from(fileList);
+    const handleFiles = useCallback(
+        async (fileList: FileList) => {
+            const files = Array.from(fileList);
+            setIsUploading(true);
+            setFileStatuses(files.map((f) =>({ filename: f.name, status: "uploading" as const})));
 
-
-                  setIsUploading(true);
-                  setFileStatuses(files.map((f) =>({ filename: f.name, status: "uploading" as const})));
-
-                  try {
-                      const payload = await Promise.all(
-                          files.map(async (file) => ({
-                              filename: file.name,
-                              contentType: file.type,
-                              contentBytes: await fileToBase64(file),
-                          }))
-                      );
-                      const res = await fetch("/api/dragAndDrop", {
-                          method: "POST",
-                          headers: {"Content-Type": "application/json"},
-                          body: JSON.stringify({ 
-                            key: builderKey,
-                            files: payload
-                          }), 
-                      });
-
-                      const data = await res.json();
-                      const results: FileUploadResult[] = data.results ?? data;
-
-                      setFileStatuses(results);
-
-                      const duplicates = results.filter((r) => r.status === "duplicate");
-                
-                      const uploaded = results.filter((r) => r.status === "uploaded");
-                      if (uploaded.length > 0 && onLinksReady) {
-                          onLinksReady(uploaded);
-                      }
-                  } catch (err) {
-                      console.error("Upload failed:", err);
-                      setFileStatuses(files.map((f) => ({ filename: f.name, status: "error" as const })));
-                  } finally {
-                      setIsUploading(false);
-                    }
-                  },
-                  [onLinksReady, builderKey]
+            try {
+                const payload = await Promise.all(
+                    files.map(async (file) => ({
+                        filename: file.name,
+                        contentType: file.type,
+                        contentBytes: await fileToBase64(file),
+                    }))
                 );
+                const res = await fetch("/api/dragAndDrop", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({ key: builderKey, files: payload }), 
+                });
 
-          const handleDrop = (e: React.DragEvent<HTMLInputElement>) => {
+                const data = await res.json();
+                const results: FileUploadResult[] = data.results ?? data;
+
+                setFileStatuses(results);
+
+                const duplicates = results.filter((r) => r.status === "duplicate");
+                // if (duplicates.length > 0) {
+                //     alert(`Already uploaded: ${duplicates.map((d) => d.filename).join(", ")}. Would you link to fetch file link?`);
+                // }
+                const uploaded = results.filter((r) => r.status === "uploaded");
+                if (uploaded.length > 0 && onLinksReady) {
+                    onLinksReady(uploaded);
+                }
+            } catch (err) {
+                console.error("Upload failed:", err);
+                setFileStatuses(files.map((f) => ({ filename: f.name, status: "error" as const })));
+            } finally {
+                setIsUploading(false);
+              }
+            },
+            [onLinksReady, builderKey]
+          );
+
+          const handleDrop = (e: React.DragEvent<HTMLDivElementAS>) => {
             e.preventDefault();
             setIsDragging(false);
             handleFiles(e.dataTransfer.files);
