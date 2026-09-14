@@ -8,23 +8,23 @@ export default async function handler(req, res) {
     const { key, files } = req.body;
 
     //validation / imo optional
-    const allowedKeys = [
-      "ai-bulletin-data",
-      "events-builder-data",
-      "ssa-digest-data",
-    ];
+    // const allowedKeys = [
+    //   "ai-bulletin-data",
+    //   "events-builder-data",
+    //   "ssa-digest-data",
+    // ];
     
-    if (!allowedKeys.includes(key)) {
-      return res.status(400).json({
-        error: "Invalid builder key",
-      });
-    }
+    // if (!allowedKeys.includes(key)) {
+    //   return res.status(400).json({
+    //     error: "Invalid builder key",
+    //   });
+    // }
     
-    if (!Array.isArray(files)) {
-      return res.status(400).json({
-        error: "Files must be an array",
-      });
-    }    
+    // if (!Array.isArray(files)) {
+    //   return res.status(400).json({
+    //     error: "Files must be an array",
+    //   });
+    // }    
 
     const response = await fetch(process.env.POWER_AUTOMATE_FLOW_URL, {
       method: "POST",
