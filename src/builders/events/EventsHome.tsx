@@ -786,6 +786,10 @@ export default function EventsHome() {
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const { confirmDelete, deleteModal } = useConfirmDelete();
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"Events" | "preview">("Events");
+  const [copied, setCopied] = useState(false);
+
   const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
   const [greeting, setGreeting] = useState(`Dear Members,
 
@@ -796,9 +800,6 @@ These in-person sessions will provide an overview of the work being undertaken a
 We encourage you to register your interest and join us at these upcoming sessions.
 
 We look forward to bringing our members together and strengthening our collective engagement across the association.`);
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"Events" | "preview">("Events");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -1117,6 +1118,21 @@ ${eventHtml}
 </html>`;
   };
 
+  //copy event item
+  const copyEvent = (event: any) => {
+    const copy = { ...event, id: uid() };
+  
+      const index = events.findIndex((x) => x.id === event.id);
+  
+      setEvents([
+        ...events.slice(0, index + 1),
+        copy,
+        ...events.slice(index + 1),
+      ])
+  
+  };
+
+  //handles copy for HTML
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(buildFullHtml());
@@ -1128,6 +1144,7 @@ ${eventHtml}
     }
   };
 
+  
   if (selectedEventId) {
     return (
       <EventsEditor
@@ -1271,6 +1288,13 @@ ${eventHtml}
                         >
                           <SquareArrowOutUpRight size={16} />
                         </button>
+                        <button
+  onClick={() => copyEvent(ev, "copy")}
+  className="p-1 rounded hover:bg-gray-100 text-gray-500"
+  title="Copy event"
+>
+  <Copy size={16} /></button>
+
 
                         <button
                           type="button"
