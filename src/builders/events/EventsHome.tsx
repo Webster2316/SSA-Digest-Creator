@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import {
   Trash2,
   SquareArrowOutUpRight,
+  CircleCheck,
   Plus,
   Loader2,
+  Archive,
   Save,
   Eye,
   Copy,
@@ -14,7 +16,9 @@ import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "./NamePopUpModal";
 import EventsEditor from "./EventsEditor";
+import EventsHistory from "./EventsHistory";
 
+const EVENTS_BUILDER_KEY = "events-builder-data";
 
 export interface EventDocument {
   label: string;
@@ -33,6 +37,7 @@ export interface EventItem {
     | "ClosingSoon"
     | "Full";
   eventStatus: "Tentative" | "Confirmed";
+  completionStatus: "InProgress" | "Completed";
   registrationLink: string;
   committees: string[];
   customCommitteeTags: string[];
@@ -148,6 +153,7 @@ function normaliseEvent(ev: any): EventItem {
     dateMode: ev?.dateMode === "exact" ? "exact" : "month",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+    completionStatus: ev?.completionStatus === "Completed" ? "Completed" : "InProgress",
     registrationLink: ev?.registrationLink ?? "",
     committees: Array.isArray(ev?.committees) ? ev.committees : [],
     customCommitteeTags: Array.isArray(ev?.customCommitteeTags) ? ev.customCommitteeTags : [],
@@ -363,7 +369,7 @@ function renderTentativeEvent(event: EventItem) {
               </span>
 
 
-              }
+
             </td>
 
             <td
@@ -781,15 +787,14 @@ function renderGreeting(text: string) {
 }
 
 export default function EventsHome() {
+  const [tab, setTab] = useState<"Events" | "preview">("Events");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const { confirmDelete, deleteModal } = useConfirmDelete();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"Events" | "preview">("Events");
   const [copied, setCopied] = useState(false);
-
   const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
   const [greeting, setGreeting] = useState(`Dear Members,
 
@@ -863,6 +868,7 @@ We look forward to bringing our members together and strengthening our collectiv
         dateMode: "month",
         eventStatus: "Tentative",
         registrationStatus: "Open",
+        completionStatus: "InProgress",
         registrationLink: "",
         committees: [],
         customCommitteeTags: [],
@@ -1144,6 +1150,75 @@ ${eventHtml}
     }
   };
 
+const handleMovetoCurrent = (eventData: any) => {
+  const copy = normaliseEvent({
+    ...eventData,
+    id: uid(),
+    completionStatus: "InProgress",
+  });
+
+  setEvents((prev) => [
+    ...prev,
+    copy,
+  ]);
+
+  setTab("Events");
+};
+
+const handleRestoreEvent = async (archiveId: number, eventData: any) => {
+  try {
+    const res = await fetch(`/api/events-history?id=${archiveId}`,
+    {
+      method: "DELETE",
+    });
+
+    if(!res.ok) {
+      console.error("Failed to restore event");
+      return;
+    }
+    const restored = normaliseEvent({
+      ...eventData,
+      completionStatus: "InProgress",
+    });
+
+    setEvents((prev) => [
+      ...prev,
+      restored,
+    ]);
+
+    setTab("Events");
+  } catch (e) {
+console.error("Failed to restore event:", e)
+  }
+};
+
+
+const completedEvent = async (event: EventItem) => {
+  try {
+    const res = await fetch("/api/events-history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        builderKey: EVENTS_BUILDER_KEY,
+        event: {
+          ...event,
+          completionStatus: "Completed",
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to move event into archive");
+      return;
+    }
+
+    setEvents((prev) => prev.filter((item) => item.if !== event.id));
+  } catch (e) {
+    console.error("Failed to move to archive", e);
+  }
+};
   
   if (selectedEventId) {
     return (
@@ -1210,6 +1285,19 @@ ${eventHtml}
           >
             <Eye size={15} /> Preview & Export
           </button>
+          <button
+  type="button"
+  onClick={() => setTab("history")}
+  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
+    tab === "history"
+      ? "border-indigo-700 text-indigo-700"
+      : "border-transparent text-gray-500 hover:text-gray-700"
+  }`}
+>
+  <Archive size={15} />
+  Event History
+</button>
+  
         </div>
 
         {tab === "Events" && (
@@ -1279,7 +1367,30 @@ ${eventHtml}
                           <option value="Tentative">Tentative</option>
                           <option value="Confirmed">Confirmed</option>
                         </select>
+                        <div className="relative group">
+  <button
+    type="button"
+    onClick={() => completedEvent(ev)}
+    className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+  >
+    <CircleCheck size={16} />
+  </button>
 
+  <div
+    className="
+      absolute bottom-full left-1/2 -translate-x-1/2 mb-2
+      whitespace-nowrap
+      rounded bg-gray-800 px-2 py-1
+      text-xs text-white
+      opacity-0 pointer-events-none
+      group-hover:opacity-100
+      transition-opacity duration-100
+      z-50
+    "
+  >
+    Mark event as completed
+  </div>
+</div>
                         <button
                           type="button"
                           onClick={() => setSelectedEventId(ev.id)}
@@ -1289,7 +1400,7 @@ ${eventHtml}
                           <SquareArrowOutUpRight size={16} />
                         </button>
                         <button
-  onClick={() => copyEvent(ev, "copy")}
+  onClick={() => copyEvent(ev)}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy event"
 >
@@ -1367,6 +1478,13 @@ ${eventHtml}
           </div>
         )}
 
+{tab === "history" && (
+  <EventsHistory
+    builderKey={EVENTS_BUILDER_KEY}
+    onCopyToCurrent={handleMovetoCurrent}
+    onRestoreEvent={handleRestoreEvent}
+  />
+)}
         {deleteModal}
       </div>
     </div>
