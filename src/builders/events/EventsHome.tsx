@@ -1215,7 +1215,7 @@ const completedEvent = async (event: EventItem) => {
       return;
     }
 
-    setEvents((prev) => prev.filter((item) => item.if !== event.id));
+    setEvents((prev) => prev.filter((item) => item.id !== event.id));
   } catch (e) {
     console.error("Failed to move to archive", e);
   }
