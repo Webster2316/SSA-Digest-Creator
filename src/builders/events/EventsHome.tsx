@@ -1210,7 +1210,8 @@ const completedEvent = async (event: EventItem) => {
     });
 
     if (!res.ok) {
-      console.error("Failed to move event into archive");
+      const errorText = await res.text();
+      console.error("Failed to move event into archive:", res.status, errorText);
       return;
     }
 
