@@ -1201,7 +1201,7 @@ const completedEvent = async (event: EventItem) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        builderKey: EVENTS_BUILDER_KEY,
+        key: EVENTS_BUILDER_KEY,
         event: {
           ...event,
           completionStatus: "Completed",
