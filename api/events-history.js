@@ -1,4 +1,3 @@
-//saves all issues 
 import { neon } from '@neondatabase/serverless';
 
 
@@ -12,7 +11,7 @@ if (req.method !== "POST") {
 
   const {builderKey, event } = req.body;
 
-  if (!builderKey || event?.id) {
+  if (!builderKey || !event?.id) {
     return res.status(400).json({ 
         error: "Missing Key or event"
     })
