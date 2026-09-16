@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Archive, RotateCcw, Copy, SquareArrowOutUpRight, } from "lucide-react";
 
+
 type EventArchive = {
   id: number;
   builder_key: string;
   title: string;
-  event_data: string;
+  event_data: string | Record<string, any>;
   archived_at: string;
 };
 
@@ -49,9 +50,16 @@ export default function EventsHistory({
   }, [builderKey]);
 
   const getEventData = (record: EventArchive) => {
+    if (!record.event_data) return null;
+  
+    if (typeof record.event_data === "object") {
+      return record.event_data;
+    }
+  
     try {
       return JSON.parse(record.event_data);
-    } catch {
+    } catch (e) {
+      console.error("Failed to parse archived event:", e);
       return null;
     }
   };

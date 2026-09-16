@@ -787,7 +787,7 @@ function renderGreeting(text: string) {
 }
 
 export default function EventsHome() {
-  const [tab, setTab] = useState<"Events" | "preview">("Events");
+  const [tab, setTab] = useState<"Events" | "preview" | "EventsHistory">("Events");
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -1224,8 +1224,8 @@ const completedEvent = async (event: EventItem) => {
 
 if (selectedArchivedEvent) {
   return (
-    <EventsHistory
-      archivedEvent={selectedArchiveEvent}
+    <EventsEditor
+      archivedEvent={selectedArchivedEvent}
       events={events}
       setEvents={setEvents}
       onBack={() => setSelectedArchivedEvent(null)}
