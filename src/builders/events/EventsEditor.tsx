@@ -15,11 +15,13 @@ import DocumentUploadModal from "../../shared/documentUploadModal";
 import type { EventItem, EventDocument } from "./EventsHome";
 
 interface EventsEditorProps {
-  eventId: string;
+  eventId?: string;
+  archivedEvent?: EventItem;
   events: EventItem[];
   setEvents: Dispatch<SetStateAction<EventItem[]>>;
   onBack: () => void;
   saveStatus: string;
+  readOnly?: boolean;
 }
 
 type TagStyle = {
@@ -97,16 +99,17 @@ const committeeOptions: Record<string, TagStyle> = {
 
 export default function EventsEditor({
   eventId,
+  archivedEvent,
   events,
   setEvents,
   onBack,
   saveStatus,
+  readOnly = false,
 }: EventsEditorProps) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
 
   const [newCustomCommittee, setNewCustomCommittee] = useState("");
-  const event = events.find((ev) => ev.id === eventId);
-
+  
   if (!event) {
     return <div className="p-6">Event not found.</div>;
   }
@@ -118,7 +121,12 @@ export default function EventsEditor({
   const registrationBadge =
     registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
 
+    const event =
+    archivedEvent ??
+    events.find((ev) => ev.id === eventId);
+
   const updateEvent = (updates: Partial<EventItem>) => {
+    if (readOnly || !eventId) return;
     setEvents((prev) =>
       prev.map((ev) => (ev.id === eventId ? { ...ev, ...updates } : ev))
     );
@@ -130,8 +138,10 @@ export default function EventsEditor({
       documents: [...documents, ...docs],
     });
   };
+  
 
   return (
+    
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
         {/* HEADER */}
@@ -166,8 +176,18 @@ export default function EventsEditor({
         >
           <ArrowLeft size={16} /> Back to Events
         </button>
+        {readOnly && (
+  <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+    Archived event — view only
+  </div>
+)}
 
-        <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
+<fieldset disabled={readOnly}>
+  <div
+    className={`bg-white border border-gray-200 rounded-lg p-5 space-y-5 ${
+      readOnly ? "opacity-75" : ""
+    }`}
+  >
           <Field label="Event Title">
             <input
               className={inputCls}
@@ -623,9 +643,11 @@ export default function EventsEditor({
     }
   />
 </Field>
+
             </>
           )}
-        </div>
+   </div>
+      </fieldset>
       </div>
 
       <DocumentUploadModal

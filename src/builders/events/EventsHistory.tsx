@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Archive, RotateCcw, Copy } from "lucide-react";
+import { Archive, RotateCcw, Copy, SquareArrowOutUpRight, } from "lucide-react";
 
 type EventArchive = {
   id: number;
@@ -11,6 +11,7 @@ type EventArchive = {
 
 type EventHistoryProps = {
   builderKey: string;
+  viewPastEventDetails: (eventData: any) => void;
   onCopyToCurrent: (eventData: any) => void;
   onRestoreEvent: (archiveId: number, eventData: any) => void;
 };
@@ -19,6 +20,7 @@ export default function EventsHistory({
   builderKey,
   onCopyToCurrent,
   onRestoreEvent,
+  viewPastEventDetails,
 }: EventHistoryProps) {
   const [records, setRecords] = useState<EventArchive[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +102,19 @@ export default function EventsHistory({
                 </div>
 
                 <div className="flex items-center gap-1">
+                <button
+                          type="button"
+                          onClick={() => {
+                          if (eventData) {
+                            viewPastEventDetails(eventData);
+                          }}}
+
+                          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
+                          title="View event"
+                        >
+                          <SquareArrowOutUpRight size={16} />
+                        </button>
+
                   <button
                     type="button"
                     onClick={() => {

@@ -794,6 +794,7 @@ export default function EventsHome() {
   const [saveStatus, setSaveStatus] = useState("idle");
   const { confirmDelete, deleteModal } = useConfirmDelete();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
   const [copied, setCopied] = useState(false);
   const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
   const [greeting, setGreeting] = useState(`Dear Members,
@@ -1220,6 +1221,19 @@ const completedEvent = async (event: EventItem) => {
     console.error("Failed to move to archive", e);
   }
 };
+
+if (selectedArchivedEvent) {
+  return (
+    <EventsHistory
+      archivedEvent={selectedArchiveEvent}
+      events={events}
+      setEvents={setEvents}
+      onBack={() => setSelectedArchivedEvent(null)}
+      saveStatus={saveStatus}
+      readOnly
+    />
+  );
+}
   
   if (selectedEventId) {
     return (
@@ -1402,7 +1416,7 @@ const completedEvent = async (event: EventItem) => {
                         </button>
 
                         <button
-  onClick={() => copyEvent(ev.id)}
+  onClick={() => copyEvent(ev)}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy event"
 >
@@ -1483,6 +1497,7 @@ const completedEvent = async (event: EventItem) => {
 {tab === "history" && (
   <EventsHistory
     builderKey={EVENTS_BUILDER_KEY}
+    viewPastEventDetails={setSelectedArchivedEvent}
     onCopyToCurrent={handleMovetoCurrent}
     onRestoreEvent={handleRestoreEvent}
   />
