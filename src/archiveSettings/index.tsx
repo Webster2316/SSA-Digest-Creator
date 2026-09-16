@@ -127,9 +127,6 @@ const  deleteArchiveRecord = async(type: "issues" | "events", id: number) => {
             <h1 className="text-xl font-bold text-indigo-900">
               Data Management
             </h1>
-            <p className="text-xs text-gray-500">
-              Manage archived issues and completed events.
-            </p>
           </div>
   
           <button
