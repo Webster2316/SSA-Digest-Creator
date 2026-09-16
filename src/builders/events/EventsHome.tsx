@@ -1400,8 +1400,9 @@ const completedEvent = async (event: EventItem) => {
                         >
                           <SquareArrowOutUpRight size={16} />
                         </button>
+
                         <button
-  onClick={() => copyEvent(ev)}
+  onClick={() => copyEvent(ev.id)}
   className="p-1 rounded hover:bg-gray-100 text-gray-500"
   title="Copy event"
 >
