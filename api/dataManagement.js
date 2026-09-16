@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
           let rows;
 
-        if(type = "events") {
+        if(type === "events") {
             if (builderKey && builderKey !== "all") {
                 rows = await sql `
                 SELECT * FROM events_archives WHERE builder_key = ${builderKey} ORDER BY archived_at DESC
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
             if(type === "events") {
 
                 deleted = await sql `
-                DELETED FROM events_archives where id=${id} RETURNING id
+                DELETE FROM events_archives where id=${id} RETURNING id
                 `;
             } else if (type === "issues") {
                 deleted = await sql `
