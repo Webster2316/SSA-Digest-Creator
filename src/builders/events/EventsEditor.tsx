@@ -109,7 +109,9 @@ export default function EventsEditor({
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
 
   const [newCustomCommittee, setNewCustomCommittee] = useState("");
-  
+  const event =
+  archivedEvent ??
+  events.find((ev) => ev.id === eventId);
   if (!event) {
     return <div className="p-6">Event not found.</div>;
   }
@@ -121,9 +123,7 @@ export default function EventsEditor({
   const registrationBadge =
     registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
 
-    const event =
-    archivedEvent ??
-    events.find((ev) => ev.id === eventId);
+
 
   const updateEvent = (updates: Partial<EventItem>) => {
     if (readOnly || !eventId) return;
