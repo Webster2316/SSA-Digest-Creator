@@ -54,7 +54,7 @@ export default function App() {
       </div>
   
       {/* Desktop: sidebar */}
-      <div className="w-52 shrink-0 hidden md:flex flex-col min-h-screen pt-4 pb-4 pl-4">
+      <div className="w-52 shrink-0 hidden md:flex flex-col h-screen sticky top-0 self-start pt-4 pb-4 pl-4">
         {/* Builders at top */}
         <div className="space-y-1">
           {builders.map(({ key, label, icon: Icon }) => (
