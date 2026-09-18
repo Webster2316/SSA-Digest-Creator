@@ -195,7 +195,7 @@ export default function PostBuilder() {
           <Plus size={16} />
           Draft a post
         </button>
-        <NamePopUpModal
+        <NamePopUp
   isOpen={isNameModalOpen}
   onClose={() => setIsNameModalOpen(false)}
   onAdd={handleAddPost}

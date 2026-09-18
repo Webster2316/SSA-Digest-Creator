@@ -14,7 +14,7 @@ import {
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
-import NamePopUp from "../../shared/NamePopUpModal";
+import NamePopUp from "../../NamePopUpModal";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
 
@@ -1452,7 +1452,7 @@ if (selectedArchivedEvent) {
               <Plus size={16} /> Add Event
             </button>
 
-            <NamePopUpModal
+            <NamePopUp
   isOpen={isNameModalOpen}
   onClose={() => setIsNameModalOpen(false)}
   onAdd={handleAddEvent}
