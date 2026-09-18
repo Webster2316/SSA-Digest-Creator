@@ -31,7 +31,8 @@ interface Post {
 }
 
 export default function PostBuilder() {
-  const [saveStatus] = useState("idle");
+    const [loaded, setLoaded] = useState(false);
+    const [saveStatus, setSaveStatus] = useState("idle");
   const [posts, setPosts] = useState<Post[]>([]);
 
 
