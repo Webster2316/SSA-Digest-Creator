@@ -1100,8 +1100,7 @@ ${eventHtml}
               <tr>
                 <td align="center">
                   <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
-                    Singapore Shipping Association<br>
-                    For enquiries, please contact sarah@ssa.org.sg
+                  You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
                   </p>
                 </td>
               </tr>
