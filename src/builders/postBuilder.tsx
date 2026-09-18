@@ -14,6 +14,7 @@ import Field from "../shared/field";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
+import NamePopUp from "./NamePopUpModal";
 import { useState } from "react";
 
 
@@ -39,6 +40,7 @@ export default function PostBuilder() {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
 
 
@@ -195,6 +197,11 @@ export default function PostBuilder() {
           <Plus size={16} />
           Draft a post
         </button>
+        <NamePopUp
+              isOpen={isNameModalOpen}
+              onClose={() => setIsNameModalOpen(false)}
+              onAdd={handleAddPost}
+            />
       </div>
     </div>
   );
