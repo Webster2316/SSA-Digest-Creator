@@ -29,7 +29,12 @@ interface Post {
   caption: string;
   gallery: GalleryImage[];
 }
-
+function getDateTime() {
+    return new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 export default function PostBuilder() {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
