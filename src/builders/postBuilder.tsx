@@ -14,7 +14,7 @@ import Field from "../shared/field";
 import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
-import NamePopUp from "./NamePopUpModal";
+import NamePopUp from "../shared/NamePopUpModal";
 
 interface GalleryImage {
   url: string;

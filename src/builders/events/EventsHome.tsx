@@ -14,7 +14,7 @@ import {
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
-import NamePopUp from "./NamePopUpModal";
+import NamePopUp from "../../shared/NamePopUpModal";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
 
