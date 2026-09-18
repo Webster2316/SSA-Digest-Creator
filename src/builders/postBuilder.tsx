@@ -195,11 +195,15 @@ export default function PostBuilder() {
           <Plus size={16} />
           Draft a post
         </button>
-        <NamePopUp
-              isOpen={isNameModalOpen}
-              onClose={() => setIsNameModalOpen(false)}
-              onAdd={handleAddPost}
-            />
+        <NamePopUpModal
+  isOpen={isNameModalOpen}
+  onClose={() => setIsNameModalOpen(false)}
+  onAdd={handleAddPost}
+  heading="Create Post Draft"
+  fieldLabel="Post Title"
+  placeholder="e.g. idk insert linked in post header..."
+  buttonText="Create Draft"
+/>
       </div>
     </div>
   );
