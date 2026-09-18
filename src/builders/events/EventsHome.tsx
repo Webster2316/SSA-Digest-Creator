@@ -1093,7 +1093,7 @@ We look forward to bringing our members together and strengthening our collectiv
 
 ${eventHtml}
 
-        <!-- FOOTER -->
+        <!-- FOOTER - follow weekly digest-->
         <tr>
           <td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
