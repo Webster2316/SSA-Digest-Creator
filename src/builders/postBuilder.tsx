@@ -26,5 +26,36 @@ gallery: GalleryImage[],
 }
 
 export default function postBuilder() {
-return (<div><p>work in progress</p></div>)
+    const [loaded, setLoaded] = useState(false);
+    const [saveStatus, setSaveStatus] = useState("idle");
+
+return (
+
+<div>
+     {/* HEADER */}
+     <div className="flex items-center gap-3 mb-4">
+     <img
+       src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+       alt="SSA Logo"
+       className="h-8 w-auto"
+     />
+
+     <h1 className="text-xl font-bold text-indigo-900">LinkedIn Post Drafts</h1>
+
+     <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
+       {saveStatus === "saving" && (
+         <>
+           <Loader2 size={13} className="animate-spin" /> Saving…
+         </>
+       )}
+       {saveStatus.startsWith("Saved at") && (
+         <>
+           <Save size={13} /> {saveStatus}
+         </>
+       )}
+       {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
+     </div>
+     </div>
+     <p>work in progress</p></div>
+)
 }
