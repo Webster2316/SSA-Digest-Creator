@@ -1,114 +1,132 @@
-import { useState, useEffect } from "react";
-import {
-    Trash2,
-    CircleCheck,
-    Plus,
-    Loader2,
-    Archive,
-    Save,
-    Copy,
-    Check,
-} from "lucide-react";
-import useConfirmDelete from "../../shared/useConfirmDelete";
+import { useState } from "react";
+import { Trash2, Plus, Loader2, Save } from "lucide-react";
+
 import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
-import { uid, esc, inputCls } from "../../shared/utils";
-import DocumentUploadModal from "../../shared/documentUploadModal";
+import { uid } from "../../shared/utils";
 
 interface GalleryImage {
-    url: string;
-    name?: string;
-    alt?: string;
+  url: string;
+  name?: string;
+  alt?: string;
 }
 
 interface Post {
-caption: string,
-gallery: GalleryImage[],
+  id: string;
+  caption: string;
+  gallery: GalleryImage[];
 }
 
-export default function postBuilder() {
-    const [loaded, setLoaded] = useState(false);
-    const [saveStatus, setSaveStatus] = useState("idle");
-    const { confirmDelete, deleteModal } = useConfirmDelete();
-    const [ posts, setPosts ] =  useState<Post[]>([]);
+export default function PostBuilder() {
+  const [saveStatus] = useState("idle");
+  const [posts, setPosts] = useState<Post[]>([]);
 
+  const handleAddPost = () => {
+    setPosts((current) => [
+      ...current,
+      {
+        id: uid(),
+        caption: "",
+        gallery: [],
+      },
+    ]);
+  };
 
-    const handleAddPost = (title: string) => {
-        setPosts((prev) => [
-          ...prev,
-          {
-            id: uid(),
-           caption: "",
-           gallery: [],
-          },
-        ]);
-      };
-return (
+  const updateCaption = (postId: string, caption: string) => {
+    setPosts((current) =>
+      current.map((post) =>
+        post.id === postId
+          ? { ...post, caption }
+          : post
+      )
+    );
+  };
+
+  const deletePost = (postId: string) => {
+    setPosts((current) =>
+      current.filter((post) => post.id !== postId)
+    );
+  };
+
+  return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="mx-auto max-w-4xl p-4">
+        {/* Header */}
+        <div className="mb-4 flex items-center gap-3">
+          <img
+            src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+            alt="SSA Logo"
+            className="h-8 w-auto"
+          />
 
-     {/* HEADER */}
-     <div className="flex items-center gap-3 mb-4">
-     <img
-       src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-       alt="SSA Logo"
-       className="h-8 w-auto"
-     />
+          <h1 className="text-xl font-bold text-indigo-900">
+            LinkedIn Post Drafts
+          </h1>
 
-     <h1 className="text-xl font-bold text-indigo-900">LinkedIn Post Drafts</h1>
+          <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
+            {saveStatus === "saving" && (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                Saving…
+              </>
+            )}
 
-     <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-       {saveStatus === "saving" && (
-         <>
-           <Loader2 size={13} className="animate-spin" /> Saving…
-         </>
-       )}
-       {saveStatus.startsWith("Saved at") && (
-         <>
-           <Save size={13} /> {saveStatus}
-         </>
-       )}
-       {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
-     </div>
-     </div>
-     {/* addPost section */}
- 
-     <Field label="Caption">
-  <RichTextEditor
-    value={post.caption ?? ""}
-    onChange={(caption: string) =>
-      setPost({ ...post, caption })
-    }
-  />
-</Field>
-     
-     
-     <button
-                onClick={() =>
-                  setPosts([
-                    ...posts,
-                    {
-                        id: uid(),
-                        caption: "",
-                        gallery: [],
-                    },
-                  ])
-                }
-                className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-              >
-                <Plus size={16} /> Draft a post
-              </button>
-     
-     
-     
-     </div>
-     <DocumentUploadModal
-        isOpen={isDocModalOpen}
-        onClose={() => setIsDocModalOpen(false)}
-        onAdd={addDocuments}
-        builderKey="events-builder-data"
-      />
-      {deleteModal}
-     </div>
-)
+            {saveStatus.startsWith("Saved at") && (
+              <>
+                <Save size={13} />
+                {saveStatus}
+              </>
+            )}
+
+            {saveStatus === "error" && (
+              <span className="text-red-600">Save failed</span>
+            )}
+          </div>
+        </div>
+
+        {/* Post editors */}
+        <div className="space-y-4">
+          {posts.map((post, index) => (
+            <div
+              key={post.id}
+              className="rounded-lg border border-gray-200 bg-white p-4"
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="font-semibold text-indigo-900">
+                  Draft {index + 1}
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={() => deletePost(post.id)}
+                  className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  title="Delete draft"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              <Field label="Caption">
+                <RichTextEditor
+                  value={post.caption}
+                  onChange={(caption: string) =>
+                    updateCaption(post.id, caption)
+                  }
+                />
+              </Field>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAddPost}
+          className="mt-4 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
+        >
+          <Plus size={16} />
+          Draft a post
+        </button>
+      </div>
+    </div>
+  );
 }
