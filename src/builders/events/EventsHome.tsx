@@ -1455,7 +1455,7 @@ if (selectedArchivedEvent) {
             <NamePopUp
   isOpen={isNameModalOpen}
   onClose={() => setIsNameModalOpen(false)}
-  onAdd={handleAddEvent}
+  onAdd={handleAddEvents}
   heading="Create New Event"
   fieldLabel="Event Name"
   placeholder="e.g. SSA Maritime Digitalisation Forum"
