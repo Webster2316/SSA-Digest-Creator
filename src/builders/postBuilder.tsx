@@ -15,7 +15,7 @@ import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 import { useState } from "react";
-import { Trash2, Plus, Loader2, Save } from "lucide-react";
+
 
 interface GalleryImage {
   url: string;
