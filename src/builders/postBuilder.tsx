@@ -15,8 +15,6 @@ import RichTextEditor from "../shared/richTextEditor";
 import { uid, esc, inputCls } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 import NamePopUp from "./NamePopUpModal";
-import { useState } from "react";
-
 
 interface GalleryImage {
   url: string;
@@ -191,7 +189,7 @@ export default function PostBuilder() {
 
         <button
           type="button"
-          onClick={handleAddPost}
+          onClick={() => setIsNameModalOpen(true)}
           className="mt-4 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
         >
           <Plus size={16} />
