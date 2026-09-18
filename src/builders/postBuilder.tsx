@@ -25,6 +25,7 @@ interface GalleryImage {
 
 interface Post {
   id: string;
+  title: string;
   caption: string;
   gallery: GalleryImage[];
 }
@@ -33,11 +34,61 @@ export default function PostBuilder() {
   const [saveStatus] = useState("idle");
   const [posts, setPosts] = useState<Post[]>([]);
 
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/load-digest?key=posts-draft-data");
+        if (res.ok) {
+          const data = await res.json();
+
+          if (Array.isArray(data?.posts)) {
+            setPosts(data.map(post));
+          }
+
+        }
+      } catch (e) {
+        console.error("Failed to load post drafter:", e);
+      }
+      setLoaded(true);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    setSaveStatus("saving");
+
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/save-digest?key=posts-draft-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ posts }),
+        });
+
+        if (res.ok) {
+          setSaveStatus(`Saved at ${getDateTime()}`);
+        } else {
+          setSaveStatus("error");
+        }
+      } catch (e) {
+        console.error("Failed to save posts drafter:", e);
+        setSaveStatus("error");
+      }
+    }, 700);
+
+    return () => clearTimeout(t);
+  }, [posts]);
+
+
   const handleAddPost = () => {
     setPosts((current) => [
       ...current,
       {
         id: uid(),
+        title: "",
         caption: "",
         gallery: [],
       },
