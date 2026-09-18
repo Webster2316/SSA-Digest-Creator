@@ -50,7 +50,7 @@ export default function PostBuilder() {
           const data = await res.json();
 
           if (Array.isArray(data?.posts)) {
-            setPosts(data.map(posts));
+            setPosts(data.posts);
           }
 
         }
@@ -86,15 +86,15 @@ export default function PostBuilder() {
     }, 700);
 
     return () => clearTimeout(t);
-  }, [posts]);
+  }, [posts, loaded]);
 
 
-  const handleAddPost = () => {
+  const handleAddPost = (title: string) => {
     setPosts((current) => [
       ...current,
       {
         id: uid(),
-        title: "",
+        title: title.trim(),
         caption: "",
         gallery: [],
       },
