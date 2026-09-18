@@ -1,9 +1,21 @@
-import { useState } from "react";
-import { Trash2, Plus, Loader2, Save } from "lucide-react";
-
+import { useState, useEffect } from "react";
+import {
+    Trash2,
+    CircleCheck,
+    Plus,
+    Loader2,
+    Archive,
+    Save,
+    Copy,
+    Check,
+} from "lucide-react";
+import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
-import { uid } from "../../shared/utils";
+import { uid, esc, inputCls } from "../../shared/utils";
+import DocumentUploadModal from "../../shared/documentUploadModal";
+import { useState } from "react";
+import { Trash2, Plus, Loader2, Save } from "lucide-react";
 
 interface GalleryImage {
   url: string;
