@@ -162,7 +162,7 @@ export default function PostBuilder() {
             >
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="font-semibold text-indigo-900">
-                  Draft {index + 1}
+                  Draft {index + 1}: {post.title}
                 </h2>
 
                 <button
