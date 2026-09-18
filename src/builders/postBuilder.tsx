@@ -30,7 +30,8 @@ export default function postBuilder() {
     const [saveStatus, setSaveStatus] = useState("idle");
 
 return (
-
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-4xl mx-auto p-4">
 <div>
      {/* HEADER */}
      <div className="flex items-center gap-3 mb-4">
@@ -57,5 +58,7 @@ return (
      </div>
      </div>
      <p>work in progress</p></div>
+     </div>
+     </div>
 )
 }
