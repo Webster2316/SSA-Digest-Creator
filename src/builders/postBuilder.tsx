@@ -9,11 +9,11 @@ import {
     Copy,
     Check,
 } from "lucide-react";
-import useConfirmDelete from "../../shared/useConfirmDelete";
-import Field from "../../shared/field";
-import RichTextEditor from "../../shared/richTextEditor";
-import { uid, esc, inputCls } from "../../shared/utils";
-import DocumentUploadModal from "../../shared/documentUploadModal";
+import useConfirmDelete from "../shared/useConfirmDelete";
+import Field from "../shared/field";
+import RichTextEditor from "../shared/richTextEditor";
+import { uid, esc, inputCls } from "../shared/utils";
+import DocumentUploadModal from "../shared/documentUploadModal";
 import { useState } from "react";
 import { Trash2, Plus, Loader2, Save } from "lucide-react";
 
