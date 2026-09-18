@@ -52,7 +52,7 @@ export default function PostBuilder() {
           const data = await res.json();
 
           if (Array.isArray(data?.posts)) {
-            setPosts(data.map(post));
+            setPosts(data.map(posts));
           }
 
         }
