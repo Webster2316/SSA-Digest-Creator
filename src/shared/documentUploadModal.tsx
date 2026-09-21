@@ -3,7 +3,7 @@ import { X, Link as LinkIcon } from "lucide-react";
 import DigestDropZone, { FileUploadResult } from "./digestDropZone";
 
 
-export type BuilderKey =  "ssa-digest-data" | "ai-bulletin-data" | "events-builder-data";
+export type BuilderKey =  "ssa-digest-data" | "ai-bulletin-data" | "events-builder-data" | "posts-draft-data";
 interface DocRow {
     label: string;
     url: string;
