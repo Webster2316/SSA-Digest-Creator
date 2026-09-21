@@ -1,24 +1,26 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserStar } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
 import EventsBuilder from "./builders/events/EventsHome";
 import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
-
-type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder"; 
+import AdminBrief from "./builders/AdminBrief"
+;
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
   { key: "AIBulletin", label: "AI Bulletin", icon: BotMessageSquare },
   { key: "events", label: "Events", icon: Martini},
   {key: "postBuilder", label: "Socials", icon: MessageSquareQuote},
+  {key: "adminBrief", label: "Admin Brief", icon: UserStar},
 ];
 
-//social media - 1
+//social media - 1 - partially complete 
 // survey - outlook polls
-//admin brief
+//admin brief 
 // sponsorship template ??? -TE
 export default function App() {
   const [builder, setBuilder] = useState<BuilderKey>("weeklyDigest");
@@ -104,6 +106,7 @@ export default function App() {
         {builder === "events" && <EventsBuilder />}
         {builder === "dataManagement" && <DataManagement />}
         {builder === "postBuilder" && <Socials />} 
+        {builder === "adminBrief" && <AdminBrief />}
       </div>
     </div>
   );
