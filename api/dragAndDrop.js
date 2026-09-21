@@ -14,6 +14,7 @@ export default async function handler(req, res) {
       "ai-bulletin-data",
       "events-builder-data",
       "ssa-digest-data",
+      "posts-draft-data",
     ];
     
     if (!allowedKeys.includes(key)) {
