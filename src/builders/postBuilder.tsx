@@ -281,19 +281,19 @@ const removeGalleryImage = (postId: string, url: string) => {
       )}
     </div>
 
-   <button
-   type="button"
-   disabled={!post.gallery?.length}
-   onClick={() => {
-     post.gallery.forEach((image) => {
-       window.open(directFileUrl(image.url), "_blank");
-     });
-   }}
-   className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-indigo-700 px-3 py-2 text-xs font-medium text-white disabled:bg-gray-300"
- >
+    <a
+      href={post.gallery?.[0]?.url}
+      target="_blank"
+      rel="noreferrer"
+      className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium ${
+        post.gallery?.length
+          ? "bg-indigo-700 text-white hover:bg-indigo-800"
+          : "pointer-events-none bg-gray-300 text-gray-500"
+      }`}
+    >
       <Download size={14} />
       Download images
-    </button>
+    </a>
   </div>
 </div>
             </div>
