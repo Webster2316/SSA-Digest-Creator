@@ -22,7 +22,7 @@ import NamePopUp from "../shared/NamePopUpModal";
 interface GalleryImage {
   url: string;
   name?: string;
-  // alt?: string;
+  alt?: string;
 }
 
 interface Post {
@@ -51,7 +51,7 @@ const addGalleryImages = (postId: string, docs: { label: string, url: string }[]
       ...(post.gallery ?? []),
       ...docs.map((doc) => ({
         name: doc.label,
-        // alt: doc.label,
+        alt: doc.label,
         url: doc.url,
       })),
     ],
