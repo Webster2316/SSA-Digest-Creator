@@ -7,6 +7,9 @@ import {
     Archive,
     Save,
     Copy,
+    Download,
+    ImagePlus,
+    X,
     Check,
 } from "lucide-react";
 import useConfirmDelete from "../shared/useConfirmDelete";
@@ -35,11 +38,40 @@ function getDateTime() {
     });
   }
 export default function PostBuilder() {
-    const [loaded, setLoaded] = useState(false);
-    const [saveStatus, setSaveStatus] = useState("idle");
+  const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
   const [posts, setPosts] = useState<Post[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [galleryPostId, setGalleryPostId] = useState<string | null>(null);
 
+const addGalleryImages = (postId: string, docs: { label: string, url: string }[]) => {
+  setPosts((current) => current.map((post) => post.id === postId  ? {
+    ...post,
+    gallery: [
+      ...(post.gallery ?? []),
+      ...docs.map((doc) => ({
+        name: doc.label,
+        alt: doc.label,
+        url: doc.url,
+      })),
+    ],
+  }
+: post
+)
+);
+};
+
+const removeGalleryImage = (postId: string, url: string) => {
+  setPosts((current) => current.map((post) => post.id === postId ? {
+    ...post,
+    gallery: post.gallery.filter(
+      (image) => image.url !== url
+    ),
+  }
+: post
+)
+);
+};
 
 
   useEffect(() => {
@@ -175,14 +207,90 @@ export default function PostBuilder() {
                 </button>
               </div>
 
-              <Field label="Caption">
-                <RichTextEditor
-                  value={post.caption}
-                  onChange={(caption: string) =>
-                    updateCaption(post.id, caption)
-                  }
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+  {/* 2/3 caption */}
+  <div className="md:col-span-2">
+    <Field label="Caption">
+      <RichTextEditor
+        value={post.caption}
+        onChange={(caption) =>
+          updateCaption(post.id, caption)
+        }
+      />
+    </Field>
+  </div>
+
+  {/* 1/3 gallery */}
+  <div>
+    <div className="mb-2 flex items-center justify-between">
+      <span className="text-sm font-medium text-gray-700">
+        Gallery
+      </span>
+
+      <button
+        type="button"
+        onClick={() => setGalleryPostId(post.id)}
+        className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+      >
+        <ImagePlus size={14} />
+        Add images
+      </button>
+    </div>
+
+    <div className="min-h-40 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2">
+      {!post.gallery?.length ? (
+        <div className="flex h-36 items-center justify-center text-xs text-gray-400">
+          No images uploaded
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {post.gallery.map((image) => (
+            <div key={image.url} className="group relative">
+              <img
+                src={image.url}
+                alt={image.alt ?? image.name ?? ""}
+                className="aspect-square w-full rounded object-cover"
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  removeGalleryImage(post.id, image.url)
+                }
+                className="absolute right-1 top-1 hidden rounded-full bg-black/70 p-1 text-white group-hover:block"
+              >
+                <X size={10} />
+              </button>
+
+              {/* Larger hover preview */}
+              <div className="pointer-events-none absolute right-full top-0 z-30 mr-2 hidden w-64 rounded-lg border bg-white p-2 shadow-xl group-hover:block">
+                <img
+                  src={image.url}
+                  alt={image.alt ?? ""}
+                  className="max-h-64 w-full object-contain"
                 />
-              </Field>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <a
+      href={post.gallery?.[0]?.url}
+      target="_blank"
+      rel="noreferrer"
+      className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium ${
+        post.gallery?.length
+          ? "bg-indigo-700 text-white hover:bg-indigo-800"
+          : "pointer-events-none bg-gray-300 text-gray-500"
+      }`}
+    >
+      <Download size={14} />
+      Download images
+    </a>
+  </div>
+</div>
             </div>
           ))}
         </div>
@@ -203,6 +311,17 @@ export default function PostBuilder() {
   fieldLabel="Post Title"
   placeholder="e.g. idk insert linked in post header..."
   buttonText="Create Draft"
+/>
+<DocumentUploadModal
+  isOpen={galleryPostId !== null}
+  onClose={() => setGalleryPostId(null)}
+  builderKey="posts-draft-data"
+  onAdd={(docs) => {
+    if (!galleryPostId) return;
+
+    addGalleryImages(galleryPostId, docs);
+    setGalleryPostId(null);
+  }}
 />
       </div>
     </div>
