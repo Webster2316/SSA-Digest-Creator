@@ -1,21 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-    Trash2,
-    CircleCheck,
-    Plus,
-    Loader2,
-    Archive,
-    Save,
-    Copy,
-    Download,
-    ImagePlus,
-    X,
-    Check,
+  Trash2,
+  Plus,
+  Loader2,
+  Save,
+  Download,
+  ImagePlus,
+  X,
 } from "lucide-react";
-import useConfirmDelete from "../shared/useConfirmDelete";
+
 import Field from "../shared/field";
 import RichTextEditor from "../shared/richTextEditor";
-import { uid, esc, inputCls } from "../shared/utils";
+import { uid } from "../shared/utils";
 import DocumentUploadModal from "../shared/documentUploadModal";
 import NamePopUp from "../shared/NamePopUpModal";
 
@@ -31,70 +27,149 @@ interface Post {
   caption: string;
   gallery: GalleryImage[];
 }
+
 function getDateTime() {
-    return new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  return new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Power Automate may already return a URL containing download=1.
+ * This prevents adding it more than once.
+ */
+function directFileUrl(url: string) {
+  if (/[?&]download=1(?:&|$)/.test(url)) {
+    return url;
   }
+
+  return `${url}${url.includes("?") ? "&" : "?"}download=1`;
+}
+
 export default function PostBuilder() {
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
   const [posts, setPosts] = useState<Post[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [galleryPostId, setGalleryPostId] = useState<string | null>(null);
+  const [galleryPostId, setGalleryPostId] = useState<string | null>(
+    null
+  );
+  const [downloadingPostId, setDownloadingPostId] = useState<
+    string | null
+  >(null);
 
-const directFileUrl = (url: string) => {
-  const separator = url.includes("?") ? "&" : "?";
-  return`${url}${separator}download=1`;
-}
+  const addGalleryImages = (
+    postId: string,
+    docs: { label: string; url: string }[]
+  ) => {
+    setPosts((current) =>
+      current.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              gallery: [
+                ...(post.gallery ?? []),
+                ...docs.map((doc) => ({
+                  name: doc.label,
+                  alt: doc.label,
+                  url: doc.url,
+                })),
+              ],
+            }
+          : post
+      )
+    );
+  };
 
-const addGalleryImages = (postId: string, docs: { label: string, url: string }[]) => {
-  setPosts((current) => current.map((post) => post.id === postId  ? {
-    ...post,
-    gallery: [
-      ...(post.gallery ?? []),
-      ...docs.map((doc) => ({
-        name: doc.label,
-        alt: doc.label,
-        url: doc.url,
-      })),
-    ],
-  }
-: post
-)
-);
-};
+  const removeGalleryImage = (
+    postId: string,
+    imageUrl: string
+  ) => {
+    setPosts((current) =>
+      current.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              gallery: (post.gallery ?? []).filter(
+                (image) => image.url !== imageUrl
+              ),
+            }
+          : post
+      )
+    );
+  };
 
-const removeGalleryImage = (postId: string, url: string) => {
-  setPosts((current) => current.map((post) => post.id === postId ? {
-    ...post,
-    gallery: post.gallery.filter(
-      (image) => image.url !== url
-    ),
-  }
-: post
-)
-);
-};
+  const downloadImages = async (post: Post) => {
+    if (!post.gallery?.length) return;
 
+    setDownloadingPostId(post.id);
+
+    try {
+      for (let index = 0; index < post.gallery.length; index++) {
+        const image = post.gallery[index];
+        const response = await fetch(directFileUrl(image.url));
+
+        if (!response.ok) {
+          throw new Error(
+            `Could not download ${image.name ?? "image"}`
+          );
+        }
+
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = blobUrl;
+        link.download =
+          image.name || `${post.title}-image-${index + 1}.png`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(blobUrl);
+
+        // Small delay between downloads.
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    } catch (error) {
+      console.error("Failed to download gallery:", error);
+
+      alert(
+        "The images could not be downloaded. OneDrive may be blocking direct downloads from this page."
+      );
+    } finally {
+      setDownloadingPostId(null);
+    }
+  };
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/load-digest?key=posts-draft-data");
+        const res = await fetch(
+          "/api/load-digest?key=posts-draft-data"
+        );
+
         if (res.ok) {
           const data = await res.json();
 
           if (Array.isArray(data?.posts)) {
-            setPosts(data.posts);
+            setPosts(
+              data.posts.map((post: Post) => ({
+                ...post,
+                gallery: Array.isArray(post.gallery)
+                  ? post.gallery
+                  : [],
+              }))
+            );
           }
-
         }
-      } catch (e) {
-        console.error("Failed to load post drafter:", e);
+      } catch (error) {
+        console.error("Failed to load post drafter:", error);
+      } finally {
+        setLoaded(true);
       }
-      setLoaded(true);
     })();
   }, []);
 
@@ -103,28 +178,32 @@ const removeGalleryImage = (postId: string, url: string) => {
 
     setSaveStatus("saving");
 
-    const t = setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       try {
-        const res = await fetch("/api/save-digest?key=posts-draft-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ posts }),
-        });
+        const res = await fetch(
+          "/api/save-digest?key=posts-draft-data",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ posts }),
+          }
+        );
 
         if (res.ok) {
           setSaveStatus(`Saved at ${getDateTime()}`);
         } else {
           setSaveStatus("error");
         }
-      } catch (e) {
-        console.error("Failed to save posts drafter:", e);
+      } catch (error) {
+        console.error("Failed to save posts drafter:", error);
         setSaveStatus("error");
       }
     }, 700);
 
-    return () => clearTimeout(t);
+    return () => clearTimeout(timeout);
   }, [posts, loaded]);
-
 
   const handleAddPost = (title: string) => {
     setPosts((current) => [
@@ -138,11 +217,17 @@ const removeGalleryImage = (postId: string, url: string) => {
     ]);
   };
 
-  const updateCaption = (postId: string, caption: string) => {
+  const updateCaption = (
+    postId: string,
+    caption: string
+  ) => {
     setPosts((current) =>
       current.map((post) =>
         post.id === postId
-          ? { ...post, caption }
+          ? {
+              ...post,
+              caption,
+            }
           : post
       )
     );
@@ -157,7 +242,6 @@ const removeGalleryImage = (postId: string, url: string) => {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="mx-auto max-w-4xl p-4">
-        {/* Header */}
         <div className="mb-4 flex items-center gap-3">
           <img
             src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
@@ -190,7 +274,6 @@ const removeGalleryImage = (postId: string, url: string) => {
           </div>
         </div>
 
-        {/* Post editors */}
         <div className="space-y-4">
           {posts.map((post, index) => (
             <div
@@ -213,89 +296,130 @@ const removeGalleryImage = (postId: string, url: string) => {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-  {/* 2/3 caption */}
-  <div className="md:col-span-2">
-    <Field label="Caption">
-      <RichTextEditor
-        value={post.caption}
-        onChange={(caption) =>
-          updateCaption(post.id, caption)
-        }
-      />
-    </Field>
-  </div>
+                <div className="md:col-span-2">
+                  <Field label="Caption">
+                    <RichTextEditor
+                      value={post.caption}
+                      onChange={(caption) =>
+                        updateCaption(post.id, caption)
+                      }
+                    />
+                  </Field>
+                </div>
 
-  {/* 1/3 gallery */}
-  <div>
-    <div className="mb-2 flex items-center justify-between">
-      <span className="text-sm font-medium text-gray-700">
-        Gallery
-      </span>
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      Gallery
+                    </span>
 
-      <button
-        type="button"
-        onClick={() => setGalleryPostId(post.id)}
-        className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
-      >
-        <ImagePlus size={14} />
-        Add images
-      </button>
-    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGalleryPostId(post.id)
+                      }
+                      className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    >
+                      <ImagePlus size={14} />
+                      Add images
+                    </button>
+                  </div>
 
-    <div className="min-h-40 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2">
-      {!post.gallery?.length ? (
-        <div className="flex h-36 items-center justify-center text-xs text-gray-400">
-          No images uploaded
-        </div>
-      ) : (
-        <div className="grid grid-cols-3 gap-2">
-          {post.gallery.map((image) => (
-            <div key={image.url} className="group relative">
-              <img
-                src={directFileUrl(image.url)}
-                alt={image.alt ?? image.name ?? ""}
-                className="aspect-square w-full rounded object-cover"
-              />
+                  <div className="min-h-40 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-2">
+                    {!post.gallery?.length ? (
+                      <div className="flex h-36 items-center justify-center text-xs text-gray-400">
+                        No images uploaded
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {post.gallery.map((image, imageIndex) => {
+                          const imageUrl = directFileUrl(
+                            image.url
+                          );
 
-              <button
-                type="button"
-                onClick={() =>
-                  removeGalleryImage(post.id, image.url)
-                }
-                className="absolute right-1 top-1 hidden rounded-full bg-black/70 p-1 text-white group-hover:block"
-              >
-                <X size={10} />
-              </button>
+                          return (
+                            <div
+                              key={`${image.url}-${imageIndex}`}
+                              className="group relative"
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={
+                                  image.alt ??
+                                  image.name ??
+                                  `Gallery image ${imageIndex + 1}`
+                                }
+                                className="aspect-square w-full rounded border border-gray-200 bg-white object-cover"
+                                onError={(event) => {
+                                  console.error(
+                                    "Image preview failed:",
+                                    imageUrl
+                                  );
 
-              {/* Larger hover preview */}
-              <div className="pointer-events-none absolute right-full top-0 z-30 mr-2 hidden w-64 rounded-lg border bg-white p-2 shadow-xl group-hover:block">
-                <img
-                  src={directFileUrl(image.url)}
-                  alt={image.alt ?? ""}
-                  className="max-h-64 w-full object-contain"
-                />
+                                  event.currentTarget.classList.add(
+                                    "object-contain"
+                                  );
+                                }}
+                              />
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeGalleryImage(
+                                    post.id,
+                                    image.url
+                                  )
+                                }
+                                className="absolute right-1 top-1 hidden rounded-full bg-black/70 p-1 text-white hover:bg-red-600 group-hover:block"
+                                title="Remove image"
+                              >
+                                <X size={10} />
+                              </button>
+
+                              <div className="pointer-events-none absolute right-full top-0 z-30 mr-2 hidden w-64 rounded-lg border border-gray-200 bg-white p-2 shadow-xl group-hover:block">
+                                <img
+                                  src={imageUrl}
+                                  alt={image.alt ?? image.name ?? ""}
+                                  className="max-h-64 w-full object-contain"
+                                />
+
+                                {image.name && (
+                                  <p className="mt-1 truncate text-xs text-gray-500">
+                                    {image.name}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={
+                      !post.gallery?.length ||
+                      downloadingPostId === post.id
+                    }
+                    onClick={() => downloadImages(post)}
+                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-indigo-700 px-3 py-2 text-xs font-medium text-white hover:bg-indigo-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  >
+                    {downloadingPostId === post.id ? (
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <Download size={14} />
+                    )}
+
+                    {downloadingPostId === post.id
+                      ? "Downloading…"
+                      : "Download images"}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    <a
-      href={post.gallery?.[0]?.url}
-      target="_blank"
-      rel="noreferrer"
-      className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium ${
-        post.gallery?.length
-          ? "bg-indigo-700 text-white hover:bg-indigo-800"
-          : "pointer-events-none bg-gray-300 text-gray-500"
-      }`}
-    >
-      <Download size={14} />
-      Download images
-    </a>
-  </div>
-</div>
             </div>
           ))}
         </div>
@@ -308,26 +432,28 @@ const removeGalleryImage = (postId: string, url: string) => {
           <Plus size={16} />
           Draft a post
         </button>
-        <NamePopUp
-  isOpen={isNameModalOpen}
-  onClose={() => setIsNameModalOpen(false)}
-  onAdd={handleAddPost}
-  heading="Create Post Draft"
-  fieldLabel="Post Title"
-  placeholder="e.g. idk insert linked in post header..."
-  buttonText="Create Draft"
-/>
-<DocumentUploadModal
-  isOpen={galleryPostId !== null}
-  onClose={() => setGalleryPostId(null)}
-  builderKey="posts-draft-data"
-  onAdd={(docs) => {
-    if (!galleryPostId) return;
 
-    addGalleryImages(galleryPostId, docs);
-    setGalleryPostId(null);
-  }}
-/>
+        <NamePopUp
+          isOpen={isNameModalOpen}
+          onClose={() => setIsNameModalOpen(false)}
+          onAdd={handleAddPost}
+          heading="Create Post Draft"
+          fieldLabel="Post Title"
+          placeholder="e.g. LinkedIn post title"
+          buttonText="Create Draft"
+        />
+
+        <DocumentUploadModal
+          isOpen={galleryPostId !== null}
+          onClose={() => setGalleryPostId(null)}
+          builderKey="posts-draft-data"
+          onAdd={(docs) => {
+            if (!galleryPostId) return;
+
+            addGalleryImages(galleryPostId, docs);
+            setGalleryPostId(null);
+          }}
+        />
       </div>
     </div>
   );
