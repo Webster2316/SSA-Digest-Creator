@@ -44,6 +44,11 @@ export default function PostBuilder() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [galleryPostId, setGalleryPostId] = useState<string | null>(null);
 
+const directFileUrl = (url: string) => {
+  const separator = url.includes("?") ? "&" : "?";
+  return`${url}${separator}download=1`;
+}
+
 const addGalleryImages = (postId: string, docs: { label: string, url: string }[]) => {
   setPosts((current) => current.map((post) => post.id === postId  ? {
     ...post,
@@ -247,7 +252,7 @@ const removeGalleryImage = (postId: string, url: string) => {
           {post.gallery.map((image) => (
             <div key={image.url} className="group relative">
               <img
-                src={image.url}
+                src={directFileUrl(image.url)}
                 alt={image.alt ?? image.name ?? ""}
                 className="aspect-square w-full rounded object-cover"
               />
@@ -265,7 +270,7 @@ const removeGalleryImage = (postId: string, url: string) => {
               {/* Larger hover preview */}
               <div className="pointer-events-none absolute right-full top-0 z-30 mr-2 hidden w-64 rounded-lg border bg-white p-2 shadow-xl group-hover:block">
                 <img
-                  src={image.url}
+                  src={directFileUrl(image.url)}
                   alt={image.alt ?? ""}
                   className="max-h-64 w-full object-contain"
                 />
@@ -276,19 +281,19 @@ const removeGalleryImage = (postId: string, url: string) => {
       )}
     </div>
 
-    <a
-      href={post.gallery?.[0]?.url}
-      target="_blank"
-      rel="noreferrer"
-      className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium ${
-        post.gallery?.length
-          ? "bg-indigo-700 text-white hover:bg-indigo-800"
-          : "pointer-events-none bg-gray-300 text-gray-500"
-      }`}
-    >
+   <button
+   type="button"
+   disabled={!post.gallery?.length}
+   onClick={() => {
+     post.gallery.forEach((image) => {
+       window.open(directFileUrl(image.url), "_blank");
+     });
+   }}
+   className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md bg-indigo-700 px-3 py-2 text-xs font-medium text-white disabled:bg-gray-300"
+ >
       <Download size={14} />
       Download images
-    </a>
+    </button>
   </div>
 </div>
             </div>
