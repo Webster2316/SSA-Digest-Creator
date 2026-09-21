@@ -7,8 +7,7 @@ import EventsBuilder from "./builders/events/EventsHome";
 import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement"; // | "postBuilder"
- 
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder"; 
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
