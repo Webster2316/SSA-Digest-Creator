@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserShield, } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserShield, ChartColumnIncreasing, StarCheck } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
@@ -7,8 +7,10 @@ import EventsBuilder from "./builders/events/EventsHome";
 import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
 import AdminBrief from "./builders/AdminBrief";
+import Surveys from "./builders/Surveys";
+import Sponsorships from "./builder/Sponsors";
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief";
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief" | "sponsors" | "surveys";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
@@ -16,6 +18,8 @@ const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "events", label: "Events", icon: Martini},
   {key: "postBuilder", label: "Socials", icon: MessageSquareQuote},
   {key: "adminBrief", label: "Admin Brief", icon: UserShield},
+  {key: "surveys", label: "Surveys & Polls", icon: ChartColumnIncreasing},
+  {key: "sponsors", label: "Sponsors", icon: StarCheck},
 ];
 
 //social media - 1 - partially complete 
