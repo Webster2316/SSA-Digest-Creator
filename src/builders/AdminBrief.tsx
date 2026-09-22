@@ -8,7 +8,7 @@ import {
   ImagePlus,
   X,
 } from "lucide-react";
-
+ 
 //for internal use
 export default function AdminBrief() {
     return(

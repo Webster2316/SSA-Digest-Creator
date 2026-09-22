@@ -97,7 +97,7 @@ export default function App() {
           </button>
         </div>
       </div>
-  
+   
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {builder === "weeklyDigest" && <WeeklyDigestBuilder />}
