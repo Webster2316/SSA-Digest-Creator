@@ -8,7 +8,7 @@ import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
 import AdminBrief from "./builders/AdminBrief";
 import Surveys from "./builders/Surveys";
-import Sponsorships from "./builder/Sponsors";
+import Sponsorships from "./builders/Sponsors";
 
 type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief" | "sponsors" | "surveys";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
@@ -111,6 +111,9 @@ export default function App() {
         {builder === "dataManagement" && <DataManagement />}
         {builder === "postBuilder" && <Socials />} 
         {builder === "adminBrief" && <AdminBrief />}
+        {builder === "surveys" && <Surveys />}
+        {builder === "sponsors" && <Sponsorships />} 
+     
       </div>
     </div>
   );
