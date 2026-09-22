@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
  
-//for internal use mainly
+//for internal use mainly 
 export default function AdminBrief() {
     return(
         <div>

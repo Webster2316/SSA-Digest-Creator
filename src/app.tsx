@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserShield } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
@@ -15,7 +15,7 @@ const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "AIBulletin", label: "AI Bulletin", icon: BotMessageSquare },
   { key: "events", label: "Events", icon: Martini},
   {key: "postBuilder", label: "Socials", icon: MessageSquareQuote},
-  {key: "adminBrief", label: "Admin Brief", icon: UserShield},
+  // {key: "adminBrief", label: "Admin Brief", icon: UserShield},
 ];
 
 //social media - 1 - partially complete 
