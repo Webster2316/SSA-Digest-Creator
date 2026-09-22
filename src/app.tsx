@@ -6,8 +6,8 @@ import AIBulletinBuilder from "./builders/AIBulletinBuilder";
 import EventsBuilder from "./builders/events/EventsHome";
 import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
-import AdminBrief from "./builders/AdminBrief"
-;
+import AdminBrief from "./builders/AdminBrief";
+
 type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
