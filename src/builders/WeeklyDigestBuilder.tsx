@@ -442,7 +442,7 @@ export default function WeeklyDigestBuilder() {
   
     setReplacingIssue(true);
     try {
-      const response = await fetch("/api/replace-archived-issue", {
+      const response = await fetch("/api/replace-issue", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ builderKey: "ssa-digest-data" }),
