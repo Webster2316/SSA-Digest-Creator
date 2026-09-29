@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
-import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive, FileText, Loader2, RotateCcw, Files, ArrowRightLeft, GripVertical } from "lucide-react";
+import { Plus, Trash2, Copy, Check, Save, Eye, Code2, CalendarDays, Archive, FileText, Loader2, RotateCcw, Files, ArrowRightLeft, GripVertical, ReplaceAll} from "lucide-react";
 import Field from "../shared/field";
 import MoveButtons from "../shared/moveButtons";
 import RichTextEditor from "../shared/richTextEditor";
@@ -374,6 +374,7 @@ export default function WeeklyDigestBuilder() {
   const issueRangeRef = useRef<HTMLInputElement>(null);
   const titleRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [collapsedItem, setCollapsedItem] = useState<Record<string, boolean>>({});
+  const [replacingIssue, setReplacingIssue] = useState(false);
 
 
 
@@ -433,6 +434,31 @@ export default function WeeklyDigestBuilder() {
     }, 700);
     return () => clearTimeout(t);
   }, [issueRange, events, actionItems, notingItems, rawHtmlEdit, collapsedItem, loaded]);
+
+  async function replaceRecentIssue() {
+    if (!window.confirm(
+      "Replace the most recent archived Weekly Digest with the current saved version?"
+    )) return;
+  
+    setReplacingIssue(true);
+    try {
+      const response = await fetch("/api/replace-archived-issue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ builderKey: "ssa-digest-data" }),
+      });
+  
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Replacement failed");
+  
+      alert(`Replaced archived issue: ${result.issue.issue_label}`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Replacement failed");
+    } finally {
+      setReplacingIssue(false);
+    }
+  }
+
 
   const move = (list, setList) => (index, dir) => {
     const arr = [...list];
@@ -584,8 +610,21 @@ requestAnimationFrame(() => {
             {saveStatus === "saving" && <><Loader2 size={13} className="animate-spin" /> Saving…</>}
             {saveStatus.startsWith("Saved at") && (
   <>
-    <Save size={13} />
-    {saveStatus}
+   <Save size={13} />
+{saveStatus}
+
+<button
+  type="button"
+  onClick={replaceRecentIssue}
+  disabled={replacingIssue}
+  title="Replace recent issue"
+  aria-label="Replace recent issue"
+  className="ml-2 rounded p-1 text-gray-500 hover:bg-indigo-50 hover:text-indigo-700 disabled:opacity-50"
+>
+  {replacingIssue
+    ? <Loader2 size={15} className="animate-spin" />
+    : <ReplaceAll size={15} />}
+</button>
   </>
 )}
 {saveStatus === "error" && (

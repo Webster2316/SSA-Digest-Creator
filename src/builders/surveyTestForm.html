@@ -1,47 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Survey card test 2</title>
-</head>
-<body>
-
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-  style="max-width:600px;font-family:'Yu Gothic UI','Segoe UI',Arial,sans-serif;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"
+       width="100%" style="max-width:480px; border:1px solid #ddd9e8;
+       background-color:#ffffff; font-family:Arial,Helvetica,sans-serif;">
   <tr>
-    <td style="padding:20px;background:#f6f3fc;border:1px solid #dacaf9;border-radius:10px;">
+    <td style="padding:24px;">
+      <p style="margin:0 0 6px; color:#63558a; font-size:12px;
+                font-weight:bold; letter-spacing:1px;">
+      Survey Test 1
+      </p>
 
-      <div style="margin-bottom:14px;font-size:16px;line-height:22px;font-weight:700;color:#312f70;">
-        How useful was this issue?
-      </div>
+      <h2 style="margin:0 0 8px; color:#25213a; font-size:20px;
+                 line-height:28px;">
+        Would you attend another seminar?
+      </h2>
 
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+      <p style="margin:0 0 22px; color:#666; font-size:13px;
+                line-height:19px;">
+        Select an answer below. Your response will be recorded when you click.
+      </p>
+
+      <table role="presentation" cellpadding="0" cellspacing="0"
+             border="0" width="100%">
         <tr>
-          <td style="padding:0 0 10px 0;font-size:14px;line-height:20px;">
-            <a href="https://webhook.site/f506b3ae-fd1b-496f-ac77-5e1ca9dcdab2?id=test1&q1=Very%20useful" style="color:#2d3748;text-decoration:none;">
-              <span style="color:#312f70;font-size:18px;">&#9675;</span>&nbsp;&nbsp;Very useful
+          <td style="padding-bottom:10px;">
+            <a href="https://ssa-weekly-digest-creator.vercel.app/api/surveys?surveyId=1&amp;answer=Yes"
+               style="display:block; padding:14px 16px;
+                      border:1px solid #cfc9df; background-color:#faf9fd;
+                      color:#25213a; font-size:15px; text-decoration:none;">
+              <span style="color:#65469a; font-size:20px;">◯</span>
+              &nbsp; Yes
             </a>
           </td>
         </tr>
         <tr>
-          <td style="padding:0 0 10px 0;font-size:14px;line-height:20px;">
-            <a href="https://webhook.site/f506b3ae-fd1b-496f-ac77-5e1ca9dcdab2?id=test1&q1=Somewhat%20useful" style="color:#2d3748;text-decoration:none;">
-              <span style="color:#312f70;font-size:18px;">&#9675;</span>&nbsp;&nbsp;Somewhat useful
-            </a>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:0;font-size:14px;line-height:20px;">
-            <a href="https://webhook.site/f506b3ae-fd1b-496f-ac77-5e1ca9dcdab2?id=test1&q1=Not%20useful" style="color:#2d3748;text-decoration:none;">
-              <span style="color:#312f70;font-size:18px;">&#9675;</span>&nbsp;&nbsp;Not useful
+          <td>
+            <a href="https://ssa-weekly-digest-creator.vercel.app/api/surveys?surveyId=1&amp;answer=No"
+               style="display:block; padding:14px 16px;
+                      border:1px solid #cfc9df; background-color:#faf9fd;
+                      color:#25213a; font-size:15px; text-decoration:none;">
+              <span style="color:#65469a; font-size:20px;">◯</span>
+              &nbsp; No
             </a>
           </td>
         </tr>
       </table>
 
+      <p style="margin:20px 0 0; color:#777; font-size:12px;
+                line-height:18px;">
+        A thank-you page will open after you select an answer.
+      </p>
     </td>
   </tr>
 </table>
-
-</body>
-</html>
