@@ -82,7 +82,9 @@ export default function PostBuilder() {
 
   const addGalleryImages = (
     postId: string,
-    docs: { label: string; url: string, contentBytes?: string }[]
+    docs: {  label: string;
+      url: string;
+      contentBytes?: string; }[]
   ) => {
     setPosts((current) =>
       current.map((post) =>
