@@ -7,6 +7,7 @@ export interface FileUploadResult {
     filename:string;
     status: UploadStatus;
     link?: string;
+    contentBytes?: string;
 }
 
 interface DigestDropZoneProps {

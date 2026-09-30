@@ -8,6 +8,7 @@ import {
   ImagePlus,
   X,
 } from "lucide-react";
+import JSZip from "jszip";
 
 import Field from "../shared/field";
 import RichTextEditor from "../shared/richTextEditor";
@@ -19,6 +20,7 @@ interface GalleryImage {
   url: string;
   name?: string;
   alt?: string;
+  contentBytes?: string;
 }
 
 interface Post {
@@ -35,16 +37,35 @@ function getDateTime() {
   });
 }
 
-/**
- * Power Automate may already return a URL containing download=1.
- * This prevents adding it more than once.
- */
-function directFileUrl(url: string) {
-  if (/[?&]download=1(?:&|$)/.test(url)) {
-    return url;
+function galleryImageSrc(image: GalleryImage): string {
+  const content = image.contentBytes?.trim();
+
+  if (!content) return "";
+
+  if (content.startsWith("data:image/")) {
+    return content;
   }
 
-  return `${url}${url.includes("?") ? "&" : "?"}download=1`;
+  if (/^https?:\/\//i.test(content)) {
+    throw new Error("contentBytes contains a URL instead of Base64 data.");
+  }
+
+  const extension = image.name?.split(".").pop()?.toLowerCase();
+
+  const mimeTypes: Record<string, string> = {
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    gif: "image/gif",
+    webp: "image/webp",
+    avif: "image/avif",
+    bmp: "image/bmp",
+    svg: "image/svg+xml",
+  };
+
+  const mimeType = mimeTypes[extension ?? ""] ?? "image/png";
+
+  return `data:${mimeType};base64,${content}`;
 }
 
 export default function PostBuilder() {
@@ -61,7 +82,7 @@ export default function PostBuilder() {
 
   const addGalleryImages = (
     postId: string,
-    docs: { label: string; url: string }[]
+    docs: { label: string; url: string, contentBytes: string }[]
   ) => {
     setPosts((current) =>
       current.map((post) =>
@@ -74,6 +95,7 @@ export default function PostBuilder() {
                   name: doc.label,
                   alt: doc.label,
                   url: doc.url,
+                  contentBytes: doc.contentBytes
                 })),
               ],
             }
@@ -81,6 +103,7 @@ export default function PostBuilder() {
       )
     );
   };
+
 
   const removeGalleryImage = (
     postId: string,
@@ -102,48 +125,69 @@ export default function PostBuilder() {
 
   const downloadImages = async (post: Post) => {
     if (!post.gallery?.length) return;
-
+  
     setDownloadingPostId(post.id);
-
+  
     try {
+      const zip = new JSZip();
+  
       for (let index = 0; index < post.gallery.length; index++) {
         const image = post.gallery[index];
-        const response = await fetch(directFileUrl(image.url));
-
-        if (!response.ok) {
+        const source = galleryImageSrc(image);
+  
+        if (!source) {
           throw new Error(
-            `Could not download ${image.name ?? "image"}`
+            `${image.name ?? `Image ${index + 1}`} has no image data. ` +
+            "Please remove it and upload it again."
           );
         }
-
+  
+        const response = await fetch(source);
+  
+        if (!response.ok) {
+          throw new Error(`Could not read ${image.name ?? "image"}.`);
+        }
+  
         const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-
-        link.href = blobUrl;
-        link.download =
-          image.name || `${post.title}-image-${index + 1}.png`;
-
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        URL.revokeObjectURL(blobUrl);
-
-        // Small delay between downloads.
-        await new Promise((resolve) => setTimeout(resolve, 250));
+  
+        if (!blob.type.startsWith("image/")) {
+          throw new Error(`${image.name ?? "File"} is not image content.`);
+        }
+  
+        const filename = (
+          image.name || `image-${index + 1}.png`
+        ).replace(/[\\/:*?"<>|]/g, "_");
+  
+        // Prefix prevents files with identical names overwriting each other.
+        zip.file(`${index + 1}-${filename}`, blob);
       }
+  
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const blobUrl = URL.createObjectURL(zipBlob);
+      const link = document.createElement("a");
+  
+      const title = (post.title || "gallery").replace(/[\\/:*?"<>|]/g, "_");
+  
+      link.href = blobUrl;
+      link.download = `${title}-gallery.zip`;
+  
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
     } catch (error) {
       console.error("Failed to download gallery:", error);
-
+  
       alert(
-        "The images could not be downloaded. OneDrive may be blocking direct downloads from this page."
+        error instanceof Error
+          ? error.message
+          : "The gallery could not be downloaded."
       );
     } finally {
       setDownloadingPostId(null);
     }
   };
-
   useEffect(() => {
     (async () => {
       try {
@@ -333,7 +377,7 @@ export default function PostBuilder() {
                     ) : (
                       <div className="grid grid-cols-3 gap-2">
                         {post.gallery.map((image, imageIndex) => {
-                          const imageUrl = directFileUrl(
+                          const imageUrl = galleryImageSrc(
                             image.url
                           );
 

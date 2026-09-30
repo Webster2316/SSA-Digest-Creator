@@ -7,6 +7,7 @@ export type BuilderKey =  "ssa-digest-data" | "ai-bulletin-data" | "events-build
 interface DocRow {
     label: string;
     url: string;
+    contentBytes?: string
 }
 
 interface DocumentUploadModalProps {
@@ -27,7 +28,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey
     if (!isOpen) return null;
 
     const handleLinksReady = (uploaded: FileUploadResult[]) => {
-        const docs = uploaded.filter((u) => u.link).map((u) => ({label: u.filename, url: u.link as string}));
+        const docs = uploaded.filter((u) => u.link).map((u) => ({label: u.filename, url: u.link as string,  contentBytes: u.contentBytes,}));
 
         if (docs.length > 0) {
             onAdd(docs);
