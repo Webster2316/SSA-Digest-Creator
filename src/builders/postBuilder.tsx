@@ -469,7 +469,7 @@ export default function PostBuilder() {
                     </span>
 
                     <div className="flex items-center gap-3">
-                      <button
+                      {/* <button
                         type="button"
                         onClick={() => {
                           uploadTargetRef.current = post.id;
@@ -479,7 +479,7 @@ export default function PostBuilder() {
                       >
                         <Upload size={14} />
                         Upload from computer
-                      </button>
+                      </button> */}
 
                       <button
                         type="button"
