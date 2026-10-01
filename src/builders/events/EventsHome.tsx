@@ -1519,7 +1519,7 @@ if (selectedArchivedEvent) {
           </>
         ) : viewingRecordId === -1 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <RecordsPanel builderKey="ai-bulletin-data" onSelect={(id) => setViewingRecordId(id)} />
+            <RecordsPanel builderKey="events-builder-data" onSelect={(id) => setViewingRecordId(id)} />
             <button onClick={() => setViewingRecordId(null)} className="mt-3 text-sm text-gray-500 hover:text-indigo-700">
               ← Back to builder
             </button>
