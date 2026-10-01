@@ -17,6 +17,8 @@ import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
+import RecordsPanel from "../shared/recordsPanel";
+import RecordViewer from "../shared/recordViewer";
 
 const EVENTS_BUILDER_KEY = "events-builder-data";
 
@@ -792,6 +794,7 @@ export default function EventsHome() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
+  const [viewingRecordId, setViewingRecordId] = useState(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
@@ -1273,7 +1276,8 @@ if (selectedArchivedEvent) {
             {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
           </div>
         </div>
-
+        {viewingRecordId === null ? (
+          <>
         {/* HOME TABS ONLY — editor remains a separate component/file */}
         <div className="flex gap-1 mb-5 border-b border-gray-200">
           <button
@@ -1299,6 +1303,12 @@ if (selectedArchivedEvent) {
           >
             <Eye size={15} /> Preview & Export
           </button>
+          <button
+                onClick={() => setViewingRecordId(-1)}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
+              >
+                <Archive size={15} /> Issue Archive
+              </button>
           <button
   type="button"
   onClick={() => setTab("history")}
@@ -1505,7 +1515,20 @@ if (selectedArchivedEvent) {
     onRestoreEvent={handleRestoreEvent}
   />
 )}
-        {deleteModal}
+   {deleteModal}
+          </>
+        ) : viewingRecordId === -1 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordsPanel builderKey="ai-bulletin-data" onSelect={(id) => setViewingRecordId(id)} />
+            <button onClick={() => setViewingRecordId(null)} className="mt-3 text-sm text-gray-500 hover:text-indigo-700">
+              ← Back to builder
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordViewer recordId={viewingRecordId} onBack={() => setViewingRecordId(null)} />
+          </div>
+        )}
       </div>
     </div>
   );
