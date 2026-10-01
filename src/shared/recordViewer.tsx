@@ -16,6 +16,7 @@ type RecordViewerProps = {
 export default function RecordViewer({ recordId, onBack }: RecordViewerProps) {
   const [record, setRecord] = useState<Record | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +33,20 @@ export default function RecordViewer({ recordId, onBack }: RecordViewerProps) {
       setLoading(false);
     })();
   }, [recordId]);
+
+
+async function retriveHTMLCode(recordId) {
+if (!record) return;
+
+try
+  {
+    await navigator.clipboard.writeText(record.html);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  } catch(e) {
+console.error("Failed to Copy HTML", e)
+  }
+}
 
   return (
     <div>
@@ -51,7 +66,15 @@ export default function RecordViewer({ recordId, onBack }: RecordViewerProps) {
       {record && (
         <>
           <p className="text-xs text-gray-500 mb-2">
+            <span>
             {record.issue_label} — archived {new Date(record.archived_at).toLocaleDateString()}
+            <button  type="button"
+                        onClick={retriveHTMLCode}
+                        className="ml-3 text-indigo-700 font-medium hover:text-indigo-900"
+                        >
+                          {copied ? "Copied!" : "Retrieve HTML"}
+                        </button>
+            </span>
           </p>
           <iframe
             title="archived-record"
