@@ -17,8 +17,8 @@ import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
-import RecordsPanel from "../shared/recordsPanel";
-import RecordViewer from "../shared/recordViewer";
+import RecordsPanel from "../../shared/recordsPanel";
+import RecordViewer from "../../shared/recordViewer";
 
 const EVENTS_BUILDER_KEY = "events-builder-data";
 

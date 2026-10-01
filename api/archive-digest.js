@@ -4,7 +4,7 @@ import { neon } from '@neondatabase/serverless';
 const KEY_GROUPS = {
   weekly: ['ssa-digest-data'],
   monthly: ['ai-bulletin-data', 'training-bulletin-data', 'events-builder-data']
-}
+} 
 
 export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL);
