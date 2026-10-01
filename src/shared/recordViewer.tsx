@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Copy, Check} from "lucide-react";
 
 type Record = {
   id: number;
@@ -65,17 +65,24 @@ console.error("Failed to Copy HTML", e)
 
       {record && (
         <>
-          <p className="text-xs text-gray-500 mb-2">
-            <span>
-            {record.issue_label} — archived {new Date(record.archived_at).toLocaleDateString()}
-            <button  type="button"
-                        onClick={retriveHTMLCode}
-                        className="ml-3 text-indigo-700 font-medium hover:text-indigo-900"
-                        >
-                          {copied ? "Copied!" : "Retrieve HTML"}
-                        </button>
-            </span>
-          </p>
+        <div className="flex items-center justify-between mb-2">
+  <p className="text-xs text-gray-500">
+    {record.issue_label} — archived {new Date(record.archived_at).toLocaleDateString()}
+  </p>
+
+  <button
+    type="button"
+    onClick={retrieveHTML}
+    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+      copied
+        ? "bg-green-600 hover:bg-green-700 focus:ring-green-500"
+        : "bg-indigo-700 hover:bg-indigo-800 focus:ring-indigo-500"
+    }`}
+  >
+    {copied ? <Check size={16} /> : <Copy size={16} />}
+    {copied ? "Copied!" : "Retrieve HTML"}
+  </button>
+</div>
           <iframe
             title="archived-record"
             srcDoc={record.html}
