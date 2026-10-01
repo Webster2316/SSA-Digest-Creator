@@ -37,7 +37,6 @@ export default function RecordViewer({ recordId, onBack }: RecordViewerProps) {
 
 async function retriveHTMLCode(recordId) {
 if (!record) return;
-
 try
   {
     await navigator.clipboard.writeText(record.html);
@@ -72,7 +71,7 @@ console.error("Failed to Copy HTML", e)
 
   <button
     type="button"
-    onClick={retrieveHTML}
+    onClick={retriveHTMLCode}
     className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
       copied
         ? "bg-green-600 hover:bg-green-700 focus:ring-green-500"
