@@ -59,7 +59,7 @@ export default function DocumentUploadModal({ isOpen, onClose, onAdd, builderKey
   
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-500 mb-2 flex items-center gap-1">
-              <LinkIcon size={12} /> Or type link and name manually (e.g. a website link, not a file):
+              <LinkIcon size={12} /> Or type link and name manually (e.g. a website link/file (There is a file size limit so some docs might require manual uploading)):
             </p>
             <div className="flex gap-2">
               <input
