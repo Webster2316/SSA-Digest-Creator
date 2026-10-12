@@ -115,57 +115,57 @@ We encourage you to register your interest and join us at these upcoming session
 
 We look forward to bringing our members together and strengthening our collective engagement across the association.`);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/load-digest?key=program-brief-data");
-        if (res.ok) {
-          const data = await res.json();
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const res = await fetch("/api/load-digest?key=program-brief-data");
+  //       if (res.ok) {
+  //         const data = await res.json();
 
-          if (Array.isArray(data?.events)) {
-            setEvents(data.events.map(normaliseEvent));
-          }
-          if (typeof data?.greeting === "string") {
-            setGreeting(data.greeting);
-          }
-          if (typeof data?.issueRange === "string") {
-            setIssueRange(data.issueRange);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load events builder:", e);
-      }
-      setLoaded(true);
-    })();
-  }, []);
+  //         if (Array.isArray(data?.events)) {
+  //           setEvents(data.events.map(normaliseEvent));
+  //         }
+  //         if (typeof data?.greeting === "string") {
+  //           setGreeting(data.greeting);
+  //         }
+  //         if (typeof data?.issueRange === "string") {
+  //           setIssueRange(data.issueRange);
+  //         }
+  //       }
+  //     } catch (e) {
+  //       console.error("Failed to load events builder:", e);
+  //     }
+  //     setLoaded(true);
+  //   })();
+  // }, []);
 
-  // Home is the single save owner. Editor only updates this events state.
-  useEffect(() => {
-    if (!loaded) return;
+  // // Home is the single save owner. Editor only updates this events state.
+  // useEffect(() => {
+  //   if (!loaded) return;
 
-    setSaveStatus("saving");
+  //   setSaveStatus("saving");
 
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/save-digest?key=program-brief-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ events, greeting, issueRange }),
-        });
+  //   const t = setTimeout(async () => {
+  //     try {
+  //       const res = await fetch("/api/save-digest?key=program-brief-data", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ events, greeting, issueRange }),
+  //       });
 
-        if (res.ok) {
-          setSaveStatus(`Saved at ${getDateTime()}`);
-        } else {
-          setSaveStatus("error");
-        }
-      } catch (e) {
-        console.error("Failed to save events builder:", e);
-        setSaveStatus("error");
-      }
-    }, 700);
+  //       if (res.ok) {
+  //         setSaveStatus(`Saved at ${getDateTime()}`);
+  //       } else {
+  //         setSaveStatus("error");
+  //       }
+  //     } catch (e) {
+  //       console.error("Failed to save events builder:", e);
+  //       setSaveStatus("error");
+  //     }
+  //   }, 700);
 
-    return () => clearTimeout(t);
-  }, [events, greeting, issueRange, loaded]);
+  //   return () => clearTimeout(t);
+  // }, [events, greeting, issueRange, loaded]);
 
   const handleAddEvents = (title: string) => {
     setEvents((prev) => [
