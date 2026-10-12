@@ -239,7 +239,7 @@ export default function Sponsors() {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch("/api/load-digest?key=sponsor-email-data", {
-          method: "PUT",
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sponsor),
         });
