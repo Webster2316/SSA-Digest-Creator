@@ -156,15 +156,10 @@ export default function Admin() {
 
       const data = await res.json();
 
-      console.log("Issue archive response:", data);
 
       const records =
         extractRecords<IssueArchive>(data);
 
-      console.log(
-        "Loaded issue archive records:",
-        records.length
-      );
 
       setIssueRecords(records);
     } catch (e) {
@@ -206,15 +201,11 @@ export default function Admin() {
 
       const data = await res.json();
 
-      console.log("Event archive response:", data);
+ 
 
       const records =
         extractRecords<EventArchive>(data);
 
-      console.log(
-        "Loaded event archive records:",
-        records.length
-      );
 
       setEventRecords(records);
     } catch (e) {
