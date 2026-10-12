@@ -8,9 +8,72 @@ import {
   ImagePlus,
   X,
 } from "lucide-react";
- 
+const PROGRAM_BUILDER_KEY = "program-brief-data";
+
+type InfoFields = { 
+  date;
+  time;
+  venue;
+  dressCode;
+  audienceSize;
+  Catering;
+}
+
+type RoleNRes = { 
+  id;
+role;
+assignedTo;
+}
+
+type ProgrammeRow = {
+   id; 
+   time; 
+   activity; 
+   checks; 
+   owner; 
+}
+
+type Guest = {
+  id;
+  name;
+  row: "" | "first" | "second"
+}
+type GuestList  = { 
+  id; 
+  name; 
+  guests: Guest[]
+ }
+type PackingItem = { 
+  id; 
+  text; 
+}
+
+interface AdminProgramme {
+  id; eventName;
+  info: InfoFields;
+  roles: RoleRow[];
+  programme: ProgrammeRow[];
+  guestLists: GuestList[];   selectedGuestListId: string;   
+  packing: PackingItem[];    // set default 
+}
+
+const defaultPacking: Record<string, string> = {
+  laptops: "2 laptops with chargers",
+  clickers: "2 slide clickers – ensure fully charged",
+  moderatorTablet: "Tablet for moderator – ensure fully charged",
+  regLists: "2 x registration lists",
+  lanyards: "Lanyard and conference card + extras for walk-ins",
+  speakerLabels: "Speaker labels for seating arrangement",
+  timekeeper: "Bell & placard (red, yellow, green) for timekeeper",
+  printedProgramme: "2 x printed admin programme, on standby",
+  stationery: "Stationery (markers, pens, etc.)",
+  ssaBanner: "SSA pull-up banner",
+  sponsorBanners: "Sponsor pull-up banners & brochures",
+  tablets: "2 tablets",
+};
+
 //for internal use mainly 
-export default function AdminBrief() {
+export default function ProgramBriefzeditor() {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
 
