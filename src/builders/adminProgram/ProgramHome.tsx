@@ -95,7 +95,6 @@ function getDateTime() {
 
 export default function ProgramHome() {
   const [tab, setTab] = useState<"Events" | "preview" | "EventsHistory">("Events");
-  const [events, setEvents] = useState<EventItem[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -104,16 +103,6 @@ export default function ProgramHome() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
   const [copied, setCopied] = useState(false);
-  const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
-  const [greeting, setGreeting] = useState(`Dear Members,
-
-We are pleased to invite you to our upcoming and future planned events, designed to bring our members together and provide an opportunity to engage directly with our Chairs, Councillors and Committee Experts.
-
-These in-person sessions will provide an overview of the work being undertaken across our committees, while creating opportunities for members to exchange insights, connect with fellow industry professionals and learn more about how to engage with our activities.
-
-We encourage you to register your interest and join us at these upcoming sessions.
-
-We look forward to bringing our members together and strengthening our collective engagement across the association.`);
 
   // useEffect(() => {
   //   (async () => {
@@ -209,8 +198,6 @@ We look forward to bringing our members together and strengthening our collectiv
       )
       .join("\n");
 
-    // This shell intentionally keeps the original 680px email sizing and
-    // Outlook conditional wrapper from the supplied reference HTML.
     return `<!DOCTYPE html>
 <html lang="en">
 <head>

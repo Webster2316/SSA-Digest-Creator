@@ -74,9 +74,15 @@ const defaultPacking: Record<string, string> = {
 
 //for internal use mainly 
 export default function ProgramBriefzeditor() {
+    const [tab, setTab] = useState<"Events" | "preview" | "EventsHistory">("Events");
+    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
-
+    const [viewingRecordId, setViewingRecordId] = useState(null);
+    const { confirmDelete, deleteModal } = useConfirmDelete();
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
+    const [copied, setCopied] = useState(false);
     const getDateTime = () =>
     new Date().toLocaleString("en-SG", {
       dateStyle: "short",
