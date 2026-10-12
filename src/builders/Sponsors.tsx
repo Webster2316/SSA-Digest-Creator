@@ -243,7 +243,11 @@ export default function Sponsors() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sponsor),
         });
-        setSaveStatus(res.ok ? "saved" : "error");
+        if (res.ok) {
+          setSaveStatus(`Saved at ${getDateTime()}`);
+        } else {
+          setSaveStatus("error");
+        }
       } catch {
         setSaveStatus("error");
       }
@@ -353,7 +357,7 @@ const removeTable = () =>
                 <Loader2 size={13} className="animate-spin" /> Saving…
               </>
             )}
-            {setSaveStatus(res.ok ? `Saved at ${getDateTime()}` : "error") && (
+            {saveStatus.startsWith("Saved at") && (
               <>
                 <Save size={13} /> {saveStatus}
               </>
