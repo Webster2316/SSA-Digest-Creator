@@ -166,7 +166,7 @@ function buildFullHtml(s: SponsorItem) {
 
   <tr><td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center">
-      <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">This sponsorship invitation was sent to you by the Singapore Shipping Association (SSA) Digitalisation Committee. If you have any questions or wish to opt out of future sponsorship communications, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.</p>
+      <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">This sponsorship invitation was sent to you by the Singapore Shipping Association (SSA). If you have any questions, please email <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.</p>
     </td></tr></table>
   </td></tr>
 
