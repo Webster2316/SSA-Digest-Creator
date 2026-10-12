@@ -435,7 +435,13 @@ const removeTable = () =>
           <button
             disabled={onlyOneTable}
             title={onlyOneTable ? "At least one package is required" : "Delete this package"}
-            onClick={() => confirmDelete(selectedTable.name || "this package", removeTable)}
+            onClick={() =>
+              confirmDelete({
+                itemType: "package",
+                itemName: selectedTable.name || "this package",
+                action: () => removeTable(),
+              })
+            }
             className="flex items-center gap-1.5 rounded border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-300 disabled:border-gray-200 disabled:hover:bg-white"
           >
             <Trash2 size={15} /> Delete package
@@ -477,7 +483,13 @@ const removeTable = () =>
                     <button
                       disabled={onlyOneTier}
                       title={onlyOneTier ? "At least one tier is required" : "Delete tier"}
-                      onClick={() => confirmDelete(p.name || "this tier", () => removeTier(p.id))}
+                      onClick={() =>
+                        confirmDelete({
+                          itemType: "tier",
+                          itemName: p.name || "this tier",
+                          action: () => removeTier(p.id),
+                        })
+                      }
                       className="text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-300"
                     >
                       <Trash2 size={15} />
