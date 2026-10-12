@@ -144,7 +144,7 @@ function buildFullHtml(s: SponsorItem) {
   </td></tr>
 
   <tr><td class="pad-sides" style="background:#ffffff;padding:26px 28px 4px 28px;">
-    <p style="margin:0 0 16px;font-family:${FONT};font-size:14px;color:#281e7e;font-weight:700;">${escapeHtml(s.salutation)}</p>
+    <p style="margin:0 0 16px;font-family:${FONT};font-size:14px;color:#281e7e;font-weight:700;">${escapeHtml(s.salutation)},</p>
     <div style="font-family:${FONT};font-size:13.5px;color:#374151;line-height:1.7;">${stylePs(s.opening)}</div>
   </td></tr>
 
