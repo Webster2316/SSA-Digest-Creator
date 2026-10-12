@@ -238,7 +238,7 @@ export default function Sponsors() {
     setSaveStatus("saving");
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch("/api/load-digest?key=sponsor-email-data", {
+        const res = await fetch("/api/Save-digest?key=sponsor-email-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sponsor),
