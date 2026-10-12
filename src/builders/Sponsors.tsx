@@ -353,7 +353,7 @@ const removeTable = () =>
                 <Loader2 size={13} className="animate-spin" /> Saving…
               </>
             )}
-            {saveStatus.startsWith("Saved at") && (
+            {setSaveStatus(res.ok ? `Saved at ${getDateTime()}` : "error") && (
               <>
                 <Save size={13} /> {saveStatus}
               </>
