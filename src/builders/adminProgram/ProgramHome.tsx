@@ -1,75 +1,42 @@
 import { useEffect, useState } from "react";
-import {
-  Trash2,
-  SquareArrowOutUpRight,
-  CircleCheck,
-  Plus,
-  Loader2,
-  Archive,
-  Save,
-  Eye,
-  Copy,
-  Check,
-} from "lucide-react";
+import { Trash2, SquareArrowOutUpRight, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
-import Field from "../../shared/field";
-import { uid, esc, inputCls } from "../../shared/utils";
+import { uid, esc } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
-import AdminBriefEditor from "./ProgramBriefEditor";
-// import EventsHistory from "./EventsHistory";
-import RecordsPanel from "../../shared/recordsPanel";
-import RecordViewer from "../../shared/recordViewer";
+import ProgramBriefEditor from "./ProgramBriefEditor";
 
 const PROGRAM_BUILDER_KEY = "program-brief-data";
 
-type InfoFields = { 
-  date;
-  time;
-  venue;
-  dressCode;
-  audienceSize;
-  Catering;
-}
+/* ---------- TYPES ---------- */
 
-type RoleNRes = { 
-  id;
-role;
-assignedTo;
-}
+export type InfoFields = {
+  date: string;
+  time: string;
+  venue: string;
+  dressCode: string;
+  audienceSize: string;
+  catering: string;
+};
+export type RoleRow = { id: string; role: string; assignedTo: string };
+export type ProgrammeRow = { id: string; time: string; activity: string; checks: string; owner: string };
+export type Guest = { id: string; name: string; row: "" | "first" | "second" };
+export type GuestList = { id: string; name: string; guests: Guest[] };
+export type PackingItem = { id: string; text: string };
 
-type ProgrammeRow = {
-   id; 
-   time; 
-   activity; 
-   checks; 
-   owner; 
-}
-
-type Guest = {
-  id;
-  name;
-  row: "" | "first" | "second"
-}
-type GuestList  = { 
-  id; 
-  name; 
-  guests: Guest[]
- }
-type PackingItem = { 
-  id; 
-  text; 
-}
-
-interface AdminProgramme {
-  id; eventName;
+export interface AdminProgramme {
+  id: string;
+  eventName: string;
   info: InfoFields;
   roles: RoleRow[];
   programme: ProgrammeRow[];
-  guestLists: GuestList[];   selectedGuestListId: string;   
-  packing: PackingItem[];    // set default 
+  guestLists: GuestList[];
+  selectedGuestListId: string;
+  packing: PackingItem[];
 }
 
-const defaultPacking: Record<string, string> = {
+/* ---------- DEFAULTS ---------- */
+
+export const defaultPacking: PackingItem[] = Object.entries({
   laptops: "2 laptops with chargers",
   clickers: "2 slide clickers – ensure fully charged",
   moderatorTablet: "Tablet for moderator – ensure fully charged",
@@ -82,123 +49,298 @@ const defaultPacking: Record<string, string> = {
   ssaBanner: "SSA pull-up banner",
   sponsorBanners: "Sponsor pull-up banners & brochures",
   tablets: "2 tablets",
+}).map(([id, text]) => ({ id, text }));
+
+export const programTemplate = (eventName: string): AdminProgramme => {
+  const listId = uid();
+  return {
+    id: uid(),
+    eventName,
+    info: { date: "", time: "", venue: "", dressCode: "", audienceSize: "", catering: "" },
+    roles: [],
+    programme: [],
+    guestLists: [{ id: listId, name: "Guest List 1", guests: [] }],
+    selectedGuestListId: listId,
+    packing: defaultPacking.map((p) => ({ ...p })),
+  };
 };
+
+// guards against missing/old fields in saved data
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+
+export function normaliseProgramme(raw: any): AdminProgramme {
+  const guestLists: GuestList[] =
+    Array.isArray(raw?.guestLists) && raw.guestLists.length
+      ? raw.guestLists.map((l: any) => ({
+          id: l?.id ?? uid(),
+          name: str(l?.name),
+          guests: Array.isArray(l?.guests)
+            ? l.guests.map((g: any) => ({
+                id: g?.id ?? uid(),
+                name: str(g?.name),
+                row: g?.row === "first" || g?.row === "second" ? g.row : "",
+              }))
+            : [],
+        }))
+      : [{ id: uid(), name: "Guest List 1", guests: [] }];
+
+  return {
+    id: raw?.id ?? uid(),
+    eventName: str(raw?.eventName),
+    info: {
+      date: str(raw?.info?.date),
+      time: str(raw?.info?.time),
+      venue: str(raw?.info?.venue),
+      dressCode: str(raw?.info?.dressCode),
+      audienceSize: str(raw?.info?.audienceSize),
+      catering: str(raw?.info?.catering),
+    },
+    roles: Array.isArray(raw?.roles)
+      ? raw.roles.map((r: any) => ({ id: r?.id ?? uid(), role: str(r?.role), assignedTo: str(r?.assignedTo) }))
+      : [],
+    programme: Array.isArray(raw?.programme)
+      ? raw.programme.map((r: any) => ({
+          id: r?.id ?? uid(),
+          time: str(r?.time),
+          activity: str(r?.activity),
+          checks: str(r?.checks),
+          owner: str(r?.owner),
+        }))
+      : [],
+    guestLists,
+    selectedGuestListId: guestLists.some((l) => l.id === raw?.selectedGuestListId)
+      ? raw.selectedGuestListId
+      : guestLists[0].id,
+    packing: Array.isArray(raw?.packing)
+      ? raw.packing.map((i: any) => ({ id: i?.id ?? uid(), text: str(i?.text) }))
+      : defaultPacking.map((p) => ({ ...p })),
+  };
+}
+
+/* ---------- HTML BUILDER ---------- */
 
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
-function getDateTime() {
-  return new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+const nl2br = (s: string) => esc(s).replace(/\r?\n/g, "<br>");
 
-export default function ProgramHome() {
-  const [tab, setTab] = useState<"Events" | "preview" | "EventsHistory">("Events");
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("idle");
-  const [viewingRecordId, setViewingRecordId] = useState(null);
-  const { confirmDelete, deleteModal } = useConfirmDelete();
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
-  const [copied, setCopied] = useState(false);
+const LABEL = `font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;`;
+const NOTE = `margin:10px 0 0;font-family:${FONT};font-size:11.5px;color:#8492a6;font-style:italic;`;
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const res = await fetch("/api/load-digest?key=program-brief-data");
-  //       if (res.ok) {
-  //         const data = await res.json();
+// heading text is passed already escaped
+const heading = (html: string) => `<p style="margin:0 0 14px;${LABEL}">${html}</p>`;
 
-  //         if (Array.isArray(data?.events)) {
-  //           setEvents(data.events.map(normaliseEvent));
-  //         }
-  //         if (typeof data?.greeting === "string") {
-  //           setGreeting(data.greeting);
-  //         }
-  //         if (typeof data?.issueRange === "string") {
-  //           setIssueRange(data.issueRange);
-  //         }
-  //       }
-  //     } catch (e) {
-  //       console.error("Failed to load events builder:", e);
-  //     }
-  //     setLoaded(true);
-  //   })();
-  // }, []);
+const section = (inner: string, last = false) => `
+        <tr>
+          <td class="pad-sides" style="background:#ffffff;padding:24px 28px;${last ? "" : "border-bottom:1px solid #e2e8f0;"}">
+${inner}
+          </td>
+        </tr>`;
 
-  // // Home is the single save owner. Editor only updates this events state.
-  // useEffect(() => {
-  //   if (!loaded) return;
+const infoRow = (label: string, value: string) => `
+              <tr>
+                <td class="info-label-cell" width="190" valign="top" style="background:#f7f8fc;border:1px solid #d4dde8;padding:10px 14px;font-family:${FONT};font-size:12.5px;font-weight:700;color:#281e7e;">${label}</td>
+                <td valign="top" style="background:#ffffff;border:1px solid #d4dde8;padding:10px 14px;font-family:${FONT};font-size:13px;color:#374151;">${value || "&nbsp;"}</td>
+              </tr>`;
 
-  //   setSaveStatus("saving");
+const thDark = (label: string) =>
+  `<td style="background:#262261;border:1px solid #262261;padding:9px 12px;font-family:${FONT};font-size:10.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#ffffff;">${label}</td>`;
 
-  //   const t = setTimeout(async () => {
-  //     try {
-  //       const res = await fetch("/api/save-digest?key=program-brief-data", {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ events, greeting, issueRange }),
-  //       });
+// Set-Up & Briefing is fixed text for now (edit here)
+const SETUP_INTRO =
+  "Arrival of Technical Dept Team for set up. Registration begins 8.30am. Commencement of Event 9.00am.";
 
-  //       if (res.ok) {
-  //         setSaveStatus(`Saved at ${getDateTime()}`);
-  //       } else {
-  //         setSaveStatus("error");
-  //       }
-  //     } catch (e) {
-  //       console.error("Failed to save events builder:", e);
-  //       setSaveStatus("error");
-  //     }
-  //   }, 700);
+const SETUP_GROUPS: {
+  title: string;
+  bullets: [string, string][];
+  checklistTitle: string;
+  checklist: string[];
+}[] = [
+  {
+    title: "AA / SY / AC / KN / DN — Registration",
+    bullets: [
+      ["Registration Booth Setup", "Prepare registration table before guests arrive."],
+      ["Registration Materials", "Prepare lanyards and final registration list."],
+      ["No-Show Fee", "$120; update HM after registration closes."],
+      ["Parking Coupons", "SY to manage and distribute coupons (only 20 tickets)."],
+      ["SSA Banner", "Display prominently at the registration booth."],
+    ],
+    checklistTitle: "Registration Logistics Checklist",
+    checklist: [
+      "Registration Table & Chairs – dedicated for those in registration",
+      "Lanyards / Stickers – prepared according to registration list",
+      "Final Registration List – printed copies, track attendance",
+      "Parking Coupons",
+      "SSA Banner",
+      "Stationery – pens, permanent marker",
+    ],
+  },
+  {
+    title: "NQ / SJ / NI / AS — Room, AV & Programme Readiness",
+    bullets: [
+      ["Speaker Rehearsal", "Sequence, timing, transitions, microphones and stage movements."],
+      ["Slides & Pigeonhole Testing", "Slides, videos, audio and Pigeonhole functions."],
+      ["Seating Arrangement", "Reserved seats for speakers, VIPs and guests (pasting stickers)."],
+      ["Sponsor Booth Readiness", "Confirm booths are fully set up and operational."],
+      ["Sponsor Video Loop", "Play sponsor videos continuously on designated screens."],
+      ["Lighting Check", "Coordinate with hotel staff."],
+      ["TS", "Do dry run (emcee) and speakers to do dry run."],
+    ],
+    checklistTitle: "Room, AV & Programme Logistics Checklist",
+    checklist: [
+      "3 Handheld Microphones and Confidence Monitor",
+      "Presentation Laptop – loaded with final slides and videos",
+      "Clicker / Presentation Remote",
+      "HDMI / Display Adapters – backup connection to venue screens",
+      "Pigeonhole Access & Internet – login details and stable Wi-Fi",
+      "Reserved Seating Stickers – for speakers, VIPs and guests",
+      "Printed Seating Plan",
+      "Sponsor Booth Tables & Chairs – as required by sponsors",
+      "Power Extension Cables – for sponsor booths and AV equipment",
+      "Sponsor Video File – final video ready for continuous playback",
+      "Display Screen / LED Screen – for sponsor video playback",
+      "Stage / Room Lighting – checked and adjusted with hotel staff",
+      "Event Programme / Run Sheet – for rehearsal and timing checks",
+      "Speaker Presentation Slides – final versions ready for rehearsal",
+    ],
+  },
+];
 
-  //   return () => clearTimeout(t);
-  // }, [events, greeting, issueRange, loaded]);
+const bulletRows = (items: [string, string][]) =>
+  items
+    .map(
+      ([b, t]) =>
+        `<tr><td width="6" valign="top" style="padding:4px 8px 4px 0;color:#8492a6;">•</td><td style="padding:4px 0;font-family:${FONT};font-size:12.5px;color:#374151;"><strong>${esc(b)}</strong> – ${esc(t)}</td></tr>`
+    )
+    .join("");
 
-  const handleAddEvents = (title: string) => {
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        title,
-        date: "",
-        dateMode: "month",
-        eventStatus: "Tentative",
-        registrationStatus: "Open",
-        completionStatus: "InProgress",
-        registrationLink: "",
-        committees: [],
-        customCommitteeTags: [],
-        details: "",
-        programme: "",
-        speakers: "",
-        documents: [],
-      },
-    ]);
-  };
+const checklistTable = (title: string, items: string[], margin: string) => `
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;border:1px solid #d4dde8;${margin}">
+              <tr><td style="background:#f7f8fc;border:1px solid #d4dde8;padding:7px 12px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#8492a6;">${esc(title)}</td></tr>
+              ${items
+                .map(
+                  (i) =>
+                    `<tr><td style="border:1px solid #d4dde8;padding:7px 12px;font-family:${FONT};font-size:12.5px;color:#374151;">${esc(i)}</td></tr>`
+                )
+                .join("\n              ")}
+            </table>`;
 
-  const sortedEvents = [...events].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
+export function buildFullHtml(p: AdminProgramme) {
+  const list = p.guestLists.find((l) => l.id === p.selectedGuestListId) ?? p.guestLists[0];
 
-    const aDate = a.dateMode === "month" ? `${a.date}-01` : a.date;
-    const bDate = b.dateMode === "month" ? `${b.date}-01` : b.date;
+  /* EVENT INFO */
+  const eventInfo = section(`
+            ${heading("Event Information")}
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+              ${infoRow("Date:", nl2br(p.info.date))}
+              ${infoRow("Time:", nl2br(p.info.time))}
+              ${infoRow("Venue:", nl2br(p.info.venue))}
+              ${infoRow("Dress code:", nl2br(p.info.dressCode))}
+              ${infoRow("Audience size:", nl2br(p.info.audienceSize))}
+              ${infoRow("Catering arrangement:", nl2br(p.info.catering))}
+            </table>`);
 
-    return aDate.localeCompare(bDate);
-  });
+  /* ROLES */
+  const roleRows = p.roles
+    .map((r, i) => {
+      const cell = `style="${i % 2 ? "background:#fafbfd;" : ""}border:1px solid #d4dde8;padding:8px 12px;font-family:${FONT};font-size:12.5px;color:#374151;"`;
+      return `<tr><td ${cell}>${esc(r.role)}</td><td ${cell}>${nl2br(r.assignedTo)}</td></tr>`;
+    })
+    .join("\n                ");
 
-  const buildFullHtml = () => {
-    const eventHtml = sortedEvents
-      .map((event) =>
-        event.eventStatus === "Tentative"
-          ? renderTentativeEvent(event)
-          : renderConfirmedEvent(event)
-      )
-      .join("\n");
+  const rolesHead = (label: string, width = "") =>
+    `<td ${width} style="background:#f7f8fc;border:1px solid #d4dde8;padding:8px 12px;font-family:${FONT};font-size:12.5px;font-weight:700;color:#281e7e;">${label}</td>`;
 
-    return `<!DOCTYPE html>
+  const roles = section(`
+            ${heading("Roles &amp; Responsibilities (During Event)")}
+            <div class="table-scroll">
+              <table class="wide-table" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;border:1px solid #d4dde8;">
+                <tr>${rolesHead("Role", 'width="35%"')}${rolesHead("Assigned To")}</tr>
+                ${roleRows}
+              </table>
+            </div>
+            <p style="${NOTE}">All technical department to STANDBY at their respective station once registration is over.</p>`);
+
+  /* SET-UP & BRIEFING (static) */
+  const setup = section(`
+            ${heading("Set-Up &amp; Briefing — 8.00am – 9.00am")}
+            <p style="margin:0 0 16px;font-family:${FONT};font-size:13px;color:#374151;">${esc(SETUP_INTRO)}</p>
+${SETUP_GROUPS.map(
+  (g, i) => `
+            <p style="margin:0 0 8px;font-family:${FONT};font-size:13px;font-weight:700;color:#281e7e;">${esc(g.title)}</p>
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 14px;">
+              ${bulletRows(g.bullets)}
+            </table>${checklistTable(g.checklistTitle, g.checklist, i < SETUP_GROUPS.length - 1 ? "margin:0 0 20px;" : "")}`
+).join("\n")}`);
+
+  /* PROGRAMME */
+  const progRows = p.programme
+    .map((r, i) => {
+      const bg = i % 2 ? "#fafbfd" : "#ffffff";
+      const cell = (extra: string, v: string) =>
+        `<td style="background:${bg};border:1px solid #d4dde8;padding:9px 12px;font-family:${FONT};${extra}">${v}</td>`;
+      return `<tr>${cell("font-size:12.5px;font-weight:700;color:#281e7e;white-space:nowrap;", esc(r.time))}${cell("font-size:12.5px;color:#374151;", nl2br(r.activity))}${cell("font-size:12px;color:#6b7280;", nl2br(r.checks))}${cell("font-size:12.5px;color:#374151;", nl2br(r.owner) || "–")}</tr>`;
+    })
+    .join("\n                ");
+
+  const programme = section(`
+            ${heading(`Program Summary${p.info.time.trim() ? ` — ${esc(p.info.time)}` : ""}`)}
+            <div class="table-scroll">
+              <table class="wide-table" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;border:1px solid #d4dde8;">
+                <tr>${thDark("Time")}${thDark("Activity")}${thDark("Technical &amp; Programme Checks")}${thDark("Speaker / Owner")}</tr>
+                ${progRows}
+              </table>
+            </div>`);
+
+  /* FLOOR PLAN (placeholder for now) */
+  const floorPlan = section(`
+            ${heading("Floor Plan")}
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td align="center" style="border:1px solid #c7d0e0;background:#fafbfd;padding:28px;font-family:${FONT};font-size:12.5px;color:#8492a6;">
+                  [ Insert floor plan image here ]
+                </td>
+              </tr>
+            </table>`);
+
+  /* GUEST LIST */
+  const guestRows = (list?.guests ?? [])
+    .map((g, i) => {
+      const tag = g.row
+        ? ` <span style="color:#b45309;font-weight:700;">– ${g.row} row</span>`
+        : "";
+      return `<tr><td width="30" valign="top" style="padding:6px 12px;border-bottom:1px solid #eef1f6;font-family:${FONT};font-size:12.5px;font-weight:700;color:#8492a6;">${i + 1}.</td><td style="padding:6px 12px;border-bottom:1px solid #eef1f6;font-family:${FONT};font-size:12.5px;color:#374151;">${esc(g.name)}${tag}</td></tr>`;
+    })
+    .join("\n                ");
+
+  const guests = section(`
+            ${heading("Guest List for Seating Arrangement")}
+            <div class="table-scroll">
+              <table class="wide-table" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                ${guestRows}
+              </table>
+            </div>`);
+
+  /* PACKING LIST */
+  const packRows = p.packing
+    .map(
+      (it) =>
+        `<tr><td width="26" align="center" valign="top" style="padding:7px 6px;border-bottom:1px solid #eef1f6;"><table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td width="13" height="13" style="width:13px;height:13px;border:1.5px solid #281e7e;font-size:1px;line-height:1px;">&nbsp;</td></tr></table></td><td style="padding:7px 12px;border-bottom:1px solid #eef1f6;font-family:${FONT};font-size:12.5px;color:#374151;">${esc(it.text)}</td></tr>`
+    )
+    .join("\n                ");
+
+  const packing = section(
+    `
+            ${heading("Technical Department Packing List")}
+            <div class="table-scroll">
+              <table class="wide-table" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                ${packRows}
+              </table>
+            </div>
+            <p style="${NOTE}">Remove / add items where necessary.</p>`,
+    true
+  );
+
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -208,195 +350,85 @@ export default function ProgramHome() {
   <meta name="x-apple-disable-message-reformatting">
   <!--<![endif]-->
 
-  <title>SSA Upcoming Events</title>
+  <title>SSA Admin Programme</title>
 
   <!--[if mso]>
   <noscript>
     <xml>
       <o:OfficeDocumentSettings>
         <o:PixelsPerInch>96</o:PixelsPerInch>
+        <o:AllowPNG/>
       </o:OfficeDocumentSettings>
     </xml>
   </noscript>
   <![endif]-->
 
   <style type="text/css">
-    body,
-    table,
-    td,
-    a {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; display: block; outline: none; text-decoration: none; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #f0f4f8; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
 
-    table,
-    td {
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    img {
-      -ms-interpolation-mode: bicubic;
-      border: 0;
-      display: block;
-      outline: none;
-      text-decoration: none;
-    }
-
-    body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #f0f4f8;
-    }
-
-    a[x-apple-data-detectors] {
-      color: inherit !important;
-      text-decoration: none !important;
-    }
+    /* wide tables scroll instead of squeezing columns on small screens */
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .wide-table { min-width: 560px; }
 
     @media only screen and (max-width: 620px) {
-      .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
-      }
-
-      .header-img {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .pad-sides {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-
-      .event-date-cell,
-      .event-title-cell,
-      .event-status-cell,
-      .event-details-cell,
-      .event-actions-cell,
-      .programme-cell,
-      .speakers-cell {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      .event-date-cell {
-        text-align: left !important;
-        padding: 10px 12px !important;
-      }
-
-      .event-title-cell {
-        padding: 14px 16px 10px 16px !important;
-      }
-
-      .event-status-cell {
-        text-align: left !important;
-        padding: 0 16px 14px 16px !important;
-      }
-
-      .event-details-cell {
-        padding: 18px 16px !important;
-      }
-
-      .event-actions-cell {
-        padding: 0 16px 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .programme-cell {
-        padding: 18px 16px !important;
-      }
-
-      .speakers-cell {
-        padding: 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .register-table {
-        width: 100% !important;
-      }
-
-      .register-link {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-      }
-
-      .footer-cell {
-        padding: 20px 16px !important;
-      }
+      .email-container { width: 100% !important; max-width: 100% !important; }
+      .header-img { width: 100% !important; height: auto !important; }
+      .pad-sides { padding-left: 16px !important; padding-right: 16px !important; }
+      .title-cell { padding: 16px 16px !important; }
+      .title-text { font-size: 17px !important; }
+      .info-label-cell { width: 120px !important; font-size: 11.5px !important; }
+      .footer-cell { padding: 16px 16px !important; }
     }
   </style>
 </head>
 
-<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:${FONT};color:#374151;font-size:14px;line-height:1.6;">
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f0f4f8;">
   <tr>
     <td align="center" style="padding-top:32px;padding-bottom:32px;padding-left:20px;padding-right:20px;">
 
       <!--[if mso]>
-      <table width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+      <table width="962" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
         <tr>
-          <td width="680">
+          <td width="962">
       <![endif]-->
 
-      <table
-        class="email-container"
-        width="680"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-        style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;"
-      >
+      <table class="email-container" width="962" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="width:100%;max-width:962px;background:#ffffff;border:1px solid #d4dde8;">
 
         <!-- BANNER -->
         <tr>
           <td style="padding:0;font-size:0;line-height:0;">
-            <img
-              class="header-img"
-              src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png"
-              width="680"
-              alt="SSA Upcoming Events"
-              style="display:block;width:100%;max-width:680px;height:auto;border:0;"
-            >
+            <img class="header-img" src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner6.png" width="962" alt="SSA" style="display:block;width:100%;max-width:962px;height:auto;border:0;">
           </td>
         </tr>
 
-        <!-- SECTION TITLE -->
+        <!-- TITLE BAND -->
         <tr>
-          <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:12pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
+          <td class="title-cell" style="background:#262261;padding:20px 28px;">
+            <span style="display:block;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#9aa3e0;margin:0 0 6px;">Admin Programme</span>
+            <span class="title-text" style="display:block;font-family:${FONT};font-size:21px;font-weight:700;line-height:1.4;color:#ffffff;">${esc(p.eventName)}</span>
           </td>
         </tr>
+${eventInfo}
+${roles}
+${setup}
+${programme}
+${floorPlan}
+${guests}
+${packing}
 
-        <!-- GREETING -->
+        <!-- FOOTER -->
         <tr>
-          <td class="pad-sides" style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #d4dde8;">
-            <div data-f="greeting" style="font-family:${FONT};font-size:10pt;color:#1f3b7a;line-height:1.6;">
-              ${renderGreeting(greeting)}
-            </div>
-          </td>
-        </tr>
-
-${eventHtml}
-
-        <!-- FOOTER - follow weekly digest-->
-        <tr>
-          <td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
+          <td class="footer-cell" style="background:#281e7e;padding:20px 28px;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
                 <td align="center">
-                  <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
-                  You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
-                  </p>
+                  <p style="margin:0;font-family:${FONT};font-size:11px;color:#ffffff;line-height:1.7;">Singapore Shipping Association</p>
                 </td>
               </tr>
             </table>
@@ -417,26 +449,89 @@ ${eventHtml}
 
 </body>
 </html>`;
-  };
+}
 
-  //copy event item
-  const copyEvent = (event: any) => {
-    const copy = { ...event, id: uid() };
-  
-      const index = events.findIndex((x) => x.id === event.id);
-  
-      setEvents([
-        ...events.slice(0, index + 1),
-        copy,
-        ...events.slice(index + 1),
-      ])
-  
-  };
+/* ---------- HOME ---------- */
 
-  //handles copy for HTML
+function getDateTime() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+export default function ProgramHome() {
+  const [tab, setTab] = useState<"programmes" | "preview">("programmes");
+  const [programmes, setProgrammes] = useState<AdminProgramme[]>([]);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const { confirmDelete, deleteModal } = useConfirmDelete();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // LOAD once
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`/api/load-digest?key=${PROGRAM_BUILDER_KEY}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.programmes)) {
+            setProgrammes(data.programmes.map(normaliseProgramme));
+          }
+          setLoaded(true);
+        } else if (res.status === 404) {
+          setLoaded(true); // nothing saved yet
+        } else {
+          setSaveStatus("error"); // don't enable saving or we could overwrite real data
+        }
+      } catch (e) {
+        console.error("Failed to load programme builder:", e);
+        setSaveStatus("error");
+      }
+    })();
+  }, []);
+
+  // Home is the single save owner. The editor only updates `programmes`.
+  useEffect(() => {
+    if (!loaded) return;
+    setSaveStatus("saving");
+
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/save-digest?key=${PROGRAM_BUILDER_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ programmes }),
+        });
+        setSaveStatus(res.ok ? `Saved at ${getDateTime()}` : "error");
+      } catch (e) {
+        console.error("Failed to save programme builder:", e);
+        setSaveStatus("error");
+      }
+    }, 700);
+
+    return () => clearTimeout(t);
+  }, [programmes, loaded]);
+
+  const handleAdd = (name: string) => setProgrammes((prev) => [...prev, programTemplate(name)]);
+
+  const duplicateProgramme = (p: AdminProgramme) =>
+    setProgrammes((prev) => {
+      const copy: AdminProgramme = {
+        ...JSON.parse(JSON.stringify(p)),
+        id: uid(),
+        eventName: `${p.eventName} (copy)`,
+      };
+      const i = prev.findIndex((x) => x.id === p.id);
+      return [...prev.slice(0, i + 1), copy, ...prev.slice(i + 1)];
+    });
+
+  const previewProgramme = programmes.find((p) => p.id === previewId) ?? programmes[0];
+  const html = previewProgramme ? buildFullHtml(previewProgramme) : "";
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(buildFullHtml());
+      await navigator.clipboard.writeText(html);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch (e) {
@@ -445,114 +540,36 @@ ${eventHtml}
     }
   };
 
-const handleMovetoCurrent = (eventData: any) => {
-  const copy = normaliseEvent({
-    ...eventData,
-    id: uid(),
-    completionStatus: "InProgress",
-  });
-
-  setEvents((prev) => [
-    ...prev,
-    copy,
-  ]);
-
-  setTab("Events");
-};
-
-const handleRestoreEvent = async (archiveId: number, eventData: any) => {
-  try {
-    const res = await fetch(`/api/events-history?id=${archiveId}`,
-    {
-      method: "DELETE",
-    });
-
-    if(!res.ok) {
-      console.error("Failed to restore event");
-      return;
-    }
-    const restored = normaliseEvent({
-      ...eventData,
-      completionStatus: "InProgress",
-    });
-
-    setEvents((prev) => [
-      ...prev,
-      restored,
-    ]);
-
-    setTab("Events");
-  } catch (e) {
-console.error("Failed to restore event:", e)
-  }
-};
-
-
-const completedEvent = async (event: EventItem) => {
-  try {
-    const res = await fetch("/api/events-history", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        builderKey: PROGRAM_BUILDER_KEY,
-        event: {
-          ...event,
-          completionStatus: "Completed",
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Failed to move event into archive:", res.status, errorText);
-      return;
-    }
-
-    setEvents((prev) => prev.filter((item) => item.id !== event.id));
-  } catch (e) {
-    console.error("Failed to move to archive", e);
-  }
-};
-
-if (selectedArchivedEvent) {
-  return (
-    <EventsEditor
-      archivedEvent={selectedArchivedEvent}
-      events={events}
-      setEvents={setEvents}
-      onBack={() => setSelectedArchivedEvent(null)}
-      saveStatus={saveStatus}
-      readOnly
-    />
-  );
-}
-  
-  if (selectedEventId) {
+  if (selectedId) {
     return (
-      <EventsEditor
-        eventId={selectedEventId}
-        events={events}
-        setEvents={setEvents}
-        onBack={() => setSelectedEventId(null)}
+      <ProgramBriefEditor
+        programmeId={selectedId}
+        programmes={programmes}
+        setProgrammes={setProgrammes}
+        onBack={() => setSelectedId(null)}
         saveStatus={saveStatus}
       />
     );
   }
 
+  const tabCls = (active: boolean) =>
+    `flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
+      active
+        ? "border-indigo-700 text-indigo-700"
+        : "border-transparent text-gray-500 hover:text-gray-700"
+    }`;
+
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="mx-auto max-w-4xl p-4">
         {/* HEADER */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <img
             src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
             alt="SSA Logo"
             className="h-8 w-auto"
           />
-
-          <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
+          <h1 className="text-xl font-bold text-indigo-900">Admin Brief Builder</h1>
 
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (
@@ -568,259 +585,140 @@ if (selectedArchivedEvent) {
             {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
           </div>
         </div>
-        {viewingRecordId === null ? (
-          <>
-        {/* HOME TABS ONLY — editor remains a separate component/file */}
-        <div className="flex gap-1 mb-5 border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setTab("Events")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "Events"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Events
-          </button>
 
-          <button
-            type="button"
-            onClick={() => setTab("preview")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "preview"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
+        {/* TABS */}
+        <div className="mb-5 flex gap-1 border-b border-gray-200">
+          <button type="button" onClick={() => setTab("programmes")} className={tabCls(tab === "programmes")}>
+            Programmes
+          </button>
+          <button type="button" onClick={() => setTab("preview")} className={tabCls(tab === "preview")}>
             <Eye size={15} /> Preview & Export
           </button>
-          <button
-                onClick={() => setViewingRecordId(-1)}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
-              >
-                <Archive size={15} /> Issue Archive
-              </button>
-          <button
-  type="button"
-  onClick={() => setTab("history")}
-  className={`ml-auto flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-    tab === "history"
-      ? "border-indigo-700 text-gray-700"
-      : "border-transparent text-gray-500 hover:text-gray-700"
-  }`}
->
-  <Archive size={15} />
-  Event History
-</button>
-  
         </div>
 
-        {tab === "Events" && (
+        {/* PROGRAMME LIST */}
+        {tab === "programmes" && (
           <>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
-              <Field label="Issue Range">
-                <input
-                  className={inputCls}
-                  value={issueRange}
-                  onChange={(e) => setIssueRange(e.target.value)}
-                />
-              </Field>
-
-              <Field label="Header Greeting">
-                <textarea
-                  className={inputCls}
-                  rows={8}
-                  value={greeting}
-                  onChange={(e) => setGreeting(e.target.value)}
-                />
-              </Field>
-            </div>
-
-            {/* EVENT LIST */}
             <div className="space-y-2">
-              {events.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-                  <p className="text-sm text-gray-500">No upcoming events yet.</p>
+              {programmes.length === 0 ? (
+                <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
+                  <p className="text-sm text-gray-500">No admin programmes yet.</p>
                 </div>
               ) : (
-                sortedEvents.map((ev) => {
-                  const badge = eventStatusOptions[ev.eventStatus]; //?? eventStatusOptions.Tentative;
+                programmes.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3"
+                  >
+                    <span className="text-sm font-semibold text-gray-800">
+                      {p.eventName || "Untitled Programme"}
+                    </span>
 
-                  return (
-                    <div
-                      key={ev.id}
-                      className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between"
-                    >
-                      <span className="text-sm font-semibold text-gray-800">
-                        {ev.title || "Untitled Event"}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={ev.eventStatus}
-                          onChange={(e) => {
-                            const nextStatus = e.target.value as EventItem["eventStatus"];
-                            setEvents((prev) =>
-                              prev.map((item) =>
-                                item.id === ev.id
-                                  ? {
-                                      ...item,
-                                      eventStatus: nextStatus,
-                                      // dateMode: nextStatus === "Tentative" ? "month" : "exact",
-                                    }
-                                  : item
-                              )
-                            );
-                          }}
-                          className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
-                          style={{
-                            backgroundColor: badge.bg,
-                            color: badge.color,
-                            borderColor: badge.border,
-                          }}
-                        >
-                          <option value="Tentative">Tentative</option>
-                          <option value="Confirmed">Confirmed</option>
-                        </select>
-                        <div className="relative group">
-  <button
-    type="button"
-    onClick={() => completedEvent(ev)}
-    className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-  >
-    <CircleCheck size={16} />
-  </button>
-
-  <div
-    className="
-      absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-      whitespace-nowrap
-      rounded bg-gray-800 px-2 py-1
-      text-xs text-white
-      opacity-0 pointer-events-none
-      group-hover:opacity-100
-      transition-opacity duration-100
-      z-50
-    "
-  >
-    Mark event as completed
-  </div>
-</div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedEventId(ev.id)}
-                          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-                          title="Open event"
-                        >
-                          <SquareArrowOutUpRight size={16} />
-                        </button>
-
-                        <button
-  onClick={() => copyEvent(ev)}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy event"
->
-  <Copy size={16} /></button>
-
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            confirmDelete({
-                              itemType: "event",
-                              itemName: ev.title,
-                              action: () =>
-                                setEvents((prev) => prev.filter((item) => item.id !== ev.id)),
-                            })
-                          }
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                          title="Delete event"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedId(p.id)}
+                        className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-indigo-700"
+                        title="Open programme"
+                      >
+                        <SquareArrowOutUpRight size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => duplicateProgramme(p)}
+                        className="rounded p-1.5 text-gray-500 hover:bg-gray-100"
+                        title="Duplicate programme"
+                      >
+                        <Copy size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          confirmDelete({
+                            itemType: "programme",
+                            itemName: p.eventName || "this programme",
+                            action: () =>
+                              setProgrammes((prev) => prev.filter((x) => x.id !== p.id)),
+                          })
+                        }
+                        className="rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                        title="Delete programme"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                  );
-                })
+                  </div>
+                ))
               )}
             </div>
 
             <button
               type="button"
               onClick={() => setIsNameModalOpen(true)}
-              className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+              className="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
             >
-              <Plus size={16} /> Add Event
+              <Plus size={16} /> Add Programme
             </button>
 
             <NamePopUp
-  isOpen={isNameModalOpen}
-  onClose={() => setIsNameModalOpen(false)}
-  onAdd={handleAddEvents}
-  heading="Create New Event"
-  fieldLabel="Event Name"
-  placeholder="e.g. SSA Maritime Digitalisation Forum"
-  buttonText="Create Event"
-/>
+              isOpen={isNameModalOpen}
+              onClose={() => setIsNameModalOpen(false)}
+              onAdd={handleAdd}
+              heading="Create New Admin Programme"
+              fieldLabel="Event Name"
+              placeholder="e.g.Event Name - Admin Program"
+              buttonText="Create Programme"
+            />
           </>
         )}
 
+        {/* PREVIEW & EXPORT */}
         {tab === "preview" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-800">Email Preview</h2>
-            <div>
-            <button
-                type="button"
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
-              >
-                {copied ? <Check size={15} /> : <Copy size={15} />}
-                {copied ? "Copied!" : "Copy HTML"}
-              </button>
-                <p className="text-xs text-gray-500">
-                 Live Preview 
-                </p>
-            </div>
+            {programmes.length === 0 ? (
+              <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
+                <p className="text-sm text-gray-500">Create a programme first to preview it.</p>
               </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <select
+                    value={previewProgramme?.id}
+                    onChange={(e) => setPreviewId(e.target.value)}
+                    className="rounded border border-gray-300 bg-white px-2 py-1.5 text-sm"
+                  >
+                    {programmes.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.eventName || "Untitled Programme"}
+                      </option>
+                    ))}
+                  </select>
 
-            </div>
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 rounded bg-indigo-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-900"
+                  >
+                    {copied ? <Check size={15} /> : <Copy size={15} />}
+                    {copied ? "Copied!" : "Copy HTML"}
+                  </button>
+                  <span className="text-xs text-gray-500">Live preview</span>
+                </div>
 
-            <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
-              <iframe
-                title="SSA Upcoming Events Preview"
-                srcDoc={buildFullHtml()}
-                style={{ width: 680, minWidth: 680, height: 1100 }}
-                className="block mx-auto bg-white border-0"
-              />
-            </div>
+                <div className="overflow-auto rounded-lg border border-gray-300 bg-gray-200 p-4">
+                  <iframe
+                    title="SSA Admin Programme Preview"
+                    srcDoc={html}
+                    style={{ width: 962, minWidth: 962, height: 1100 }}
+                    className="mx-auto block border-0 bg-white"
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
 
-{/* {tab === "history" && (
-  <EventsHistory
-    builderKey={PROGRAM_BUILDER_KEY}
-    viewPastEventDetails={setSelectedArchivedEvent}
-    onCopyToCurrent={handleMovetoCurrent}
-    onRestoreEvent={handleRestoreEvent}
-  />
-)} */}
-   {deleteModal}
-          </>
-        ) : viewingRecordId === -1 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <RecordsPanel builderKey="program-brief-data" onSelect={(id) => setViewingRecordId(id)} />
-            <button onClick={() => setViewingRecordId(null)} className="mt-3 text-sm text-gray-500 hover:text-indigo-700">
-              ← Back to builder
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <RecordViewer recordId={viewingRecordId} onBack={() => setViewingRecordId(null)} />
-          </div>
-        )}
+        {deleteModal}
       </div>
     </div>
   );
