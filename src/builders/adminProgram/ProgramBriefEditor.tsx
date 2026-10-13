@@ -72,9 +72,11 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
       <div className="mx-auto max-w-5xl p-4">
         {/* HEADER */}
         <div className="mb-4 flex items-center gap-3">
-          <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-700">
-            <ArrowLeft size={16} /> Back
-          </button>
+        <img
+            src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+            alt="SSA Logo"
+            className="h-8 w-auto"
+          />
           <h1 className="text-xl font-bold text-indigo-900">Admin Brief Builder</h1>
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (<><Loader2 size={13} className="animate-spin" /> Saving…</>)}
@@ -82,6 +84,10 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
             {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
           </div>
         </div>
+        <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-700">
+            <ArrowLeft size={16} /> Back
+          </button>
+   
 
         {/* EVENT NAME */}
         <div className="mb-4 rounded-lg border bg-white p-4">
