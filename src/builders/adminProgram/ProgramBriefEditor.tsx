@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, Save, Info, Users, CalendarClock, ClipboardList, Eye, Copy, Check } from "lucide-react";
 import Field from "../../shared/field";
 import { inputCls } from "../../shared/utils";
-import { buildFullHtml, type AdminProgramme, type InfoFields } from "./ProgramHome";
+import { buildFullHtml, type AdminProgramme, type InfoFields, type RoleRow} from "./ProgramHome";
 
 type Tab = "info" | "roles" | "programme" | "lists" | "preview";
 
@@ -43,6 +43,11 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
     setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? { ...p, ...patch } : p)));
 
   const updateInfo = (field: keyof InfoFields, value: string) =>
+    setProgrammes((prev) =>
+      prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
+    );
+
+    const updateRoles = (field: keyof RoleRow, value: string) =>
     setProgrammes((prev) =>
       prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
     );
@@ -120,7 +125,11 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
           </div>
         )}
 
-        {tab === "roles" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Roles — next step</div>}
+        {tab === "roles" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">&& (
+          <div className="space-y-4 rounded-b-lg border bg-white p-4">
+
+          </div>
+        )</div>}
         {tab === "programme" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Programme — next step</div>}
         {tab === "lists" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Lists — next step</div>}
 
