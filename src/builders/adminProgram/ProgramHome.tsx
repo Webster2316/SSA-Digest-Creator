@@ -591,9 +591,6 @@ export default function ProgramHome() {
           <button type="button" onClick={() => setTab("programmes")} className={tabCls(tab === "programmes")}>
             Programmes
           </button>
-          <button type="button" onClick={() => setTab("preview")} className={tabCls(tab === "preview")}>
-            <Eye size={15} /> Preview & Export
-          </button>
         </div>
 
         {/* PROGRAMME LIST */}
@@ -670,52 +667,6 @@ export default function ProgramHome() {
               buttonText="Create Programme"
             />
           </>
-        )}
-
-        {/* PREVIEW & EXPORT */}
-        {tab === "preview" && (
-          <div className="space-y-4">
-            {programmes.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
-                <p className="text-sm text-gray-500">Create a programme first to preview it.</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-center gap-3">
-                  <select
-                    value={previewProgramme?.id}
-                    onChange={(e) => setPreviewId(e.target.value)}
-                    className="rounded border border-gray-300 bg-white px-2 py-1.5 text-sm"
-                  >
-                    {programmes.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.eventName || "Untitled Programme"}
-                      </option>
-                    ))}
-                  </select>
-
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="flex items-center gap-1.5 rounded bg-indigo-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-900"
-                  >
-                    {copied ? <Check size={15} /> : <Copy size={15} />}
-                    {copied ? "Copied!" : "Copy HTML"}
-                  </button>
-                  <span className="text-xs text-gray-500">Live preview</span>
-                </div>
-
-                <div className="overflow-auto rounded-lg border border-gray-300 bg-gray-200 p-4">
-                  <iframe
-                    title="SSA Admin Programme Preview"
-                    srcDoc={html}
-                    style={{ width: 962, minWidth: 962, height: 1100 }}
-                    className="mx-auto block border-0 bg-white"
-                  />
-                </div>
-              </>
-            )}
-          </div>
         )}
 
         {deleteModal}
