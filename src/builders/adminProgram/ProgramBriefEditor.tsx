@@ -23,6 +23,11 @@ const infoFields: { key: keyof InfoFields; label: string; multiline?: boolean }[
   { key: "catering", label: "Catering arrangement", multiline: true },
 ];
 
+const RoleRow: { key: keyof RoleRow; label: string; }[] = [
+  { key: "role", label: "Role" },
+  { key: "assignedTo", label: "Assigned to" },
+];
+//{ id: string; role: string; assignedTo: string };
 export default function ProgramBriefEditor({ programmeId, programmes, setProgrammes, onBack, saveStatus }: Props) {
   const [tab, setTab] = useState<Tab>("info");
   const [copied, setCopied] = useState(false);
@@ -47,9 +52,13 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
       prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
     );
 
-    const updateRoles = (field: keyof RoleRow, value: string) =>
+    const updateRoles = (field: keyof roles, value: string) =>
     setProgrammes((prev) =>
-      prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
+      prev.map((p) => (p.id === programmeId ? { ...p, roles: { ...p.roles, [field]: value } } : p))
+    );
+    const addNewRole = (field: keyof roles, value: string) =>
+    setProgrammes((prev) =>
+      prev.map((p) => (p.id === programmeId ? { ...p, roles: { ...p.roles, [field]: value } } : p))
     );
 
   const html = buildFullHtml(programme);
@@ -125,11 +134,36 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
           </div>
         )}
 
-        {tab === "roles" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">&& (
-          <div className="space-y-4 rounded-b-lg border bg-white p-4">
-
-          </div>
-        )</div>}
+     
+{tab === "roles" && (
+  <div className="space-y-4 rounded-b-lg border bg-white p-4">
+    {RoleRow.map((f) => (
+      <Field key={f.key} label={f.label}>
+        {f.multiline ? (
+          <textarea
+            className={inputCls}
+            rows={3}
+            value={programme.roles[f.key]}
+            onChange={(e) => updateInfo(f.key, e.target.value)}
+          />
+        ) : (
+          <input
+            className={inputCls}
+            value={programme.roles[f.key]}
+            onChange={(e) => updateInfo(f.key, e.target.value)}
+          />
+        )}
+      </Field>
+    ))}
+     <button
+      type="button"
+      onClick={() => setIsNameModalOpen(true)}
+      className="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
+     >
+     <Plus size={16} /> Add New Role
+     </button>
+  </div>
+)}
         {tab === "programme" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Programme — next step</div>}
         {tab === "lists" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Lists — next step</div>}
 
