@@ -94,25 +94,32 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
 
 
     //Program summary functions
-
-    const patchRow = (id: string, patch: Partial<ProgrammeRow>) => {
-      setProgrammes( prev.map((p) =>
-      p.id === programmeId
-        ? { ...p, programme: p.programme.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
-        : p))
-    }
-
-    const addRow = () => {
-      setProgrammes(  prev.map((p) =>
-      p.id === programmeId
-        ? { ...p, programme: [...p.programme, { id: uid(), time: "", activity: "", checks: "", owner: "" }] }
-        : p))
-    }
-
-    const removeRow = (id: string) => {
-      setProgrammes(prev => prev.map(p => p.id === programmeId ? { ...p, programme: p.programme.filter((r) => r.id !== id) }
-      : p))
-    }
+    const patchRow = (id: string, patch: Partial<ProgrammeRow>) =>
+    setProgrammes((prev) =>
+      prev.map((p) =>
+        p.id === programmeId
+          ? { ...p, programme: p.programme.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
+          : p
+      )
+    );
+  
+  const addRow = () =>
+    setProgrammes((prev) =>
+      prev.map((p) =>
+        p.id === programmeId
+          ? { ...p, programme: [...p.programme, { id: uid(), time: "", activity: "", checks: "", owner: "" }] }
+          : p
+      )
+    );
+  
+  const removeRow = (id: string) =>
+    setProgrammes((prev) =>
+      prev.map((p) =>
+        p.id === programmeId
+          ? { ...p, programme: p.programme.filter((r) => r.id !== id) }
+          : p
+      )
+    );
   /* ---------- EXPORT ---------- */
 
   const html = buildFullHtml(programme);
