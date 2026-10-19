@@ -3,7 +3,7 @@ import { ArrowLeft, Plus, Trash2, Loader2, Save, Info, Users, CalendarClock, Cli
 import Field from "../../shared/field";
 import { inputCls, uid } from "../../shared/utils";
 import { buildFullHtml } from "./ProgramHome";
-import type { AdminProgramme, InfoFields, SetupSection, SetupTask } from "./ProgramHome";
+import type { AdminProgramme, InfoFields, SetupSection, SetupTask, ProgrammeRow } from "./ProgramHome";
 
 type Tab = "info" | "roles" | "programme" | "lists" | "preview";
 
@@ -76,7 +76,7 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
       )
     );
 
-  // Set-Up & Briefing: updateSetup takes a function (old setup -> new setup)
+  // Set-Up & Briefing:functions 
   const updateSetup = (fn: (s: SetupSection) => SetupSection) =>
     setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? { ...p, setup: fn(p.setup) } : p)));
 
@@ -92,6 +92,27 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
   const removeTask = (id: string) =>
     updateSetup((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) }));
 
+
+    //Program summary functions
+
+    const patchRow = (id: string, patch: Partial<ProgrammeRow>) => {
+      setProgrammes( prev.map((p) =>
+      p.id === programmeId
+        ? { ...p, programme: p.programme.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
+        : p))
+    }
+
+    const addRow = () => {
+      setProgrammes(  prev.map((p) =>
+      p.id === programmeId
+        ? { ...p, programme: [...p.programme, { id: uid(), time: "", activity: "", checks: "", owner: "" }] }
+        : p))
+    }
+
+    const removeRow = (id: string) => {
+      setProgrammes(prev => prev.map(p => p.id === programmeId ? { ...p, programme: p.programme.filter((r) => r.id !== id) }
+      : p))
+    }
   /* ---------- EXPORT ---------- */
 
   const html = buildFullHtml(programme);
@@ -212,7 +233,7 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
                     />
                   </Field>
                   <div className="sm:col-span-2">
-                    <Field label="Intro text">
+                    <Field label="Main Task">
                       <textarea
                         className={inputCls}
                         rows={2}
@@ -330,6 +351,67 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
             </details>
 
             {/* Program Summary <details> goes here next */}
+            <details open className="rounded-lg border border-gray-200">
+            <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+            Program Summary
+            </summary>
+
+            <div className="space-y-3 border-t border-gray-200 p-3">
+            {programme.programme.map((r) => (
+  <div key={r.id} className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+    {/* top line: time + activity + delete */}
+    <div className="flex items-end gap-2">
+      <div className="w-48">
+        <Field label="Time">
+          <input
+            className={inputCls}
+            placeholder="9.00am – 9.15am"
+            value={r.time}
+            onChange={(e) => patchRow(r.id, { time: e.target.value })}
+          />
+        </Field>
+      </div>
+      <div className="flex-1">
+        <Field label="Activity">
+          <input
+            className={inputCls}
+            value={r.activity}
+            onChange={(e) => patchRow(r.id, { activity: e.target.value })}
+          />
+        </Field>
+      </div>
+      <button type="button" className={delBtn} title="Delete row" onClick={() => removeRow(r.id)}>
+        <Trash2 size={16} />
+      </button>
+    </div>
+
+    {/* checks + owner */}
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="Technical & Programme Checks">
+        <textarea
+          className={inputCls}
+          rows={3}
+          value={r.checks}
+          onChange={(e) => patchRow(r.id, { checks: e.target.value })}
+        />
+      </Field>
+      <Field label="Speaker / Owner">
+        <textarea
+          className={inputCls}
+          rows={3}
+          value={r.owner}
+          onChange={(e) => patchRow(r.id, { owner: e.target.value })}
+        />
+      </Field>
+    </div>
+  </div>
+))}
+
+<button type="button" className={addBtn} onClick={addRow}>
+  <Plus size={16} /> Add row
+</button>
+            </div>
+            </details>
           </div>
         )}
 
