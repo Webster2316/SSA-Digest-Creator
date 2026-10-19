@@ -423,7 +423,10 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
           </div>
         )}
 
-        {tab === "lists" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Lists — next step</div>}
+        {tab === "lists" &&
+         <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">
+       
+          </div>}
 
         {/* PREVIEW */}
         {tab === "preview" && (
