@@ -521,12 +521,6 @@ const removeList = () =>
         {currentList.guests.map((g, i) => (
           <div key={g.id} className="flex items-center gap-2">
             <span className="w-6 text-right text-sm text-gray-400">{i + 1}.</span>
-            <input
-              className={`${inputCls} flex-1`}
-              placeholder="Guest name"
-              value={g.name}
-              onChange={(e) => patchGuest(g.id, { name: e.target.value })}
-            />
             <select
               className={`${inputCls} w-36`}
               value={g.row}
@@ -536,6 +530,12 @@ const removeList = () =>
               <option value="first">First row</option>
               <option value="second">Second row</option>
             </select>
+            <input
+              className={`${inputCls} flex-1`}
+              placeholder="Guest name"
+              value={g.name}
+              onChange={(e) => patchGuest(g.id, { name: e.target.value })}
+            />
             <button type="button" className={delBtn} title="Delete guest" onClick={() => removeGuest(g.id)}>
               <Trash2 size={15} />
             </button>
