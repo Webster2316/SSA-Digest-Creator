@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect,useState } from "react";
 import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserShield, ChartColumnIncreasing, StarCheck } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
@@ -38,7 +38,9 @@ const [builder, setBuilder] = useState<BuilderKey>(() => {
     : "weeklyDigest";
 
 });
-
+useEffect(() => {
+  localStorage.setItem("active-builder", builder);
+}, [builder]);
 
 
   return (
