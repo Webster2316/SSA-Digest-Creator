@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, Plus, Trash2, Loader2, Save, Info, Users, CalendarClock, ClipboardList, Eye, Copy, Check } from "lucide-react";
 import Field from "../../shared/field";
+import RichTextEditor from "../../shared/richTextEditor";
 import { inputCls, uid } from "../../shared/utils";
 import { buildFullHtml } from "./ProgramHome";
 import type { AdminProgramme, InfoFields, SetupSection, SetupTask, ProgrammeRow } from "./ProgramHome";
@@ -392,24 +393,24 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
       </button>
     </div>
 
-    {/* checks + owner */}
+    {/* checks + speaker */}
     <div className="grid gap-3 sm:grid-cols-2">
-      <Field label="Technical & Programme Checks">
+      <RichTextEditor label="Technical & Programme Checks">
         <textarea
           className={inputCls}
           rows={3}
           value={r.checks}
           onChange={(e) => patchRow(r.id, { checks: e.target.value })}
         />
-      </Field>
-      <Field label="Speaker / Owner">
+      </RichTextEditor>
+      <RichTextEditor label="Speaker">
         <textarea
           className={inputCls}
           rows={3}
           value={r.owner}
           onChange={(e) => patchRow(r.id, { owner: e.target.value })}
         />
-      </Field>
+      </RichTextEditor>
     </div>
   </div>
 ))}
