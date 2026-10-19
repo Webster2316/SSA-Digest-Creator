@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Loader2, Save, Info, Users, CalendarClock, ClipboardList, Eye, Copy, Check } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, Save, Info, Users, CalendarClock, ClipboardList, Eye, Copy, Check } from "lucide-react";
 import Field from "../../shared/field";
 import { inputCls } from "../../shared/utils";
 import { buildFullHtml, type AdminProgramme, type InfoFields, type RoleRow} from "./ProgramHome";
@@ -23,7 +23,7 @@ const infoFields: { key: keyof InfoFields; label: string; multiline?: boolean }[
   { key: "catering", label: "Catering arrangement", multiline: true },
 ];
 
-const RoleRow: { key: keyof RoleRow; label: string; }[] = [
+const roleFields: { key: "role" | "assignedTo"; label: string }[] = [
   { key: "role", label: "Role" },
   { key: "assignedTo", label: "Assigned to" },
 ];
@@ -52,14 +52,37 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
       prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
     );
 
-    const updateRoles = (field: keyof roles, value: string) =>
+    const updateRoles = (roleId: string, field: "role" | "assignedTo", value: string) =>
     setProgrammes((prev) =>
-      prev.map((p) => (p.id === programmeId ? { ...p, roles: { ...p.roles, [field]: value } } : p))
-    );
-    const addNewRole = (field: keyof roles, value: string) =>
-    setProgrammes((prev) =>
-      prev.map((p) => (p.id === programmeId ? { ...p, roles: { ...p.roles, [field]: value } } : p))
-    );
+    prev.map((p) =>
+      p.id === programmeId
+        ? {
+            ...p,
+            roles: p.roles.map((r) =>
+              r.id === roleId ? { ...r, [field]: value } : r
+            ),
+          }
+        : p
+    )
+  );
+  const addNewRole = () =>
+  setProgrammes((prev) =>
+    prev.map((p) =>
+      p.id === programmeId
+        ? {
+            ...p,
+            roles: [
+              ...p.roles,
+              {
+                id: crypto.randomUUID(),
+                role: "",
+                assignedTo: "",
+              },
+            ],
+          }
+        : p
+    )
+  );
 
   const html = buildFullHtml(programme);
 
@@ -137,31 +160,29 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
      
 {tab === "roles" && (
   <div className="space-y-4 rounded-b-lg border bg-white p-4">
-    {RoleRow.map((f) => (
-      <Field key={f.key} label={f.label}>
-        {f.multiline ? (
-          <textarea
-            className={inputCls}
-            rows={3}
-            value={programme.roles[f.key]}
-            onChange={(e) => updateInfo(f.key, e.target.value)}
-          />
-        ) : (
-          <input
-            className={inputCls}
-            value={programme.roles[f.key]}
-            onChange={(e) => updateInfo(f.key, e.target.value)}
-          />
-        )}
-      </Field>
+    {programme.roles.map((r) => (
+      <div key={r.id} className="grid gap-4 sm:grid-cols-2">
+        {roleFields.map((f) => (
+          <Field key={f.key} label={f.label}>
+            <input
+              className={inputCls}
+              value={r[f.key]}
+              onChange={(e) =>
+                updateRoles(r.id, f.key, e.target.value)
+              }
+            />
+          </Field>
+        ))}
+      </div>
     ))}
-     <button
+
+    <button
       type="button"
-      onClick={() => setIsNameModalOpen(true)}
+      onClick={addNewRole}
       className="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
-     >
-     <Plus size={16} /> Add New Role
-     </button>
+    >
+      <Plus size={16} /> Add New Role
+    </button>
   </div>
 )}
         {tab === "programme" && <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">Programme — next step</div>}
