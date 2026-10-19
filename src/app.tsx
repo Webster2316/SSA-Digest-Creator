@@ -22,12 +22,24 @@ const builders: { key: BuilderKey; label: string; icon: any }[] = [
   {key: "sponsors", label: "Sponsors", icon: StarCheck},
 ];
 
-//social media - 1 - partially complete 
-// survey - outlook polls
-//admin brief 
-// sponsorship template ??? -TE
 export default function App() {
-  const [builder, setBuilder] = useState<BuilderKey>("weeklyDigest");
+//  const [builder, setBuilder] = useState<BuilderKey>("weeklyDigest");
+
+const [builder, setBuilder] = useState<BuilderKey>(() => {
+  const saved = localStorage.getItem("active-builder");
+ 
+  const validBuilders: BuilderKey[] = [
+    ...builders.map(({ key }) => key),
+    "dataManagement",
+  ];
+
+  return validBuilders.includes(saved as BuilderKey)
+    ? (saved as BuilderKey)
+    : "weeklyDigest";
+
+});
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
