@@ -4,7 +4,7 @@ import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
 import { inputCls, uid } from "../../shared/utils";
 import { buildFullHtml } from "./ProgramHome";
-import type { AdminProgramme, InfoFields, SetupSection, SetupTask, ProgrammeRow } from "./ProgramHome";
+import type { AdminProgramme, InfoFields, SetupSection, SetupTask, ProgrammeRow, PackingItem, Guest, GuestList } from "./ProgramHome";
 
 type Tab = "info" | "roles" | "programme" | "lists" | "preview";
 
@@ -53,6 +53,11 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
 
   const update = (patch: Partial<AdminProgramme>) =>
     setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? { ...p, ...patch } : p)));
+
+
+    const updateProgramme = (fn: (p: AdminProgramme) => AdminProgramme) =>
+  setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? fn(p) : p)));
+
 
   const updateInfo = (field: keyof InfoFields, value: string) =>
     setProgrammes((prev) =>
@@ -121,6 +126,55 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
           : p
       )
     );
+
+
+    //lists
+//packing
+    const patchPacking = (id: string, text: string) => 
+      updateProgramme((p) => ({ ...p, packing: p.packing.map((i) => (i.id === id ? { ...i, text } : i)) }));
+
+   const  addPackaging = () => 
+   updateProgramme((p) => ({ ...p, packing: [...p.packing, { id: uid(), text: "" }] }));
+
+   const removePackaging = (id: string) =>
+updateProgramme((p) => ({...p, packaging: p.packing.filter((i) => i.id !== id) }));
+
+
+//guests
+const currentList =
+  programme.guestLists.find((l) => l.id === programme.selectedGuestListId) ?? programme.guestLists[0];
+
+const updateList = (listId: string, fn: (l: GuestList) => GuestList) =>
+  updateProgramme((p) => ({ ...p, guestLists: p.guestLists.map((l) => (l.id === listId ? fn(l) : l)) }));
+
+  const patchGuest = (guestId: string, patch: Partial<Guest>) =>
+  updateList(currentList.id, (l) => ({
+    ...l,
+    guests: l.guests.map((g) => (g.id === guestId ? { ...g, ...patch } : g)),
+  }));
+
+const addGuest = () =>
+  updateList(currentList.id, (l) => ({ ...l, guests: [...l.guests, { id: uid(), name: "", row: "" }] }));
+
+const removeGuest = (guestId: string) =>
+  updateList(currentList.id, (l) => ({ ...l, guests: l.guests.filter((g) => g.id !== guestId) }));
+
+  const addList = () =>
+  updateProgramme((p) => {
+    const id = uid();
+    return {
+      ...p,
+      guestLists: [...p.guestLists, { id, name: `Guest List ${p.guestLists.length + 1}`, guests: [] }],
+      selectedGuestListId: id,
+    };
+  });
+
+const removeList = () =>
+  updateProgramme((p) => {
+    if (p.guestLists.length <= 1) return p; // always keep one list
+    const rest = p.guestLists.filter((l) => l.id !== currentList.id);
+    return { ...p, guestLists: rest, selectedGuestListId: rest[0].id };
+  });
   /* ---------- EXPORT ---------- */
 
   const html = buildFullHtml(programme);
@@ -423,10 +477,109 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
           </div>
         )}
 
-        {tab === "lists" &&
-         <div className="rounded-b-lg border bg-white p-4 text-sm text-gray-500">
-       
-          </div>}
+{tab === "lists" && (
+  <div className="space-y-4 rounded-b-lg border bg-white p-4">
+    {/* GUEST LIST */}
+    <details open className="rounded-lg border border-gray-200">
+      <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+        Guest List for Seating Arrangement
+      </summary>
+
+      <div className="space-y-3 border-t border-gray-200 p-3">
+        {/* list picker */}
+        <div className="flex items-end gap-2">
+          <div className="w-56">
+            <Field label="Guest list">
+              <select
+                className={inputCls}
+                value={currentList.id}
+                onChange={(e) => update({ selectedGuestListId: e.target.value })}
+              >
+                {programme.guestLists.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name || "Untitled list"}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <div className="flex-1">
+            <Field label="List name">
+              <input
+                className={inputCls}
+                value={currentList.name}
+                onChange={(e) => updateList(currentList.id, (l) => ({ ...l, name: e.target.value }))}
+              />
+            </Field>
+          </div>
+          <button type="button" className={delBtn} title="Delete list" onClick={removeList}>
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        {/* guests */}
+        {currentList.guests.map((g, i) => (
+          <div key={g.id} className="flex items-center gap-2">
+            <span className="w-6 text-right text-sm text-gray-400">{i + 1}.</span>
+            <input
+              className={`${inputCls} flex-1`}
+              placeholder="Guest name"
+              value={g.name}
+              onChange={(e) => patchGuest(g.id, { name: e.target.value })}
+            />
+            <select
+              className={`${inputCls} w-36`}
+              value={g.row}
+              onChange={(e) => patchGuest(g.id, { row: e.target.value as Guest["row"] })}
+            >
+              <option value="">No highlight</option>
+              <option value="first">First row</option>
+              <option value="second">Second row</option>
+            </select>
+            <button type="button" className={delBtn} title="Delete guest" onClick={() => removeGuest(g.id)}>
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+
+        <div className="flex gap-4">
+          <button type="button" className={addBtn} onClick={addGuest}>
+            <Plus size={15} /> Add guest
+          </button>
+          <button type="button" className={addBtn} onClick={addList}>
+            <Plus size={15} /> New guest list
+          </button>
+        </div>
+      </div>
+    </details>
+
+    {/* PACKING LIST */}
+    <details open className="rounded-lg border border-gray-200">
+      <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+        Technical Department Packing List
+      </summary>
+
+      <div className="space-y-2 border-t border-gray-200 p-3">
+        {programme.packing.map((i) => (
+          <div key={i.id} className="flex gap-2">
+            <input
+              className={`${inputCls} flex-1`}
+              value={i.text}
+              onChange={(e) => patchPacking(i.id, e.target.value)}
+            />
+            <button type="button" className={delBtn} title="Delete item" onClick={() => removePacking(i.id)}>
+              <Trash2 size={15} />
+            </button>
+          </div>
+        ))}
+
+        <button type="button" className={addBtn} onClick={addPacking}>
+          <Plus size={15} /> Add item
+        </button>
+      </div>
+    </details>
+  </div>
+)}
 
         {/* PREVIEW */}
         {tab === "preview" && (
