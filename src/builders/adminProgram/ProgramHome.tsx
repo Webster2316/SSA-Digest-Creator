@@ -22,12 +22,18 @@ export type ProgrammeRow = { id: string; time: string; activity: string; checks:
 export type Guest = { id: string; name: string; row: "" | "first" | "second" };
 export type GuestList = { id: string; name: string; guests: Guest[] };
 export type PackingItem = { id: string; text: string };
+export type SetupBullet = { id: string; label: string; text: string};
+export type CheckListItem = { id: string; text: string};
+export type SetupTask = { id: string; title: string; bullets: SetupBullet[]; checklistTitle: string; checklist: CheckListItem[];};
+export type SetupSection = { time: string; intro: string; tasks: SetupTask[] };
+
 
 export interface AdminProgramme {
   id: string;
   eventName: string;
   info: InfoFields;
   roles: RoleRow[];
+  setup: SetupSection[];
   programme: ProgrammeRow[];
   guestLists: GuestList[];
   selectedGuestListId: string;
@@ -58,6 +64,7 @@ export const programTemplate = (eventName: string): AdminProgramme => {
     eventName,
     info: { date: "", time: "", venue: "", dressCode: "", audienceSize: "", catering: "" },
     roles: [],
+    setup: { time: "", intro: "", tasks: [] },
     programme: [],
     guestLists: [{ id: listId, name: "Guest List 1", guests: [] }],
     selectedGuestListId: listId,
@@ -98,6 +105,23 @@ export function normaliseProgramme(raw: any): AdminProgramme {
     roles: Array.isArray(raw?.roles)
       ? raw.roles.map((r: any) => ({ id: r?.id ?? uid(), role: str(r?.role), assignedTo: str(r?.assignedTo) }))
       : [],
+      setup: {
+        time: str(raw?.setup?.time),
+        intro: str(raw?.setup?.intro),
+        tasks: Array.isArray(raw?.setup?.tasks)
+          ? raw.setup.tasks.map((t: any) => ({
+              id: t?.id ?? uid(),
+              title: str(t?.title),
+              bullets: Array.isArray(t?.bullets)
+                ? t.bullets.map((b: any) => ({ id: b?.id ?? uid(), label: str(b?.label), text: str(b?.text) }))
+                : [],
+              checklistTitle: str(t?.checklistTitle),
+              checklist: Array.isArray(t?.checklist)
+                ? t.checklist.map((c: any) => ({ id: c?.id ?? uid(), text: str(c?.text) }))
+                : [],
+            }))
+          : [],
+      },
     programme: Array.isArray(raw?.programme)
       ? raw.programme.map((r: any) => ({
           id: r?.id ?? uid(),
@@ -146,64 +170,7 @@ const thDark = (label: string) =>
   `<td style="background:#262261;border:1px solid #262261;padding:9px 12px;font-family:${FONT};font-size:10.5px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:#ffffff;">${label}</td>`;
 
 // Set-Up & Briefing is fixed text for now (edit here)
-const SETUP_INTRO =
-  "Arrival of Technical Dept Team for set up. Registration begins 8.30am. Commencement of Event 9.00am.";
 
-const SETUP_GROUPS: {
-  title: string;
-  bullets: [string, string][];
-  checklistTitle: string;
-  checklist: string[];
-}[] = [
-  {
-    title: "AA / SY / AC / KN / DN — Registration",
-    bullets: [
-      ["Registration Booth Setup", "Prepare registration table before guests arrive."],
-      ["Registration Materials", "Prepare lanyards and final registration list."],
-      ["No-Show Fee", "$120; update HM after registration closes."],
-      ["Parking Coupons", "SY to manage and distribute coupons (only 20 tickets)."],
-      ["SSA Banner", "Display prominently at the registration booth."],
-    ],
-    checklistTitle: "Registration Logistics Checklist",
-    checklist: [
-      "Registration Table & Chairs – dedicated for those in registration",
-      "Lanyards / Stickers – prepared according to registration list",
-      "Final Registration List – printed copies, track attendance",
-      "Parking Coupons",
-      "SSA Banner",
-      "Stationery – pens, permanent marker",
-    ],
-  },
-  {
-    title: "NQ / SJ / NI / AS — Room, AV & Programme Readiness",
-    bullets: [
-      ["Speaker Rehearsal", "Sequence, timing, transitions, microphones and stage movements."],
-      ["Slides & Pigeonhole Testing", "Slides, videos, audio and Pigeonhole functions."],
-      ["Seating Arrangement", "Reserved seats for speakers, VIPs and guests (pasting stickers)."],
-      ["Sponsor Booth Readiness", "Confirm booths are fully set up and operational."],
-      ["Sponsor Video Loop", "Play sponsor videos continuously on designated screens."],
-      ["Lighting Check", "Coordinate with hotel staff."],
-      ["TS", "Do dry run (emcee) and speakers to do dry run."],
-    ],
-    checklistTitle: "Room, AV & Programme Logistics Checklist",
-    checklist: [
-      "3 Handheld Microphones and Confidence Monitor",
-      "Presentation Laptop – loaded with final slides and videos",
-      "Clicker / Presentation Remote",
-      "HDMI / Display Adapters – backup connection to venue screens",
-      "Pigeonhole Access & Internet – login details and stable Wi-Fi",
-      "Reserved Seating Stickers – for speakers, VIPs and guests",
-      "Printed Seating Plan",
-      "Sponsor Booth Tables & Chairs – as required by sponsors",
-      "Power Extension Cables – for sponsor booths and AV equipment",
-      "Sponsor Video File – final video ready for continuous playback",
-      "Display Screen / LED Screen – for sponsor video playback",
-      "Stage / Room Lighting – checked and adjusted with hotel staff",
-      "Event Programme / Run Sheet – for rehearsal and timing checks",
-      "Speaker Presentation Slides – final versions ready for rehearsal",
-    ],
-  },
-];
 
 const bulletRows = (items: [string, string][]) =>
   items
@@ -262,15 +229,19 @@ export function buildFullHtml(p: AdminProgramme) {
 
   /* SET-UP & BRIEFING (static) */
   const setup = section(`
-            ${heading("Set-Up &amp; Briefing — 8.00am – 9.00am")}
-            <p style="margin:0 0 16px;font-family:${FONT};font-size:13px;color:#374151;">${esc(SETUP_INTRO)}</p>
-${SETUP_GROUPS.map(
-  (g, i) => `
-            <p style="margin:0 0 8px;font-family:${FONT};font-size:13px;font-weight:700;color:#281e7e;">${esc(g.title)}</p>
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 14px;">
-              ${bulletRows(g.bullets)}
-            </table>${checklistTable(g.checklistTitle, g.checklist, i < SETUP_GROUPS.length - 1 ? "margin:0 0 20px;" : "")}`
-).join("\n")}`);
+  ${heading(`Set-Up &amp; Briefing${p.setup.time.trim() ? ` — ${esc(p.setup.time)}` : ""}`)}
+  ${p.setup.intro.trim() ? `<p style="margin:0 0 16px;font-family:${FONT};font-size:13px;color:#374151;">${nl2br(p.setup.intro)}</p>` : ""}
+${p.setup.tasks
+.map((t, i) => {
+const last = i === p.setup.tasks.length - 1;
+return `
+  <p style="margin:0 0 8px;font-family:${FONT};font-size:13px;font-weight:700;color:#281e7e;">${esc(t.title)}</p>
+  ${t.bullets.length ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 14px;">
+    ${bulletRows(t.bullets.map((b): [string, string] => [b.label, b.text]))}
+  </table>` : ""}
+  ${t.checklist.length ? checklistTable(t.checklistTitle, t.checklist.map((c) => c.text), last ? "" : "margin:0 0 20px;") : ""}`;
+})
+.join("\n")}`);
 
   /* PROGRAMME */
   const progRows = p.programme
