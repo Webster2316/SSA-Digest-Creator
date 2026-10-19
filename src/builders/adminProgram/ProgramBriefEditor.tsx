@@ -519,27 +519,34 @@ const removeList = () =>
 
         {/* guests */}
         {currentList.guests.map((g, i) => (
-          <div key={g.id} className="flex items-center gap-2">
-            <span className="w-6 text-right text-sm text-gray-400">{i + 1}.</span>
-            <select
-              className={`${inputCls} w-36`}
-              value={g.row}
-              onChange={(e) => patchGuest(g.id, { row: e.target.value as Guest["row"] })}
-            >
-              <option value="">No highlight</option>
-              <option value="first">First row</option>
-              <option value="second">Second row</option>
-            </select>
-            <input
-              className={`${inputCls} flex-1`}
-              placeholder="Guest name"
-              value={g.name}
-              onChange={(e) => patchGuest(g.id, { name: e.target.value })}
-            />
-            <button type="button" className={delBtn} title="Delete guest" onClick={() => removeGuest(g.id)}>
-              <Trash2 size={15} />
-            </button>
-          </div>
+       <div key={g.id} className="flex items-center gap-2">
+       <span className="w-6 text-right text-sm text-gray-400">{i + 1}.</span>
+     
+       <div className="w-36 shrink-0">
+         <select
+           className={inputCls}
+           value={g.row}
+           onChange={(e) => patchGuest(g.id, { row: e.target.value as Guest["row"] })}
+         >
+           <option value="">No highlight</option>
+           <option value="first">First row</option>
+           <option value="second">Second row</option>
+         </select>
+       </div>
+     
+       <div className="min-w-0 flex-1">
+         <input
+           className={inputCls}
+           placeholder="Guest name"
+           value={g.name}
+           onChange={(e) => patchGuest(g.id, { name: e.target.value })}
+         />
+       </div>
+     
+       <button type="button" className={delBtn} title="Delete guest" onClick={() => removeGuest(g.id)}>
+         <Trash2 size={15} />
+       </button>
+     </div>
         ))}
 
         <div className="flex gap-4">
