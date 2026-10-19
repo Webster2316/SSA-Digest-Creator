@@ -268,7 +268,8 @@ return `
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
                 <td align="center" style="border:1px solid #c7d0e0;background:#fafbfd;padding:28px;font-family:${FONT};font-size:12.5px;color:#8492a6;">
-                  [ Insert floor plan image here ]
+                  [ <Insert />
+                  <paste></paste> floor plan image here ]
                 </td>
               </tr>
             </table>`);
