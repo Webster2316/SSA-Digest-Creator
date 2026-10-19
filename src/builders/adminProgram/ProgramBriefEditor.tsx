@@ -133,10 +133,10 @@ export default function ProgramBriefEditor({ programmeId, programmes, setProgram
     const patchPacking = (id: string, text: string) => 
       updateProgramme((p) => ({ ...p, packing: p.packing.map((i) => (i.id === id ? { ...i, text } : i)) }));
 
-   const  addPackaging = () => 
+   const  addPacking = () => 
    updateProgramme((p) => ({ ...p, packing: [...p.packing, { id: uid(), text: "" }] }));
 
-   const removePackaging = (id: string) =>
+   const removePacking = (id: string) =>
 updateProgramme((p) => ({...p, packaging: p.packing.filter((i) => i.id !== id) }));
 
 
