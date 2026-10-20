@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Trash2, SquareArrowOutUpRight,   CircleCheck, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
+import { Archive, Trash2, SquareArrowOutUpRight,   CircleCheck, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import { uid, esc } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
 import ProgramBriefEditor from "./ProgramBriefEditor";
+import ProgramHistory from "./programHistory";
 
 const PROGRAM_BUILDER_KEY = "program-brief-data";
 
@@ -430,8 +431,9 @@ function getDateTime() {
 }
 
 export default function ProgramHome() {
-  const [tab, setTab] = useState<"programmes" | "preview">("programmes");
+  const [tab, setTab] = useState<"programmes" | "preview" | "ProgramHistoryss">("programmes");
   const [programmes, setProgrammes] = useState<AdminProgramme[]>([]);
+  const [selectedArchivedBrief, setSelectedArchivedBrief] = useState<AdminProgramme | null>(null)
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -441,6 +443,47 @@ export default function ProgramHome() {
   const [copied, setCopied] = useState(false);
 
 
+  const handleMovetoCurrent = (p: any) => {
+    const copy = normaliseProgramme({
+      ...p,
+      id: uid(),
+    });
+  
+    setProgrammes((prev) => [
+      ...prev,
+      copy,
+    ]);
+  
+    setTab("programmes");
+  };
+  
+  const handleRestoreEvent = async (archiveId: number, p: any) => {
+    try {
+      const res = await fetch(`/api/events-history?id=${archiveId}`,
+      {
+        method: "DELETE",
+      });
+  
+      if(!res.ok) {
+        console.error("Failed to restore event");
+        return;
+      }
+      const restored = normaliseProgramme({
+        ...eventData,
+
+      });
+  
+      setProgrammes((prev) => [
+        ...prev,
+        p,
+      ]);
+  
+      setTab("programmes");
+    } catch (e) {
+  console.error("Failed to restore event:", e)
+    }
+  };
+  
   const completedProgram = async (p: AdminProgramme) => {
     try {
       const res = await fetch("/api/program-history", {
@@ -677,7 +720,14 @@ export default function ProgramHome() {
             />
           </>
         )}
-
+{tab === "history" && (
+  <EventsHistory
+    builderKey={PROGRAM_BUILDER_KEY}
+    viewPastEventDetails={setSelectedArchivedBrief}
+    onCopyToCurrent={handleMovetoCurrent}
+    onRestoreEvent={handleRestoreEvent}
+  />
+)}
         {deleteModal}
       </div>
     </div>
