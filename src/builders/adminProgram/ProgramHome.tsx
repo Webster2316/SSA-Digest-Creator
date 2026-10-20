@@ -623,7 +623,7 @@ export default function ProgramHome() {
                       </button>
                       <button
     type="button"
-    onClick={() => completedProgram(ev)}
+    onClick={() => completedProgram(p)}
     className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
   >
     <CircleCheck size={16} />
