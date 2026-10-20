@@ -632,11 +632,25 @@ export default function ProgramHome() {
         </div>
 
         {/* TABS */}
-        <div className="mb-5 flex gap-1 border-b border-gray-200">
-          <button type="button" onClick={() => setTab("programmes")} className={tabCls(tab === "programmes")}>
-            Programmes
-          </button>
-        </div>
+       {/* TABS */}
+<div className="mb-5 flex gap-1 border-b border-gray-200">
+  <button
+    type="button"
+    onClick={() => setTab("programmes")}
+    className={tabCls(tab === "programmes")}
+  >
+    Programmes
+  </button>
+
+  <button
+    type="button"
+    onClick={() => setTab("history")}
+    className={tabCls(tab === "history")}
+  >
+    <Archive size={15} />
+    History
+  </button>
+</div>
 
         {/* PROGRAMME LIST */}
         {tab === "programmes" && (
