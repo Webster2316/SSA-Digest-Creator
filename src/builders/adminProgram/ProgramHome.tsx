@@ -450,7 +450,7 @@ export default function ProgramHome() {
         },
         body: JSON.stringify({
           builderKey: PROGRAM_BUILDER_KEY,
-          event: {
+          programmes: {
             ...p,
           },
         }),

@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 
       if (!builderKey || !programmes?.id) {
         return res.status(400).json({
-          error: "Missing builderKey or event",
+          error: "Missing builderKey or program",
         });
       }
 
