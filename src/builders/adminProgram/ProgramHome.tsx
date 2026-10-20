@@ -596,7 +596,18 @@ export default function ProgramHome() {
       />
     );
   }
-
+  if (selectedArchivedBrief) {
+    return (
+      <ProgramBriefEditor
+        archivedProgramme={selectedArchivedBrief}
+        programmes={programmes}
+        setProgrammes={setProgrammes}
+        onBack={() => setSelectedArchivedBrief(null)}
+        saveStatus={saveStatus}
+        readOnly
+      />
+    );
+  }
   const tabCls = (active: boolean) =>
     `flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
       active
