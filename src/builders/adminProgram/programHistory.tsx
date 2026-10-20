@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
-import { Archive, RotateCcw, Copy, SquareArrowOutUpRight, } from "lucide-react";
+import {
+  Archive,
+  RotateCcw,
+  Copy,
+  SquareArrowOutUpRight,
+} from "lucide-react";
 
-
-type EventArchive = {
+type ProgramArchive = {
   id: number;
   builder_key: string;
   title: string;
@@ -10,20 +14,20 @@ type EventArchive = {
   archived_at: string;
 };
 
-type EventHistoryProps = {
+type ProgramHistoryProps = {
   builderKey: string;
   viewPastEventDetails: (eventData: any) => void;
   onCopyToCurrent: (eventData: any) => void;
   onRestoreEvent: (archiveId: number, eventData: any) => void;
 };
 
-export default function EventsHistory({
+export default function ProgramHistory({
   builderKey,
   onCopyToCurrent,
   onRestoreEvent,
   viewPastEventDetails,
-}: EventHistoryProps) {
-  const [records, setRecords] = useState<EventArchive[]>([]);
+}: ProgramHistoryProps) {
+  const [records, setRecords] = useState<ProgramArchive[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,34 +36,36 @@ export default function EventsHistory({
 
       try {
         const res = await fetch(
-          `/api/events-history?key=${builderKey}`
+          `/api/program-history?key=${encodeURIComponent(builderKey)}`
         );
 
         if (res.ok) {
           const data = await res.json();
           setRecords(data);
+        } else {
+          console.error("Failed to load program history");
         }
       } catch (e) {
-        console.error("Failed to load event history:", e);
+        console.error("Failed to load program history:", e);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadHistory();
   }, [builderKey]);
 
-  const getEventData = (record: EventArchive) => {
+  const getProgramData = (record: ProgramArchive) => {
     if (!record.event_data) return null;
-  
+
     if (typeof record.event_data === "object") {
       return record.event_data;
     }
-  
+
     try {
       return JSON.parse(record.event_data);
     } catch (e) {
-      console.error("Failed to parse archived event:", e);
+      console.error("Failed to parse archived program brief:", e);
       return null;
     }
   };
@@ -70,25 +76,23 @@ export default function EventsHistory({
         <Archive size={14} className="text-gray-500" />
 
         <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-          Event History
+          Program Brief History
         </span>
       </div>
 
       {loading && (
-        <p className="text-xs text-gray-400">
-          Loading…
-        </p>
+        <p className="text-xs text-gray-400">Loading...</p>
       )}
 
       {!loading && records.length === 0 && (
         <p className="text-xs text-gray-400">
-          No completed events yet.
+          No completed program briefs yet.
         </p>
       )}
 
       <div className="space-y-2">
         {records.map((record) => {
-          const eventData = getEventData(record);
+          const programData = getProgramData(record);
 
           return (
             <div
@@ -98,36 +102,34 @@ export default function EventsHistory({
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">
-                    {record.title || "Untitled Event"}
+                    {record.title || "Untitled Program Brief"}
                   </div>
 
                   <div className="text-xs text-gray-400 mt-1">
                     Completed{" "}
-                    {new Date(
-                      record.archived_at
-                    ).toLocaleDateString()}
+                    {new Date(record.archived_at).toLocaleDateString()}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1">
-                <button
-                          type="button"
-                          onClick={() => {
-                          if (eventData) {
-                            viewPastEventDetails(eventData);
-                          }}}
-
-                          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-                          title="View event"
-                        >
-                          <SquareArrowOutUpRight size={16} />
-                        </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (programData) {
+                        viewPastEventDetails(programData);
+                      }
+                    }}
+                    className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
+                    title="View program brief"
+                  >
+                    <SquareArrowOutUpRight size={16} />
+                  </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      if (eventData) {
-                        onCopyToCurrent(eventData);
+                      if (programData) {
+                        onCopyToCurrent(programData);
                       }
                     }}
                     className="p-1.5 rounded hover:bg-gray-100 text-gray-500"
@@ -139,15 +141,12 @@ export default function EventsHistory({
                   <button
                     type="button"
                     onClick={() => {
-                      if (eventData) {
-                        onRestoreEvent(
-                          record.id,
-                          eventData
-                        );
+                      if (programData) {
+                        onRestoreEvent(record.id, programData);
                       }
                     }}
                     className="p-1.5 rounded hover:bg-gray-100 text-gray-500"
-                    title="Restore event"
+                    title="Restore program brief"
                   >
                     <RotateCcw size={15} />
                   </button>
