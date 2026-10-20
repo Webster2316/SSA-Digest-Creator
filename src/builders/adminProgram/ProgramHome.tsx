@@ -469,7 +469,7 @@ export default function ProgramHome() {
         return;
       }
       const restored = normaliseProgramme({
-        ...eventData,
+        ...p,
 
       });
   
