@@ -456,7 +456,7 @@ export default function ProgramHome() {
         }),
       });
       console.log(PROGRAM_BUILDER_KEY)
-      comsole.log(p)
+      console.log(p)
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Failed to move brief into archive:", res.status, errorText);
