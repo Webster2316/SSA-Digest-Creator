@@ -455,15 +455,15 @@ export default function ProgramHome() {
           },
         }),
       });
-      console.log(PROGRAM_BUILDER_KEY)
-      console.log(p)
-      if (!res.ok) {
+ 
+      if (res.ok) {
+        setProgrammes((prev) => prev.filter((item) => item.id !== p.id));
+      } else if (!res.ok){
         const errorText = await res.text();
         console.error("Failed to move brief into archive:", res.status, errorText);
         return;
-      }
-  console.log("post error")
-      setProgrammes((prev) => prev.filter((item) => item.id !== programmes.id));
+        } 
+ 
     } catch (e) {
       console.error("Failed to move to archive", e);
     }
