@@ -1,22 +1,53 @@
+
 import { useState } from "react";
-import { ArrowLeft, Plus, Trash2, Loader2, Save, Info, Users, CalendarClock, ClipboardList, Eye, Copy, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  Loader2,
+  Save,
+  Info,
+  Users,
+  CalendarClock,
+  ClipboardList,
+  Eye,
+  Copy,
+  Check,
+} from "lucide-react";
+
 import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
 import { inputCls, uid } from "../../shared/utils";
 import { buildFullHtml } from "./ProgramHome";
-import type { AdminProgramme, InfoFields, SetupSection, SetupTask, ProgrammeRow, PackingItem, Guest, GuestList } from "./ProgramHome";
+
+import type {
+  AdminProgramme,
+  InfoFields,
+  SetupSection,
+  SetupTask,
+  ProgrammeRow,
+  PackingItem,
+  Guest,
+  GuestList,
+} from "./ProgramHome";
 
 type Tab = "info" | "roles" | "programme" | "lists" | "preview";
 
 type Props = {
-  programmeId: string;
+  programmeId?: string;
   programmes: AdminProgramme[];
   setProgrammes: React.Dispatch<React.SetStateAction<AdminProgramme[]>>;
   onBack: () => void;
   saveStatus: string;
+  archivedProgramme?: AdminProgramme;
+  readOnly?: boolean;
 };
 
-const infoFields: { key: keyof InfoFields; label: string; multiline?: boolean }[] = [
+const infoFields: {
+  key: keyof InfoFields;
+  label: string;
+  multiline?: boolean;
+}[] = [
   { key: "date", label: "Date" },
   { key: "time", label: "Time" },
   { key: "venue", label: "Venue", multiline: true },
@@ -25,175 +56,302 @@ const infoFields: { key: keyof InfoFields; label: string; multiline?: boolean }[
   { key: "catering", label: "Catering arrangement", multiline: true },
 ];
 
-const roleFields: { key: "role" | "assignedTo"; label: string }[] = [
+const roleFields: {
+  key: "role" | "assignedTo";
+  label: string;
+}[] = [
   { key: "role", label: "Role" },
   { key: "assignedTo", label: "Assigned to" },
 ];
 
-// shared button styles
-const addBtn = "flex items-center gap-1 text-sm font-medium text-indigo-700 hover:text-indigo-900";
-const delBtn = "rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600";
+const addBtn =
+  "flex items-center gap-1 text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:cursor-not-allowed disabled:opacity-50";
 
-export default function ProgramBriefEditor({ programmeId, programmes, setProgrammes, onBack, saveStatus }: Props) {
+const delBtn =
+  "rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
+
+export default function ProgramBriefEditor({
+  programmeId,
+  programmes,
+  setProgrammes,
+  onBack,
+  saveStatus,
+  archivedProgramme,
+  readOnly = false,
+}: Props) {
   const [tab, setTab] = useState<Tab>("info");
   const [copied, setCopied] = useState(false);
 
-  const programme = programmes.find((p) => p.id === programmeId);
+  // Archived programmes are supplied directly.
+  // Current programmes are looked up by their ID.
+  const programme =
+    archivedProgramme ??
+    programmes.find((p) => p.id === programmeId);
 
   if (!programme) {
     return (
       <div className="p-4">
-        <button onClick={onBack} className="text-sm text-indigo-700">← Back</button>
-        <p className="mt-2 text-sm text-gray-500">Programme not found.</p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm text-indigo-700"
+        >
+          ← Back
+        </button>
+        <p className="mt-2 text-sm text-gray-500">
+          Programme not found.
+        </p>
       </div>
     );
   }
 
-  /* ---------- UPDATERS (every edit goes through setProgrammes so Home can save) ---------- */
+  // Only update the current programme.
+  // Archived programmes are read-only.
+  const updateProgramme = (
+    fn: (p: AdminProgramme) => AdminProgramme
+  ) => {
+    if (readOnly || !programmeId) return;
+
+    setProgrammes((prev) =>
+      prev.map((p) =>
+        p.id === programmeId ? fn(p) : p
+      )
+    );
+  };
 
   const update = (patch: Partial<AdminProgramme>) =>
-    setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? { ...p, ...patch } : p)));
-
-
-    const updateProgramme = (fn: (p: AdminProgramme) => AdminProgramme) =>
-  setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? fn(p) : p)));
-
+    updateProgramme((p) => ({ ...p, ...patch }));
 
   const updateInfo = (field: keyof InfoFields, value: string) =>
-    setProgrammes((prev) =>
-      prev.map((p) => (p.id === programmeId ? { ...p, info: { ...p.info, [field]: value } } : p))
-    );
+    updateProgramme((p) => ({
+      ...p,
+      info: { ...p.info, [field]: value },
+    }));
 
-  const updateRoles = (roleId: string, field: "role" | "assignedTo", value: string) =>
-    setProgrammes((prev) =>
-      prev.map((p) =>
-        p.id === programmeId
-          ? { ...p, roles: p.roles.map((r) => (r.id === roleId ? { ...r, [field]: value } : r)) }
-          : p
-      )
-    );
+  const updateRoles = (
+    roleId: string,
+    field: "role" | "assignedTo",
+    value: string
+  ) =>
+    updateProgramme((p) => ({
+      ...p,
+      roles: p.roles.map((r) =>
+        r.id === roleId ? { ...r, [field]: value } : r
+      ),
+    }));
 
   const addNewRole = () =>
-    setProgrammes((prev) =>
-      prev.map((p) =>
-        p.id === programmeId
-          ? { ...p, roles: [...p.roles, { id: crypto.randomUUID(), role: "", assignedTo: "" }] }
-          : p
-      )
-    );
+    updateProgramme((p) => ({
+      ...p,
+      roles: [
+        ...p.roles,
+        { id: crypto.randomUUID(), role: "", assignedTo: "" },
+      ],
+    }));
 
-  // Set-Up & Briefing:functions 
-  const updateSetup = (fn: (s: SetupSection) => SetupSection) =>
-    setProgrammes((prev) => prev.map((p) => (p.id === programmeId ? { ...p, setup: fn(p.setup) } : p)));
+  // Set-Up & Briefing
+  const updateSetup = (
+    fn: (s: SetupSection) => SetupSection
+  ) =>
+    updateProgramme((p) => ({
+      ...p,
+      setup: fn(p.setup),
+    }));
 
   const patchTask = (id: string, patch: Partial<SetupTask>) =>
-    updateSetup((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
+    updateSetup((s) => ({
+      ...s,
+      tasks: s.tasks.map((t) =>
+        t.id === id ? { ...t, ...patch } : t
+      ),
+    }));
 
   const addTask = () =>
     updateSetup((s) => ({
       ...s,
-      tasks: [...s.tasks, { id: uid(), title: "", bullets: [], checklistTitle: "", checklist: [] }],
+      tasks: [
+        ...s.tasks,
+        {
+          id: uid(),
+          title: "",
+          bullets: [],
+          checklistTitle: "",
+          checklist: [],
+        },
+      ],
     }));
 
   const removeTask = (id: string) =>
-    updateSetup((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) }));
+    updateSetup((s) => ({
+      ...s,
+      tasks: s.tasks.filter((t) => t.id !== id),
+    }));
 
+  // Programme summary
+  const patchRow = (id: string, patch: Partial<ProgrammeRow>) =>
+    updateProgramme((p) => ({
+      ...p,
+      programme: p.programme.map((r) =>
+        r.id === id ? { ...r, ...patch } : r
+      ),
+    }));
 
-    //Program summary functions
-    const patchRow = (id: string, patch: Partial<ProgrammeRow>) =>
-    setProgrammes((prev) =>
-      prev.map((p) =>
-        p.id === programmeId
-          ? { ...p, programme: p.programme.map((r) => (r.id === id ? { ...r, ...patch } : r)) }
-          : p
-      )
-    );
-  
   const addRow = () =>
-    setProgrammes((prev) =>
-      prev.map((p) =>
-        p.id === programmeId
-          ? { ...p, programme: [...p.programme, { id: uid(), time: "", activity: "", checks: "", owner: "" }] }
-          : p
-      )
-    );
-  
+    updateProgramme((p) => ({
+      ...p,
+      programme: [
+        ...p.programme,
+        {
+          id: uid(),
+          time: "",
+          activity: "",
+          checks: "",
+          owner: "",
+        },
+      ],
+    }));
+
   const removeRow = (id: string) =>
-    setProgrammes((prev) =>
-      prev.map((p) =>
-        p.id === programmeId
-          ? { ...p, programme: p.programme.filter((r) => r.id !== id) }
-          : p
-      )
-    );
+    updateProgramme((p) => ({
+      ...p,
+      programme: p.programme.filter((r) => r.id !== id),
+    }));
 
+  // Packing list
+  const patchPacking = (id: string, text: string) =>
+    updateProgramme((p) => ({
+      ...p,
+      packing: p.packing.map((i) =>
+        i.id === id ? { ...i, text } : i
+      ),
+    }));
 
-    //lists
-//packing
-    const patchPacking = (id: string, text: string) => 
-      updateProgramme((p) => ({ ...p, packing: p.packing.map((i) => (i.id === id ? { ...i, text } : i)) }));
+  const addPacking = () =>
+    updateProgramme((p) => ({
+      ...p,
+      packing: [...p.packing, { id: uid(), text: "" }],
+    }));
 
-   const  addPacking = () => 
-   updateProgramme((p) => ({ ...p, packing: [...p.packing, { id: uid(), text: "" }] }));
+  const removePacking = (id: string) =>
+    updateProgramme((p) => ({
+      ...p,
+      packing: p.packing.filter((i) => i.id !== id),
+    }));
 
-   const removePacking = (id: string) =>
-updateProgramme((p) => ({...p, packaging: p.packing.filter((i) => i.id !== id) }));
+  // Guest lists
+  const currentList =
+    programme.guestLists.find(
+      (l) => l.id === programme.selectedGuestListId
+    ) ?? programme.guestLists[0];
 
+  const updateList = (
+    listId: string,
+    fn: (l: GuestList) => GuestList
+  ) =>
+    updateProgramme((p) => ({
+      ...p,
+      guestLists: p.guestLists.map((l) =>
+        l.id === listId ? fn(l) : l
+      ),
+    }));
 
-//guests
-const currentList =
-  programme.guestLists.find((l) => l.id === programme.selectedGuestListId) ?? programme.guestLists[0];
+  const patchGuest = (
+    guestId: string,
+    patch: Partial<Guest>
+  ) => {
+    if (!currentList) return;
 
-const updateList = (listId: string, fn: (l: GuestList) => GuestList) =>
-  updateProgramme((p) => ({ ...p, guestLists: p.guestLists.map((l) => (l.id === listId ? fn(l) : l)) }));
+    updateList(currentList.id, (l) => ({
+      ...l,
+      guests: l.guests.map((g) =>
+        g.id === guestId ? { ...g, ...patch } : g
+      ),
+    }));
+  };
 
-  const patchGuest = (guestId: string, patch: Partial<Guest>) =>
-  updateList(currentList.id, (l) => ({
-    ...l,
-    guests: l.guests.map((g) => (g.id === guestId ? { ...g, ...patch } : g)),
-  }));
+  const addGuest = () => {
+    if (!currentList) return;
 
-const addGuest = () =>
-  updateList(currentList.id, (l) => ({ ...l, guests: [...l.guests, { id: uid(), name: "", row: "" }] }));
+    updateList(currentList.id, (l) => ({
+      ...l,
+      guests: [
+        ...l.guests,
+        { id: uid(), name: "", row: "" },
+      ],
+    }));
+  };
 
-const removeGuest = (guestId: string) =>
-  updateList(currentList.id, (l) => ({ ...l, guests: l.guests.filter((g) => g.id !== guestId) }));
+  const removeGuest = (guestId: string) => {
+    if (!currentList) return;
+
+    updateList(currentList.id, (l) => ({
+      ...l,
+      guests: l.guests.filter((g) => g.id !== guestId),
+    }));
+  };
 
   const addList = () =>
-  updateProgramme((p) => {
-    const id = uid();
-    return {
-      ...p,
-      guestLists: [...p.guestLists, { id, name: `Guest List ${p.guestLists.length + 1}`, guests: [] }],
-      selectedGuestListId: id,
-    };
-  });
+    updateProgramme((p) => {
+      const id = uid();
 
-const removeList = () =>
-  updateProgramme((p) => {
-    if (p.guestLists.length <= 1) return p; // always keep one list
-    const rest = p.guestLists.filter((l) => l.id !== currentList.id);
-    return { ...p, guestLists: rest, selectedGuestListId: rest[0].id };
-  });
-  /* ---------- EXPORT ---------- */
+      return {
+        ...p,
+        guestLists: [
+          ...p.guestLists,
+          {
+            id,
+            name: `Guest List ${p.guestLists.length + 1}`,
+            guests: [],
+          },
+        ],
+        selectedGuestListId: id,
+      };
+    });
 
+  const removeList = () =>
+    updateProgramme((p) => {
+      if (p.guestLists.length <= 1) return p;
+
+      const rest = p.guestLists.filter(
+        (l) => l.id !== currentList?.id
+      );
+
+      return {
+        ...p,
+        guestLists: rest,
+        selectedGuestListId: rest[0].id,
+      };
+    });
+
+  // Preview & export
   const html = buildFullHtml(programme);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(html);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+    try {
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      console.error("Failed to copy programme HTML:", error);
+    }
   };
 
-  const tabBtn = (key: Tab, label: string, Icon: any) => (
+  const tabBtn = (
+    key: Tab,
+    label: string,
+    Icon: React.ComponentType<{ size?: number }>
+  ) => (
     <button
       type="button"
       onClick={() => setTab(key)}
       className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium ${
-        tab === key ? "border-indigo-700 text-indigo-800" : "border-transparent text-gray-500 hover:text-gray-700"
+        tab === key
+          ? "border-indigo-700 text-indigo-800"
+          : "border-transparent text-gray-500 hover:text-gray-700"
       }`}
     >
-      <Icon size={15} /> {label}
+      <Icon size={15} />
+      {label}
     </button>
   );
 
@@ -207,26 +365,60 @@ const removeList = () =>
             alt="SSA Logo"
             className="h-8 w-auto"
           />
-          <h1 className="text-xl font-bold text-indigo-900">Admin Brief Builder</h1>
+
+          <h1 className="text-xl font-bold text-indigo-900">
+            Admin Brief Builder
+            {readOnly && (
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                — Archived preview
+              </span>
+            )}
+          </h1>
+
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-            {saveStatus === "saving" && (<><Loader2 size={13} className="animate-spin" /> Saving…</>)}
-            {saveStatus.startsWith("Saved at") && (<><Save size={13} /> {saveStatus}</>)}
-            {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
+            {!readOnly && saveStatus === "saving" && (
+              <>
+                <Loader2 size={13} className="animate-spin" />
+                Saving…
+              </>
+            )}
+
+            {!readOnly && saveStatus.startsWith("Saved at") && (
+              <>
+                <Save size={13} />
+                {saveStatus}
+              </>
+            )}
+
+            {!readOnly && saveStatus === "error" && (
+              <span className="text-red-600">Save failed</span>
+            )}
           </div>
         </div>
-        <button type="button" onClick={onBack} className="mb-3 flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-700">
-          <ArrowLeft size={16} /> Back
+
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-3 flex items-center gap-1 text-sm text-gray-500 hover:text-indigo-700"
+        >
+          <ArrowLeft size={16} />
+          Back
         </button>
 
         {/* EVENT NAME */}
         <div className="mb-4 rounded-lg border bg-white p-4">
           <Field label="Event Name">
-            <input className={inputCls} value={programme.eventName} onChange={(e) => update({ eventName: e.target.value })} />
+            <input
+              className={inputCls}
+              value={programme.eventName}
+              readOnly={readOnly}
+              onChange={(e) => update({ eventName: e.target.value })}
+            />
           </Field>
         </div>
 
         {/* TABS */}
-        <div className="flex rounded-t-lg border-b border-gray-200 bg-white px-2">
+        <div className="flex flex-wrap rounded-t-lg border-b border-gray-200 bg-white px-2">
           {tabBtn("info", "Event Information", Info)}
           {tabBtn("roles", "Roles & Responsibilities", Users)}
           {tabBtn("programme", "Programme", CalendarClock)}
@@ -240,9 +432,24 @@ const removeList = () =>
             {infoFields.map((f) => (
               <Field key={f.key} label={f.label}>
                 {f.multiline ? (
-                  <textarea className={inputCls} rows={3} value={programme.info[f.key]} onChange={(e) => updateInfo(f.key, e.target.value)} />
+                  <textarea
+                    className={inputCls}
+                    rows={3}
+                    value={programme.info[f.key]}
+                    readOnly={readOnly}
+                    onChange={(e) =>
+                      updateInfo(f.key, e.target.value)
+                    }
+                  />
                 ) : (
-                  <input className={inputCls} value={programme.info[f.key]} onChange={(e) => updateInfo(f.key, e.target.value)} />
+                  <input
+                    className={inputCls}
+                    value={programme.info[f.key]}
+                    readOnly={readOnly}
+                    onChange={(e) =>
+                      updateInfo(f.key, e.target.value)
+                    }
+                  />
                 )}
               </Field>
             ))}
@@ -259,26 +466,33 @@ const removeList = () =>
                     <input
                       className={inputCls}
                       value={r[f.key]}
-                      onChange={(e) => updateRoles(r.id, f.key, e.target.value)}
+                      readOnly={readOnly}
+                      onChange={(e) =>
+                        updateRoles(r.id, f.key, e.target.value)
+                      }
                     />
                   </Field>
                 ))}
               </div>
             ))}
 
-            <button
-              type="button"
-              onClick={addNewRole}
-              className="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
-            >
-              <Plus size={16} /> Add New Role
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={addNewRole}
+                className="mt-3 flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:text-indigo-900"
+              >
+                <Plus size={16} />
+                Add New Role
+              </button>
+            )}
           </div>
         )}
 
-        {/* PROGRAMME: Set-Up & Briefing (+ Program Summary next) */}
+        {/* PROGRAMME */}
         {tab === "programme" && (
           <div className="space-y-4 rounded-b-lg border bg-white p-4">
+            {/* SET-UP & BRIEFING */}
             <details open className="rounded-lg border border-gray-200">
               <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
                 Set-Up &amp; Briefing
@@ -291,40 +505,68 @@ const removeList = () =>
                       className={inputCls}
                       placeholder="8.00am – 9.00am"
                       value={programme.setup.time}
-                      onChange={(e) => updateSetup((s) => ({ ...s, time: e.target.value }))}
+                      readOnly={readOnly}
+                      onChange={(e) =>
+                        updateSetup((s) => ({
+                          ...s,
+                          time: e.target.value,
+                        }))
+                      }
                     />
                   </Field>
+
                   <div className="sm:col-span-2">
                     <Field label="Main Task">
                       <textarea
                         className={inputCls}
                         rows={2}
                         value={programme.setup.intro}
-                        onChange={(e) => updateSetup((s) => ({ ...s, intro: e.target.value }))}
+                        readOnly={readOnly}
+                        onChange={(e) =>
+                          updateSetup((s) => ({
+                            ...s,
+                            intro: e.target.value,
+                          }))
+                        }
                       />
                     </Field>
                   </div>
                 </div>
 
                 {programme.setup.tasks.map((t) => (
-                  <div key={t.id} className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
-                    {/* task header */}
+                  <div
+                    key={t.id}
+                    className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
+                  >
                     <div className="flex items-end gap-2">
                       <div className="flex-1">
                         <Field label="Task header">
                           <input
                             className={inputCls}
                             value={t.title}
-                            onChange={(e) => patchTask(t.id, { title: e.target.value })}
+                            readOnly={readOnly}
+                            onChange={(e) =>
+                              patchTask(t.id, {
+                                title: e.target.value,
+                              })
+                            }
                           />
                         </Field>
                       </div>
-                      <button type="button" className={delBtn} title="Delete task" onClick={() => removeTask(t.id)}>
-                        <Trash2 size={16} />
-                      </button>
+
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className={delBtn}
+                          title="Delete task"
+                          onClick={() => removeTask(t.id)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
 
-                    {/* bullets: bold label + description */}
+                    {/* BULLETS */}
                     <div className="space-y-2">
                       {t.bullets.map((b) => (
                         <div key={b.id} className="flex gap-2">
@@ -332,270 +574,470 @@ const removeList = () =>
                             className={`${inputCls} w-1/3`}
                             placeholder="Bold label"
                             value={b.label}
+                            readOnly={readOnly}
                             onChange={(e) =>
                               patchTask(t.id, {
-                                bullets: t.bullets.map((x) => (x.id === b.id ? { ...x, label: e.target.value } : x)),
+                                bullets: t.bullets.map((x) =>
+                                  x.id === b.id
+                                    ? { ...x, label: e.target.value }
+                                    : x
+                                ),
                               })
                             }
                           />
+
                           <input
                             className={`${inputCls} flex-1`}
                             placeholder="Description"
                             value={b.text}
+                            readOnly={readOnly}
                             onChange={(e) =>
                               patchTask(t.id, {
-                                bullets: t.bullets.map((x) => (x.id === b.id ? { ...x, text: e.target.value } : x)),
+                                bullets: t.bullets.map((x) =>
+                                  x.id === b.id
+                                    ? { ...x, text: e.target.value }
+                                    : x
+                                ),
                               })
                             }
                           />
-                          <button
-                            type="button"
-                            className={delBtn}
-                            onClick={() => patchTask(t.id, { bullets: t.bullets.filter((x) => x.id !== b.id) })}
-                          >
-                            <Trash2 size={15} />
-                          </button>
+
+                          {!readOnly && (
+                            <button
+                              type="button"
+                              className={delBtn}
+                              onClick={() =>
+                                patchTask(t.id, {
+                                  bullets: t.bullets.filter(
+                                    (x) => x.id !== b.id
+                                  ),
+                                })
+                              }
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
                         </div>
                       ))}
-                      <button
-                        type="button"
-                        className={addBtn}
-                        onClick={() => patchTask(t.id, { bullets: [...t.bullets, { id: uid(), label: "", text: "" }] })}
-                      >
-                        <Plus size={15} /> Add bullet
-                      </button>
+
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className={addBtn}
+                          onClick={() =>
+                            patchTask(t.id, {
+                              bullets: [
+                                ...t.bullets,
+                                { id: uid(), label: "", text: "" },
+                              ],
+                            })
+                          }
+                        >
+                          <Plus size={15} />
+                          Add bullet
+                        </button>
+                      )}
                     </div>
 
-                    {/* checklist table */}
+                    {/* CHECKLIST */}
                     <div className="space-y-2 border-t border-gray-200 pt-3">
                       <Field label="Checklist title">
                         <input
                           className={inputCls}
                           value={t.checklistTitle}
-                          onChange={(e) => patchTask(t.id, { checklistTitle: e.target.value })}
+                          readOnly={readOnly}
+                          onChange={(e) =>
+                            patchTask(t.id, {
+                              checklistTitle: e.target.value,
+                            })
+                          }
                         />
                       </Field>
+
                       {t.checklist.map((c) => (
                         <div key={c.id} className="flex gap-2">
                           <input
                             className={`${inputCls} flex-1`}
                             value={c.text}
+                            readOnly={readOnly}
                             onChange={(e) =>
                               patchTask(t.id, {
-                                checklist: t.checklist.map((x) => (x.id === c.id ? { ...x, text: e.target.value } : x)),
+                                checklist: t.checklist.map((x) =>
+                                  x.id === c.id
+                                    ? { ...x, text: e.target.value }
+                                    : x
+                                ),
                               })
                             }
                           />
-                          <button
-                            type="button"
-                            className={delBtn}
-                            onClick={() => patchTask(t.id, { checklist: t.checklist.filter((x) => x.id !== c.id) })}
-                          >
-                            <Trash2 size={15} />
-                          </button>
+
+                          {!readOnly && (
+                            <button
+                              type="button"
+                              className={delBtn}
+                              onClick={() =>
+                                patchTask(t.id, {
+                                  checklist: t.checklist.filter(
+                                    (x) => x.id !== c.id
+                                  ),
+                                })
+                              }
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
                         </div>
                       ))}
-                      <button
-                        type="button"
-                        className={addBtn}
-                        onClick={() => patchTask(t.id, { checklist: [...t.checklist, { id: uid(), text: "" }] })}
-                      >
-                        <Plus size={15} /> Add checklist item
-                      </button>
+
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className={addBtn}
+                          onClick={() =>
+                            patchTask(t.id, {
+                              checklist: [
+                                ...t.checklist,
+                                { id: uid(), text: "" },
+                              ],
+                            })
+                          }
+                        >
+                          <Plus size={15} />
+                          Add checklist item
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
 
-                <button type="button" className={addBtn} onClick={addTask}>
-                  <Plus size={16} /> Add task
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className={addBtn}
+                    onClick={addTask}
+                  >
+                    <Plus size={16} />
+                    Add task
+                  </button>
+                )}
               </div>
             </details>
 
-            {/* Program Summary <details> goes here next */}
+            {/* PROGRAM SUMMARY */}
             <details open className="rounded-lg border border-gray-200">
-            <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
-            Program Summary
-            </summary>
+              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+                Program Summary
+              </summary>
 
-            <div className="space-y-3 border-t border-gray-200 p-3">
-            {programme.programme.map((r) => (
-  <div key={r.id} className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
-    {/* top line: time + activity + delete */}
-    <div className="flex items-end gap-2">
-      <div className="w-48">
-        <Field label="Time">
-          <input
-            className={inputCls}
-            placeholder="9.00am – 9.15am"
-            value={r.time}
-            onChange={(e) => patchRow(r.id, { time: e.target.value })}
-          />
-        </Field>
-      </div>
-      <div className="flex-1">
-        <Field label="Activity">
-          <input
-            className={inputCls}
-            value={r.activity}
-            onChange={(e) => patchRow(r.id, { activity: e.target.value })}
-          />
-        </Field>
-      </div>
-      <button type="button" className={delBtn} title="Delete row" onClick={() => removeRow(r.id)}>
-        <Trash2 size={16} />
-      </button>
-    </div>
+              <div className="space-y-3 border-t border-gray-200 p-3">
+                {programme.programme.map((r) => (
+                  <div
+                    key={r.id}
+                    className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3"
+                  >
+                    <div className="flex items-end gap-2">
+                      <div className="w-48">
+                        <Field label="Time">
+                          <input
+                            className={inputCls}
+                            placeholder="9.00am – 9.15am"
+                            value={r.time}
+                            readOnly={readOnly}
+                            onChange={(e) =>
+                              patchRow(r.id, {
+                                time: e.target.value,
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
 
-    {/* checks + speaker */}
-    <div className="grid gap-3 sm:grid-cols-2">
-      <RichTextEditor label="Technical & Programme Checks">
-        <textarea
-          className={inputCls}
-          rows={3}
-          value={r.checks}
-          onChange={(e) => patchRow(r.id, { checks: e.target.value })}
-        />
-      </RichTextEditor>
-      <RichTextEditor label="Speaker">
-        <textarea
-          className={inputCls}
-          rows={3}
-          value={r.owner}
-          onChange={(e) => patchRow(r.id, { owner: e.target.value })}
-        />
-      </RichTextEditor>
-    </div>
-  </div>
-))}
+                      <div className="flex-1">
+                        <Field label="Activity">
+                          <input
+                            className={inputCls}
+                            value={r.activity}
+                            readOnly={readOnly}
+                            onChange={(e) =>
+                              patchRow(r.id, {
+                                activity: e.target.value,
+                              })
+                            }
+                          />
+                        </Field>
+                      </div>
 
-<button type="button" className={addBtn} onClick={addRow}>
-  <Plus size={16} /> Add row
-</button>
-            </div>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className={delBtn}
+                          title="Delete row"
+                          onClick={() => removeRow(r.id)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <RichTextEditor label="Technical & Programme Checks">
+                        <textarea
+                          className={inputCls}
+                          rows={3}
+                          value={r.checks}
+                          readOnly={readOnly}
+                          onChange={(e) =>
+                            patchRow(r.id, {
+                              checks: e.target.value,
+                            })
+                          }
+                        />
+                      </RichTextEditor>
+
+                      <RichTextEditor label="Speaker">
+                        <textarea
+                          className={inputCls}
+                          rows={3}
+                          value={r.owner}
+                          readOnly={readOnly}
+                          onChange={(e) =>
+                            patchRow(r.id, {
+                              owner: e.target.value,
+                            })
+                          }
+                        />
+                      </RichTextEditor>
+                    </div>
+                  </div>
+                ))}
+
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className={addBtn}
+                    onClick={addRow}
+                  >
+                    <Plus size={16} />
+                    Add row
+                  </button>
+                )}
+              </div>
             </details>
           </div>
         )}
 
-{tab === "lists" && (
-  <div className="space-y-4 rounded-b-lg border bg-white p-4">
-    {/* GUEST LIST */}
-    <details open className="rounded-lg border border-gray-200">
-      <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
-        Guest List for Seating Arrangement
-      </summary>
+        {/* LISTS */}
+        {tab === "lists" && (
+          <div className="space-y-4 rounded-b-lg border bg-white p-4">
+            {/* GUEST LIST */}
+            <details open className="rounded-lg border border-gray-200">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+                Guest List for Seating Arrangement
+              </summary>
 
-      <div className="space-y-3 border-t border-gray-200 p-3">
-        {/* list picker */}
-        <div className="flex items-end gap-2">
-          <div className="w-56">
-            <Field label="Guest list">
-              <select
-                className={inputCls}
-                value={currentList.id}
-                onChange={(e) => update({ selectedGuestListId: e.target.value })}
-              >
-                {programme.guestLists.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name || "Untitled list"}
-                  </option>
+              <div className="space-y-3 border-t border-gray-200 p-3">
+                {currentList ? (
+                  <>
+                    <div className="flex items-end gap-2">
+                      <div className="w-56">
+                        <Field label="Guest list">
+                          <select
+                            className={inputCls}
+                            value={currentList.id}
+                            disabled={readOnly}
+                            onChange={(e) =>
+                              update({
+                                selectedGuestListId: e.target.value,
+                              })
+                            }
+                          >
+                            {programme.guestLists.map((l) => (
+                              <option key={l.id} value={l.id}>
+                                {l.name || "Untitled list"}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      </div>
+
+                      <div className="flex-1">
+                        <Field label="List name">
+                          <input
+                            className={inputCls}
+                            value={currentList.name}
+                            readOnly={readOnly}
+                            onChange={(e) =>
+                              updateList(currentList.id, (l) => ({
+                                ...l,
+                                name: e.target.value,
+                              }))
+                            }
+                          />
+                        </Field>
+                      </div>
+
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className={delBtn}
+                          title="Delete list"
+                          disabled={programme.guestLists.length <= 1}
+                          onClick={removeList}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+
+                    {currentList.guests.map((g, i) => (
+                      <div key={g.id} className="flex items-center gap-2">
+                        <span className="w-6 text-right text-sm text-gray-400">
+                          {i + 1}.
+                        </span>
+
+                        <div className="w-36 shrink-0">
+                          <select
+                            className={inputCls}
+                            value={g.row}
+                            disabled={readOnly}
+                            onChange={(e) =>
+                              patchGuest(g.id, {
+                                row: e.target.value as Guest["row"],
+                              })
+                            }
+                          >
+                            <option value="">No highlight</option>
+                            <option value="first">First row</option>
+                            <option value="second">Second row</option>
+                          </select>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <input
+                            className={inputCls}
+                            placeholder="Guest name"
+                            value={g.name}
+                            readOnly={readOnly}
+                            onChange={(e) =>
+                              patchGuest(g.id, {
+                                name: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        {!readOnly && (
+                          <button
+                            type="button"
+                            className={delBtn}
+                            title="Delete guest"
+                            onClick={() => removeGuest(g.id)}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+
+                    {!readOnly && (
+                      <div className="flex flex-wrap gap-4">
+                        <button
+                          type="button"
+                          className={addBtn}
+                          onClick={addGuest}
+                        >
+                          <Plus size={15} />
+                          Add guest
+                        </button>
+
+                        <button
+                          type="button"
+                          className={addBtn}
+                          onClick={addList}
+                        >
+                          <Plus size={15} />
+                          New guest list
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No guest lists available.
+                  </p>
+                )}
+              </div>
+            </details>
+
+            {/* PACKING LIST */}
+            <details open className="rounded-lg border border-gray-200">
+              <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
+                Technical Department Packing List
+              </summary>
+
+              <div className="space-y-2 border-t border-gray-200 p-3">
+                {programme.packing.map((i) => (
+                  <div key={i.id} className="flex gap-2">
+                    <input
+                      className={`${inputCls} flex-1`}
+                      value={i.text}
+                      readOnly={readOnly}
+                      onChange={(e) =>
+                        patchPacking(i.id, e.target.value)
+                      }
+                    />
+
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        className={delBtn}
+                        title="Delete item"
+                        onClick={() => removePacking(i.id)}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
+                  </div>
                 ))}
-              </select>
-            </Field>
+
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className={addBtn}
+                    onClick={addPacking}
+                  >
+                    <Plus size={15} />
+                    Add item
+                  </button>
+                )}
+              </div>
+            </details>
           </div>
-          <div className="flex-1">
-            <Field label="List name">
-              <input
-                className={inputCls}
-                value={currentList.name}
-                onChange={(e) => updateList(currentList.id, (l) => ({ ...l, name: e.target.value }))}
-              />
-            </Field>
-          </div>
-          <button type="button" className={delBtn} title="Delete list" onClick={removeList}>
-            <Trash2 size={16} />
-          </button>
-        </div>
-
-        {/* guests */}
-        {currentList.guests.map((g, i) => (
-       <div key={g.id} className="flex items-center gap-2">
-       <span className="w-6 text-right text-sm text-gray-400">{i + 1}.</span>
-     
-       <div className="w-36 shrink-0">
-         <select
-           className={inputCls}
-           value={g.row}
-           onChange={(e) => patchGuest(g.id, { row: e.target.value as Guest["row"] })}
-         >
-           <option value="">No highlight</option>
-           <option value="first">First row</option>
-           <option value="second">Second row</option>
-         </select>
-       </div>
-     
-       <div className="min-w-0 flex-1">
-         <input
-           className={inputCls}
-           placeholder="Guest name"
-           value={g.name}
-           onChange={(e) => patchGuest(g.id, { name: e.target.value })}
-         />
-       </div>
-     
-       <button type="button" className={delBtn} title="Delete guest" onClick={() => removeGuest(g.id)}>
-         <Trash2 size={15} />
-       </button>
-     </div>
-        ))}
-
-        <div className="flex gap-4">
-          <button type="button" className={addBtn} onClick={addGuest}>
-            <Plus size={15} /> Add guest
-          </button>
-          <button type="button" className={addBtn} onClick={addList}>
-            <Plus size={15} /> New guest list
-          </button>
-        </div>
-      </div>
-    </details>
-
-    {/* PACKING LIST */}
-    <details open className="rounded-lg border border-gray-200">
-      <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-indigo-900">
-        Technical Department Packing List
-      </summary>
-
-      <div className="space-y-2 border-t border-gray-200 p-3">
-        {programme.packing.map((i) => (
-          <div key={i.id} className="flex gap-2">
-            <input
-              className={`${inputCls} flex-1`}
-              value={i.text}
-              onChange={(e) => patchPacking(i.id, e.target.value)}
-            />
-            <button type="button" className={delBtn} title="Delete item" onClick={() => removePacking(i.id)}>
-              <Trash2 size={15} />
-            </button>
-          </div>
-        ))}
-
-        <button type="button" className={addBtn} onClick={addPacking}>
-          <Plus size={15} /> Add item
-        </button>
-      </div>
-    </details>
-  </div>
-)}
+        )}
 
         {/* PREVIEW */}
         {tab === "preview" && (
           <div className="space-y-3 rounded-b-lg border bg-white p-4">
-            <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 rounded bg-indigo-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-900">
-              {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied!" : "Copy HTML"}
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 rounded bg-indigo-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-900"
+            >
+              {copied ? <Check size={15} /> : <Copy size={15} />}
+              {copied ? "Copied!" : "Copy HTML"}
             </button>
+
             <div className="overflow-auto rounded border border-gray-300 bg-gray-200 p-3">
-              <iframe title="Admin programme preview" srcDoc={html} style={{ width: 962, minWidth: 962, height: 1100 }} className="mx-auto block border-0 bg-white" />
+              <iframe
+                title="Admin programme preview"
+                srcDoc={html}
+                style={{
+                  width: 962,
+                  minWidth: 962,
+                  height: 1100,
+                }}
+                className="mx-auto block border-0 bg-white"
+              />
             </div>
           </div>
         )}
