@@ -431,7 +431,7 @@ function getDateTime() {
 }
 
 export default function ProgramHome() {
-  const [tab, setTab] = useState<"programmes" | "preview" | "ProgramHistoryss">("programmes");
+  const [tab, setTab] = useState<"programmes" | "preview" | "history">("programmes");
   const [programmes, setProgrammes] = useState<AdminProgramme[]>([]);
   const [selectedArchivedBrief, setSelectedArchivedBrief] = useState<AdminProgramme | null>(null)
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
@@ -721,7 +721,7 @@ export default function ProgramHome() {
           </>
         )}
 {tab === "history" && (
-  <EventsHistory
+  <ProgramHistory
     builderKey={PROGRAM_BUILDER_KEY}
     viewPastEventDetails={setSelectedArchivedBrief}
     onCopyToCurrent={handleMovetoCurrent}
