@@ -9,7 +9,9 @@ import {
   X,
 } from "lucide-react";
  
-//for internal use mainly 
+// have draft survey layout
+// ++ ver 2 builder for 1 questiob?
+
 export default function Surveys() {
     const [loaded, setLoaded] = useState(false);
     const [saveStatus, setSaveStatus] = useState("idle");
@@ -48,11 +50,7 @@ export default function Surveys() {
             </>
           )}
 
-          {saveStatus === "too-large" && (
-            <span className="text-red-600">
-              Too large to save. Remove some images.
-            </span>
-          )}
+     
 
           {saveStatus.startsWith("error") && (
             <span className="text-red-600">
