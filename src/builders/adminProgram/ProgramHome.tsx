@@ -441,7 +441,7 @@ export default function ProgramHome() {
   const [copied, setCopied] = useState(false);
 
 
-  const completedProgram = async (event: EventItem) => {
+  const completedProgram = async (event: AdminProgramme) => {
     try {
       const res = await fetch("/api/program-history", {
         method: "POST",
