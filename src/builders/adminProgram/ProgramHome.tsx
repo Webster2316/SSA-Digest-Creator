@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Trash2, SquareArrowOutUpRight, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
+import { Trash2, SquareArrowOutUpRight,   CircleCheck, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import { uid, esc } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
@@ -440,6 +440,35 @@ export default function ProgramHome() {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+
+  const completedProgram = async (event: EventItem) => {
+    try {
+      const res = await fetch("/api/program-history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          builderKey: PROGRAM_BUILDER_KEY,
+          event: {
+            ...programmes,
+          },
+        }),
+      });
+  
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Failed to move brief into archive:", res.status, errorText);
+        return;
+      }
+  
+      setProgrammes((prev) => prev.filter((item) => item.id !== programmes.id));
+    } catch (e) {
+      console.error("Failed to move to archive", e);
+    }
+  };
+
+
   // LOAD once
   useEffect(() => {
     (async () => {
@@ -592,6 +621,13 @@ export default function ProgramHome() {
                       >
                         <SquareArrowOutUpRight size={16} />
                       </button>
+                      <button
+    type="button"
+    onClick={() => completedProgram(ev)}
+    className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+  >
+    <CircleCheck size={16} />
+  </button>
                       <button
                         type="button"
                         onClick={() => duplicateProgramme(p)}
