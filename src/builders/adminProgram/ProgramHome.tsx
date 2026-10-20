@@ -451,17 +451,18 @@ export default function ProgramHome() {
         body: JSON.stringify({
           builderKey: PROGRAM_BUILDER_KEY,
           event: {
-            ...programmes,
+            ...p,
           },
         }),
       });
-  
+      console.log(PROGRAM_BUILDER_KEY)
+      comsole.log(p)
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Failed to move brief into archive:", res.status, errorText);
         return;
       }
-  
+  console.log("post error")
       setProgrammes((prev) => prev.filter((item) => item.id !== programmes.id));
     } catch (e) {
       console.error("Failed to move to archive", e);
