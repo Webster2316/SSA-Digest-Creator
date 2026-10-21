@@ -838,7 +838,6 @@ We look forward to bringing our members together and strengthening our collectiv
             events,
             greeting,
             issueRange,
-            rawHtmlEdit,
             builtHtml,
           }),
         });
@@ -856,7 +855,7 @@ We look forward to bringing our members together and strengthening our collectiv
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, greeting, issueRange, rawHtmlEdit, loaded]);
+  }, [events, greeting, issueRange, loaded]);
 
   const handleAddEvents = (title: string) => {
     setEvents((prev) => [
