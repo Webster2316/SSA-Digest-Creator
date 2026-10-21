@@ -810,6 +810,242 @@ These in-person sessions will provide an overview of the work being undertaken a
 We encourage you to register your interest and join us at these upcoming sessions.
 
 We look forward to bringing our members together and strengthening our collective engagement across the association.`);
+const buildFullHtml = () => {
+  const eventHtml = sortedEvents
+    .map((event) =>
+      event.eventStatus === "Tentative"
+        ? renderTentativeEvent(event)
+        : renderConfirmedEvent(event)
+    )
+    .join("\n");
+
+  // This shell intentionally keeps the original 680px email sizing and
+  // Outlook conditional wrapper from the supplied reference HTML.
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!--[if !mso]><!-->
+<meta name="x-apple-disable-message-reformatting">
+<!--<![endif]-->
+
+<title>SSA Upcoming Events</title>
+
+<!--[if mso]>
+<noscript>
+  <xml>
+    <o:OfficeDocumentSettings>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+  </xml>
+</noscript>
+<![endif]-->
+
+<style type="text/css">
+  body,
+  table,
+  td,
+  a {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  table,
+  td {
+    mso-table-lspace: 0pt;
+    mso-table-rspace: 0pt;
+  }
+
+  img {
+    -ms-interpolation-mode: bicubic;
+    border: 0;
+    display: block;
+    outline: none;
+    text-decoration: none;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #f0f4f8;
+  }
+
+  a[x-apple-data-detectors] {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  @media only screen and (max-width: 620px) {
+    .email-container {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .header-img {
+      width: 100% !important;
+      height: auto !important;
+    }
+
+    .pad-sides {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+
+    .event-date-cell,
+    .event-title-cell,
+    .event-status-cell,
+    .event-details-cell,
+    .event-actions-cell,
+    .programme-cell,
+    .speakers-cell {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .event-date-cell {
+      text-align: left !important;
+      padding: 10px 12px !important;
+    }
+
+    .event-title-cell {
+      padding: 14px 16px 10px 16px !important;
+    }
+
+    .event-status-cell {
+      text-align: left !important;
+      padding: 0 16px 14px 16px !important;
+    }
+
+    .event-details-cell {
+      padding: 18px 16px !important;
+    }
+
+    .event-actions-cell {
+      padding: 0 16px 18px 16px !important;
+      border-left: 0 !important;
+      border-top: 1px solid #e2e8f0 !important;
+    }
+
+    .programme-cell {
+      padding: 18px 16px !important;
+    }
+
+    .speakers-cell {
+      padding: 18px 16px !important;
+      border-left: 0 !important;
+      border-top: 1px solid #e2e8f0 !important;
+    }
+
+    .register-table {
+      width: 100% !important;
+    }
+
+    .register-link {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      text-align: center !important;
+    }
+
+    .footer-cell {
+      padding: 20px 16px !important;
+    }
+  }
+</style>
+</head>
+
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f0f4f8;">
+<tr>
+  <td align="center" style="padding-top:32px;padding-bottom:32px;padding-left:20px;padding-right:20px;">
+
+    <!--[if mso]>
+    <table width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+      <tr>
+        <td width="680">
+    <![endif]-->
+
+    <table
+      class="email-container"
+      width="680"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      role="presentation"
+      align="center"
+      style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;"
+    >
+
+      <!-- BANNER -->
+      <tr>
+        <td style="padding:0;font-size:0;line-height:0;">
+          <img
+            class="header-img"
+            src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png"
+            width="680"
+            alt="SSA Upcoming Events"
+            style="display:block;width:100%;max-width:680px;height:auto;border:0;"
+          >
+        </td>
+      </tr>
+
+      <!-- SECTION TITLE -->
+      <tr>
+        <td style="background:#262261;padding:14px 24px;">
+          <span style="font-family:${FONT};font-size:12pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
+        </td>
+      </tr>
+
+      <!-- GREETING -->
+      <tr>
+        <td class="pad-sides" style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #d4dde8;">
+          <div data-f="greeting" style="font-family:${FONT};font-size:10pt;color:#1f3b7a;line-height:1.6;">
+            ${renderGreeting(greeting)}
+          </div>
+        </td>
+      </tr>
+
+${eventHtml}
+
+      <!-- FOOTER - follow weekly digest-->
+      <tr>
+        <td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <td align="center">
+                <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
+                You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+    </table>
+
+    <!--[if mso]>
+        </td>
+      </tr>
+    </table>
+    <![endif]-->
+
+  </td>
+</tr>
+</table>
+
+</body>
+</html>`;
+};
+
+
+const generatedHtml = buildFullHtml();
+const isEdited = rawHtmlEdit !== null;
+const html = isEdited ? rawHtmlEdit : generatedHtml;
 
   useEffect(() => {
     (async () => {
@@ -897,237 +1133,7 @@ We look forward to bringing our members together and strengthening our collectiv
     return aDate.localeCompare(bDate);
   });
 
-  const buildFullHtml = () => {
-    const eventHtml = sortedEvents
-      .map((event) =>
-        event.eventStatus === "Tentative"
-          ? renderTentativeEvent(event)
-          : renderConfirmedEvent(event)
-      )
-      .join("\n");
 
-    // This shell intentionally keeps the original 680px email sizing and
-    // Outlook conditional wrapper from the supplied reference HTML.
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!--[if !mso]><!-->
-  <meta name="x-apple-disable-message-reformatting">
-  <!--<![endif]-->
-
-  <title>SSA Upcoming Events</title>
-
-  <!--[if mso]>
-  <noscript>
-    <xml>
-      <o:OfficeDocumentSettings>
-        <o:PixelsPerInch>96</o:PixelsPerInch>
-      </o:OfficeDocumentSettings>
-    </xml>
-  </noscript>
-  <![endif]-->
-
-  <style type="text/css">
-    body,
-    table,
-    td,
-    a {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
-
-    table,
-    td {
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    img {
-      -ms-interpolation-mode: bicubic;
-      border: 0;
-      display: block;
-      outline: none;
-      text-decoration: none;
-    }
-
-    body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #f0f4f8;
-    }
-
-    a[x-apple-data-detectors] {
-      color: inherit !important;
-      text-decoration: none !important;
-    }
-
-    @media only screen and (max-width: 620px) {
-      .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
-      }
-
-      .header-img {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .pad-sides {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-
-      .event-date-cell,
-      .event-title-cell,
-      .event-status-cell,
-      .event-details-cell,
-      .event-actions-cell,
-      .programme-cell,
-      .speakers-cell {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      .event-date-cell {
-        text-align: left !important;
-        padding: 10px 12px !important;
-      }
-
-      .event-title-cell {
-        padding: 14px 16px 10px 16px !important;
-      }
-
-      .event-status-cell {
-        text-align: left !important;
-        padding: 0 16px 14px 16px !important;
-      }
-
-      .event-details-cell {
-        padding: 18px 16px !important;
-      }
-
-      .event-actions-cell {
-        padding: 0 16px 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .programme-cell {
-        padding: 18px 16px !important;
-      }
-
-      .speakers-cell {
-        padding: 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .register-table {
-        width: 100% !important;
-      }
-
-      .register-link {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-      }
-
-      .footer-cell {
-        padding: 20px 16px !important;
-      }
-    }
-  </style>
-</head>
-
-<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
-
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f0f4f8;">
-  <tr>
-    <td align="center" style="padding-top:32px;padding-bottom:32px;padding-left:20px;padding-right:20px;">
-
-      <!--[if mso]>
-      <table width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
-        <tr>
-          <td width="680">
-      <![endif]-->
-
-      <table
-        class="email-container"
-        width="680"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-        style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;"
-      >
-
-        <!-- BANNER -->
-        <tr>
-          <td style="padding:0;font-size:0;line-height:0;">
-            <img
-              class="header-img"
-              src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png"
-              width="680"
-              alt="SSA Upcoming Events"
-              style="display:block;width:100%;max-width:680px;height:auto;border:0;"
-            >
-          </td>
-        </tr>
-
-        <!-- SECTION TITLE -->
-        <tr>
-          <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:12pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
-          </td>
-        </tr>
-
-        <!-- GREETING -->
-        <tr>
-          <td class="pad-sides" style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #d4dde8;">
-            <div data-f="greeting" style="font-family:${FONT};font-size:10pt;color:#1f3b7a;line-height:1.6;">
-              ${renderGreeting(greeting)}
-            </div>
-          </td>
-        </tr>
-
-${eventHtml}
-
-        <!-- FOOTER - follow weekly digest-->
-        <tr>
-          <td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-              <tr>
-                <td align="center">
-                  <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
-                  You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-      </table>
-
-      <!--[if mso]>
-          </td>
-        </tr>
-      </table>
-      <![endif]-->
-
-    </td>
-  </tr>
-</table>
-
-</body>
-</html>`;
-  };
 
   //copy event item
   const copyEvent = (event: any) => {
@@ -1226,9 +1232,7 @@ const completedEvent = async (event: EventItem) => {
   }
 };
 
-const generatedHtml = buildFullHTML();
-const isEdited = rawHtmlEdit !== null;
-const html = isEdited ? rawHtmlEdit : generatedHtml;
+
 if (selectedArchivedEvent) {
   return (
     <EventsEditor
