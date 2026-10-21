@@ -18,7 +18,7 @@ const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "events", label: "Events", icon: Martini},
   {key: "postBuilder", label: "Socials", icon: MessageSquareQuote},
   {key: "adminBrief", label: "Admin Brief", icon: UserShield},
-  {key: "surveys", label: "Surveys & Polls", icon: ChartColumnIncreasing},
+//  {key: "surveys", label: "Surveys & Polls", icon: ChartColumnIncreasing},
   {key: "sponsors", label: "Sponsors", icon: StarCheck},
 ];
 
@@ -125,7 +125,7 @@ useEffect(() => {
         {builder === "dataManagement" && <DataManagement />}
         {builder === "postBuilder" && <Socials />} 
         {builder === "adminBrief" && <AdminBrief />}
-        {builder === "surveys" && <Surveys />}
+        {/* {builder === "surveys" && <Surveys />} */}
         {builder === "sponsors" && <Sponsorships />} 
      
       </div>
