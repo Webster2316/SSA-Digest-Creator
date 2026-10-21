@@ -7,7 +7,7 @@ import EventsBuilder from "./builders/events/EventsHome";
 import DataManagement from "./archiveSettings/index";
 import Socials from "./builders/postBuilder";
 import AdminBrief from "./builders/adminProgram/ProgramHome";
-import Surveys from "./builders/Surveys";
+import Surveys from "./builders/surveys/Surveys";
 import Sponsorships from "./builders/Sponsors";
 
 type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief" | "sponsors" | "surveys";
