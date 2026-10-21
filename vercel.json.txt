@@ -1,7 +1,8 @@
-//ensures archiving only haves at end of the week
+//ensures archiving only saves at end of the week/ start of month
 {
-    "crons": [
-      { "path": "/api/archive-digest", "schedule": "0 16 * * 5" }
-    ]
+  "crons": [
+    { "path": "/api/archive-digest?group=weekly", "schedule": "0 16 * * 5" },
+    { "path": "/api/archive-digest?group=monthly", "schedule": "0 16 3 * *" }
+  ]
   }
 /*   Timing is in UTC */
