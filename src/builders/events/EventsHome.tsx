@@ -784,7 +784,6 @@ export default function EventsHome() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
   const [copied, setCopied] = useState(false);
-  const [rawHtmlEdit, setRawHtmlEdit] = useState<string | null>(null);
   const [issueRange, setIssueRange] = useState("Monthly Issue: ");
   const [greeting, setGreeting] = useState(`Dear Members,
 
