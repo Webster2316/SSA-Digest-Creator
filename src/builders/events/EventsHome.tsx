@@ -799,7 +799,8 @@ export default function EventsHome() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
   const [copied, setCopied] = useState(false);
-  const [issueRange, setIssueRange] = useState("Monthly Issue: September 2026");
+  const [rawHtmlEdit, setRawHtmlEdit] = useState(null);
+  const [issueRange, setIssueRange] = useState("Monthly Issue: ");
   const [greeting, setGreeting] = useState(`Dear Members,
 
 We are pleased to invite you to our upcoming and future planned events, designed to bring our members together and provide an opportunity to engage directly with our Chairs, Councillors and Committee Experts.
@@ -845,7 +846,8 @@ We look forward to bringing our members together and strengthening our collectiv
         const res = await fetch("/api/save-digest?key=events-builder-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ events, greeting, issueRange }),
+          body: JSON.stringify({ events, greeting, issueRange, rawHtmlEdit,
+            builtHtml: html, }),
         });
 
         if (res.ok) {
@@ -860,7 +862,7 @@ We look forward to bringing our members together and strengthening our collectiv
     }, 700);
 
     return () => clearTimeout(t);
-  }, [events, greeting, issueRange, loaded]);
+  }, [events, greeting, issueRange, rawHtmlEdit, loaded]);
 
   const handleAddEvents = (title: string) => {
     setEvents((prev) => [
@@ -1224,6 +1226,9 @@ const completedEvent = async (event: EventItem) => {
   }
 };
 
+const generatedHtml = buildFullHTML();
+const isEdited = rawHtmlEdit !== null;
+const html = isEdited ? rawHtmlEdit : generatedHtml;
 if (selectedArchivedEvent) {
   return (
     <EventsEditor

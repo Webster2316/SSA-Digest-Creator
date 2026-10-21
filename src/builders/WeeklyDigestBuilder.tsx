@@ -411,7 +411,7 @@ export default function WeeklyDigestBuilder() {
       setLoaded(true);
     })();
   }, []);
-
+//ADD HTML
   useEffect(() => {
     if (!loaded) return;
     setSaveStatus("saving");
@@ -491,6 +491,8 @@ export default function WeeklyDigestBuilder() {
       }
     }
   };
+
+  //ADD HTML
   const generatedHtml = buildFullHTML({ issueRange, events, actionItems, notingItems });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
