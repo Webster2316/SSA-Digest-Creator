@@ -1482,8 +1482,6 @@ if (selectedArchivedEvent) {
         {tab === "preview" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-gray-800">Email Preview</h2>
             <div>
             <button
                 type="button"
@@ -1496,7 +1494,7 @@ if (selectedArchivedEvent) {
                 <p className="text-xs text-gray-500">
                  Live Preview 
                 </p>
-            </div>
+            
               </div>
 
             </div>
