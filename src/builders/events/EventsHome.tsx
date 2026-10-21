@@ -828,7 +828,7 @@ We look forward to bringing our members together and strengthening our collectiv
     const t = setTimeout(async () => {
       try {
         // Build the HTML here so it always matches the state being saved.
-        const builtHtml = rawHtmlEdit ?? buildFullHtml();
+        const builtHtml = buildFullHtml();
 
         const res = await fetch("/api/save-digest?key=events-builder-data", {
           method: "POST",
