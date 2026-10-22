@@ -48,7 +48,7 @@ export default async function handler(req, res) {
 
 
         //=============================
-        // DELETE -delete old issues
+        // DELETE -delete old issues by ID
         //=============================
        
         if (req.method === "DELETE") {
@@ -85,6 +85,7 @@ export default async function handler(req, res) {
               id: deleted[0].id,
             });
           }
+
     } catch (e) {
         console.error("Archive management failed:", e);
 
@@ -92,4 +93,7 @@ export default async function handler(req, res) {
           error: e.message,
         });
     }
+
+
+    
 }
