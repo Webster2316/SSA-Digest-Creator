@@ -6,3 +6,98 @@
   ]
   }
 /*   Timing is in UTC */
+
+     // <!-- ROW 3: SPEAKERS -->
+            // <table
+            //   width="100%"
+            //   cellpadding="0"
+            //   cellspacing="0"
+            //   border="0"
+            //   role="presentation"
+            //   style="border-top:1px solid #e2e8f0;"
+            // >
+            //   <tr>
+            //     <td
+            //       class="speakers-cell"
+            //       valign="top"
+            //       style="
+            //         padding:20px 22px;
+            //         background:#ffffff;
+            //       "
+            //     >
+            //       <p
+            //         style="
+            //           margin:0 0 10px;
+            //           font-family:${FONT};
+            //           font-size:10pt;
+            //           font-weight:700;
+            //           letter-spacing:1.5px;
+            //           text-transform:uppercase;
+            //           color:#8492a6;
+            //         "
+            //       >
+            //         Speakers
+            //       </p>
+            
+            //       <div
+            //         data-f="speakers"
+            //         style="
+            //           font-family:${FONT};
+            //           font-size:10pt;
+            //           color:#374151;
+            //           line-height:1.6;
+            //         "
+            //       >
+            //         ${speakersHtml}
+            //       </div>
+            //     </td>
+            //   </tr>
+            // </table>
+            
+            
+            // <!-- ROW 4: PROGRAMME TOPICS -->
+            // <table
+            //   width="100%"
+            //   cellpadding="0"
+            //   cellspacing="0"
+            //   border="0"
+            //   role="presentation"
+            //   style="border-top:1px solid #e2e8f0;"
+            // >
+            //   <tr>
+            //     <td
+            //       class="programme-cell"
+            //       valign="top"
+            //       style="
+            //         padding:20px 22px;
+            //         background:#fafbfd;
+            //       "
+            //     >
+            //       <p
+            //         style="
+            //           margin:0 0 10px;
+            //           font-family:${FONT};
+            //           font-size:10pt;
+            //           font-weight:700;
+            //           letter-spacing:1.5px;
+            //           text-transform:uppercase;
+            //           color:#8492a6;
+            //         "
+            //       >
+            //         Programme Topics
+            //       </p>
+            
+            //       <div
+            //         data-f="programme"
+            //         style="
+            //           font-family:${FONT};
+            //           font-size:10pt;
+            //           color:#374151;
+            //           line-height:1.65;
+            //         "
+            //       >
+            //         ${event.programme?.trim() || "&nbsp;"}
+            //       </div>
+            //     </td>
+            //   </tr>
+            // </table>

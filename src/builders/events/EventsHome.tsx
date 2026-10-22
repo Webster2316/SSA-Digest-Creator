@@ -498,10 +498,53 @@ function renderTentativeEvent(event: EventItem) {
   `;
 }
 
+function hasRichContent(html?: string) {
+  if (!html) return false;
+  if (/<img\b/i.test(html)) return true; // keep if it contains an image
+  const text = html
+    .replace(/<br\s*\/?>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .trim();
+  return text.length > 0;
+}
+
 function renderConfirmedEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
   const committees = renderCommitteeTags(event.committees ?? []) + rendercustomCommitteeTags(event.customCommitteeTags ?? []);
-  const speakersHtml = event.speakers?.trim() || "&nbsp;";
+  const speakersRow = hasRichContent(event.speakers)
+  ? `
+            <!-- ROW 3: SPEAKERS -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
+              <tr>
+                <td class="speakers-cell" valign="top" style="padding:20px 22px;background:#ffffff;">
+                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
+                    Speakers
+                  </p>
+                  <div data-f="speakers" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.6;">
+                    ${event.speakers}
+                  </div>
+                </td>
+              </tr>
+            </table>`
+  : "";
+
+const programmeRow = hasRichContent(event.programme)
+  ? `
+            <!-- ROW 4: PROGRAMME TOPICS -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
+              <tr>
+                <td class="programme-cell" valign="top" style="padding:20px 22px;background:#fafbfd;">
+                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
+                    Programme Topics
+                  </p>
+                  <div data-f="programme" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.65;">
+                    ${event.programme}
+                  </div>
+                </td>
+              </tr>
+            </table>`
+  : "";
   const documents = renderDocuments(event.documents ?? []);
   const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed");
   const registrationBadge = renderBadge(
@@ -659,100 +702,8 @@ function renderConfirmedEvent(event: EventItem) {
               </tr>
             </table>
 
-            <!-- ROW 3: SPEAKERS -->
-            <table
-              width="100%"
-              cellpadding="0"
-              cellspacing="0"
-              border="0"
-              role="presentation"
-              style="border-top:1px solid #e2e8f0;"
-            >
-              <tr>
-                <td
-                  class="speakers-cell"
-                  valign="top"
-                  style="
-                    padding:20px 22px;
-                    background:#ffffff;
-                  "
-                >
-                  <p
-                    style="
-                      margin:0 0 10px;
-                      font-family:${FONT};
-                      font-size:10pt;
-                      font-weight:700;
-                      letter-spacing:1.5px;
-                      text-transform:uppercase;
-                      color:#8492a6;
-                    "
-                  >
-                    Speakers
-                  </p>
-            
-                  <div
-                    data-f="speakers"
-                    style="
-                      font-family:${FONT};
-                      font-size:10pt;
-                      color:#374151;
-                      line-height:1.6;
-                    "
-                  >
-                    ${speakersHtml}
-                  </div>
-                </td>
-              </tr>
-            </table>
-            
-            
-            <!-- ROW 4: PROGRAMME TOPICS -->
-            <table
-              width="100%"
-              cellpadding="0"
-              cellspacing="0"
-              border="0"
-              role="presentation"
-              style="border-top:1px solid #e2e8f0;"
-            >
-              <tr>
-                <td
-                  class="programme-cell"
-                  valign="top"
-                  style="
-                    padding:20px 22px;
-                    background:#fafbfd;
-                  "
-                >
-                  <p
-                    style="
-                      margin:0 0 10px;
-                      font-family:${FONT};
-                      font-size:10pt;
-                      font-weight:700;
-                      letter-spacing:1.5px;
-                      text-transform:uppercase;
-                      color:#8492a6;
-                    "
-                  >
-                    Programme Topics
-                  </p>
-            
-                  <div
-                    data-f="programme"
-                    style="
-                      font-family:${FONT};
-                      font-size:10pt;
-                      color:#374151;
-                      line-height:1.65;
-                    "
-                  >
-                    ${event.programme?.trim() || "&nbsp;"}
-                  </div>
-                </td>
-              </tr>
-            </table>
+            ${speakersRow}
+            ${programmeRow}
           </td>
         </tr>
         <!-- =====================================================
