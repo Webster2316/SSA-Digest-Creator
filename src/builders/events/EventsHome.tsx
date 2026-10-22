@@ -210,8 +210,34 @@ function getMonthYearParts(date: string) {
   return { month: monthText, year: year || "" };
 }
 
-function renderBadge(style: TagStyle, dataField: string, dataStatus: string) {
-  return `<span data-f="${esc(dataField)}" data-status="${esc(dataStatus)}" style="display:inline-block;padding:4px 9px;border-radius:3px;background:${style.bg};border:1px solid ${style.border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;">${esc(style.text)}</span>`;
+/**
+ * Status badge (Tentative / Confirmed / registration status).
+ * Built as a one-cell table because Outlook classic (Word engine) ignores
+ * padding/border on inline spans but respects them on a <td>.
+ */
+function renderBadge(
+  style: TagStyle,
+  dataField: string,
+  dataStatus: string,
+  align?: "left" | "center" | "right"
+) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${
+    align ? ` align="${align}"` : ""
+  } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
+}
+
+/**
+ * Inline tag used for committees. Stays inline so tags can wrap onto new lines.
+ * Outlook classic ignores padding/margin on spans, so we add non-breaking
+ * spaces only for MSO via conditional comments.
+ */
+function renderInlineTag(
+  text: string,
+  bg: string,
+  color: string,
+  border: string
+) {
+  return `<span style="display:inline-block;margin:0 0 4px 0;padding:5px 9px;border-radius:3px;background:${bg};background-color:${bg};border:1px solid ${border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${color};mso-line-height-rule:exactly;line-height:12px;"><!--[if mso]>&nbsp;&nbsp;<![endif]-->${esc(text)}<!--[if mso]>&nbsp;&nbsp;<![endif]--></span>`;
 }
 
 function renderCommitteeTags(codes: string[]) {
@@ -222,33 +248,25 @@ function renderCommitteeTags(codes: string[]) {
       const option = committeeOptions[code];
       if (!option) return "";
 
-      return `<span style="display:inline-block;margin:0 4px 4px 0;padding:5px 9px;border-radius:3px;background:${option.bg};border:1px solid ${option.border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${option.color};">${esc(option.text)}</span>`;
+      return renderInlineTag(option.text, option.bg, option.color, option.border);
     })
-    .join("");
+    .filter(Boolean)
+    .join(" ");
 }
 
-
 function rendercustomCommitteeTags(tags: string[]) {
+  if (!tags.length) return "";
 
-if (!tags.length) return "";
+  return tags
+    .filter((tag) => tag.trim())
+    .map((tag) => renderInlineTag(tag.trim(), "#f5f5f5", "#383838", "#383838"))
+    .join(" ");
+}
 
-return tags.filter((tag) => tag.trim()).map((tag) => `<span style="
-display:inline-block;
-margin:0 4px 4px 0;
-padding:5px 9px;
-border-radius:3px;
-background:#f5f5f5;
-border:1px solid #383838;
-font-family:${FONT};
-font-size:9px;
-font-weight:700;
-letter-spacing:0.8px;
-text-transform:uppercase;
-color:#383838;
-">${esc(tag.trim())}</span>`
-)
-.join("");
-};
+// Joins the two tag groups with a space so they don't touch in Outlook.
+function joinTagGroups(...groups: string[]) {
+  return groups.filter(Boolean).join(" ");
+}
 
 function renderDocuments(documents: EventDocument[]) {
   if (!documents.length) return "";
@@ -262,12 +280,31 @@ function renderDocuments(documents: EventDocument[]) {
   return `<div data-f="documents" style="width:100%;border-top:1px solid #dde4ec;margin-top:14px;padding-top:12px;text-align:center;">${links}</div>`;
 }
 
+/**
+ * Button built as a table cell (bulletproof-ish for Outlook classic).
+ * Padding + background live on the <td>; the link text sits inside.
+ */
+function renderButton(
+  label: string,
+  href: string,
+  extraLinkAttrs = ""
+) {
+  return `<table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
+             <tr>
+               <td align="center" bgcolor="#1b76bc" style="background-color:#1b76bc;border-radius:3px;padding:8px 12px;mso-line-height-rule:exactly;line-height:14px;">
+                 <a class="register-link" ${extraLinkAttrs} href="${href}" target="_blank" style="font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;"><span style="color:#ffffff;">${esc(label)}</span></a>
+               </td>
+             </tr>
+           </table>`;
+}
+
 function renderTentativeEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
 
-  const committees =
-    renderCommitteeTags(event.committees ?? []) +
-    rendercustomCommitteeTags(event.customCommitteeTags ?? []);
+  const committees = joinTagGroups(
+    renderCommitteeTags(event.committees ?? []),
+    rendercustomCommitteeTags(event.customCommitteeTags ?? [])
+  );
 
   const status = eventStatusOptions.Tentative;
 
@@ -366,7 +403,7 @@ function renderTentativeEvent(event: EventItem) {
               align="right"
               style="padding:14px 18px 14px 8px;"
             >
-              ${renderBadge(status, "event-status", "Tentative")}
+              ${renderBadge(status, "event-status", "Tentative", "right")}
             </td>
 
           </tr>
@@ -511,7 +548,10 @@ function hasRichContent(html?: string) {
 
 function renderConfirmedEvent(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
-  const committees = renderCommitteeTags(event.committees ?? []) + rendercustomCommitteeTags(event.customCommitteeTags ?? []);
+  const committees = joinTagGroups(
+    renderCommitteeTags(event.committees ?? []),
+    rendercustomCommitteeTags(event.customCommitteeTags ?? [])
+  );
   const speakersRow = hasRichContent(event.speakers)
   ? `
             <!-- ROW 3: SPEAKERS -->
@@ -529,7 +569,7 @@ function renderConfirmedEvent(event: EventItem) {
             </table>`
   : "";
 
-const programmeRow = hasRichContent(event.programme)
+  const programmeRow = hasRichContent(event.programme)
   ? `
             <!-- ROW 4: PROGRAMME TOPICS -->
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
@@ -546,27 +586,24 @@ const programmeRow = hasRichContent(event.programme)
             </table>`
   : "";
   const documents = renderDocuments(event.documents ?? []);
-  const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed");
+  const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed", "right");
   const registrationBadge = renderBadge(
     registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open,
     "registration-status",
-    event.registrationStatus
+    event.registrationStatus,
+    "center"
   );
 
   const registerAction =
     event.registrationStatus === "Full"
       ? `<p style="margin:0 0 10px;font-family:${FONT};font-size:9px;color:#6b7280;line-height:1.45;text-align:center;">Registration is currently full.<br>Please contact the SSA Secretariat for enquiries.</p>
-         <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
-           <tr><td>
-             <a class="register-link" href="mailto:sarah@ssa.org.sg" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Email Secretariat</a>
-           </td></tr>
-         </table>`
+         ${renderButton("Email Secretariat", "mailto:sarah@ssa.org.sg")}`
       : event.registrationLink
-        ? `<table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
-             <tr><td>
-               <a class="register-link" data-f="registration-link" href="${esc(event.registrationLink)}" target="_blank" style="display:inline-block;padding:8px 12px;background:#1b76bc;border-radius:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;mso-padding-alt:8px 12px;">Register Now</a>
-             </td></tr>
-           </table>`
+        ? renderButton(
+            "Register Now",
+            esc(event.registrationLink),
+            'data-f="registration-link"'
+          )
         : "";
 
   return `
@@ -695,7 +732,8 @@ const programmeRow = hasRichContent(event.programme)
                   align="center"
                   style="padding:18px 14px;background:#f7f9fc;border-left:1px solid #e2e8f0;text-align:center;"
                 >
-                  <div style="margin-bottom:${registerAction ? "10px" : "0"};">${registrationBadge}</div>
+                  ${registrationBadge}
+                  <div style="height:${registerAction ? "10px" : "0"};line-height:${registerAction ? "10px" : "0"};font-size:0;mso-line-height-rule:exactly;">&nbsp;</div>
                   ${registerAction}
                   ${documents}
                 </td>
@@ -852,7 +890,7 @@ We look forward to bringing our members together and strengthening our collectiv
     // This shell intentionally keeps the original 680px email sizing and
     // Outlook conditional wrapper from the supplied reference HTML.
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -867,6 +905,7 @@ We look forward to bringing our members together and strengthening our collectiv
   <noscript>
     <xml>
       <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
         <o:PixelsPerInch>96</o:PixelsPerInch>
       </o:OfficeDocumentSettings>
     </xml>
