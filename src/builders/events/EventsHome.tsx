@@ -176,9 +176,9 @@ function normaliseEvent(ev: any): EventItem {
           .join("")
       : "",
     documents: Array.isArray(ev?.documents) ? ev.documents : [],
-    sponsors: ev?.sponsors,
-    dressCode: ev?.dressCode,
-    registrationDeadline: ev?.registrationDeadline,
+    sponsors: ev?.sponsors ?? "",
+    dressCode: ev?.dressCode ?? "",
+    registrationDeadline: ev?.registrationDeadline ?? "",
     remarks: ev?.remarks
   };
 }
@@ -284,6 +284,13 @@ function joinTagGroups(...groups: string[]) {
   return groups.filter(Boolean).join(" ");
 }
 
+
+function hasContent(html?: string): boolean {
+  return boolean(
+    html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim()
+  );
+
+}
 function renderDocuments(documents: EventDocument[]) {
   if (!documents.length) return "";
 
@@ -350,8 +357,7 @@ function renderButton(
 function renderEvents(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
 
-  const eventExtraDetails = (event.dressCode?.trim() ||
-  getRegistrationDeadline(event))
+  const eventExtraDetails = (event.dressCode?.trim() ||getRegistrationDeadline(event))
   ? `
     <table width="100%" cellpadding="0" cellspacing="0"
       border="0" role="presentation"
@@ -396,10 +402,7 @@ function renderEvents(event: EventItem) {
     </table>`
   : "";
 
-  const committees = joinTagGroups(
-    renderCommitteeTags(event.committees ?? []),
-    rendercustomCommitteeTags(event.customCommitteeTags ?? [])
-  );
+  const committees = joinTagGroups( renderCommitteeTags(event.committees ?? []), rendercustomCommitteeTags(event.customCommitteeTags ?? []));
   const speakersRow = hasRichContent(event.speakers)
   ? `
             <!-- ROW 3: SPEAKERS -->
@@ -416,6 +419,47 @@ function renderEvents(event: EventItem) {
               </tr>
             </table>`
   : "";
+
+
+  const eventPeopleSections = `
+  <table role="presentation" width="100%" cellpadding="0"
+    cellspacing="0" border="0" style="table-layout:fixed;">
+    <tr>
+      <td width="50%" valign="top"
+        style="padding:16px 22px;background:#fafbfd;">
+        <p style="margin:0 0 8px;font-family:${FONT};
+          font-size:10px;font-weight:700;letter-spacing:1.5px;
+          text-transform:uppercase;color:#8492a6;">
+          Sponsors
+        </p>
+        ${
+          hasContent(event.sponsors)
+            ? event.sponsors
+            : `Call for Sponsors.<br />
+               Please reach out to
+               <a href="mailto:sarah@ssa.org.sg">sarah@ssa.org.sg</a>.`
+        }
+      </td>
+
+      <td width="50%" valign="top"
+        style="padding:16px 22px;background:#ffffff;
+          border-left:1px solid #e2e8f0;">
+        <p style="margin:0 0 8px;font-family:${FONT};
+          font-size:10px;font-weight:700;letter-spacing:1.5px;
+          text-transform:uppercase;color:#8492a6;">
+          Speakers
+        </p>
+        ${
+          hasContent(event.speakers)
+            ? event.speakers
+            : `Call for Speakers.<br />
+               Please reach out to
+               <a href="mailto:sarah@ssa.org.sg">sarah@ssa.org.sg</a>.`
+        }
+      </td>
+    </tr>
+  </table>
+`;
 
   const programmeRow = hasRichContent(event.programme)
   ? `
@@ -673,6 +717,7 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
           </tr>
         </table>
         ${eventExtraDetails}
+        ${eventPeopleSections}
 
       </td>
     </tr>
