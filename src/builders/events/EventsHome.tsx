@@ -80,30 +80,30 @@ const registrationStatusOpt: Record<
 > = {
   Open: {
     text: "Open",
-    bg: "#e7f5e9",
+    bg: "#76914a",
     color: "#287333",
-    border: "#76b77c",
+    border: "#384a1b",
   },
 
   LimitedSlots: {
     text: "Limited Seats",
-    bg: "#fff5d8",
+    bg: "#dbd679",
     color: "#8a6c00",
-    border: "#d7b441",
+    border: "#7d7704",
   },
 
   ClosingSoon: {
     text: "Closing Soon",
-    bg: "#fff0e7",
+    bg: "#e6ad63",
     color: "#9a4a16",
-    border: "#efba98",
+    border: "#7d4804",
   },
 
   Waitlist: {
     text: "Waitlist",
-    bg: "#f2eef8",
+    bg: "#c5e0eb",
     color: "#5c3b7e",
-    border: "#cfc0df",
+    border: "#042f40",
   },
 
   Full: {
