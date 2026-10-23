@@ -176,6 +176,10 @@ function normaliseEvent(ev: any): EventItem {
           .join("")
       : "",
     documents: Array.isArray(ev?.documents) ? ev.documents : [],
+    sponsors: ev?.sponsors,
+    dressCode: ev?.dressCode,
+    registrationDeadline: ev?.registrationDeadline,
+    remarks: ev?.remarks
   };
 }
 
@@ -212,11 +216,26 @@ function getMonthYearParts(date: string) {
   return { month: monthText, year: year || "" };
 }
 
-/**
- * Status badge (Tentative / Confirmed / registration status).
- * Built as a one-cell table because Outlook classic (Word engine) ignores
- * padding/border on inline spans but respects them on a <td>.
- */
+function getRegistrationDEadline(event: EventItem):string  {
+
+  if (event.registrationDeadline?.trim()) {
+    return event.registrationDeadline;
+  }
+
+  if (!event.date || event.dateMode !== "exact") {
+    return "";
+  }
+
+  const eventDate = new Date(`${event.date}T12:00:00`);
+  eventDate.setDate(eventDate.getDate() - 14);
+
+  return [
+    String(eventDate.getDate()).padStart(2, "0"),
+    String(eventDate.getMonth() + 1).padStart(2, "0"),
+    eventDate.getFullYear(),
+  ].join("/");
+}
+
 function renderBadge(
   style: TagStyle,
   dataField: string,
@@ -228,11 +247,6 @@ function renderBadge(
   } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
 }
 
-/**
- * Inline tag used for committees. Stays inline so tags can wrap onto new lines.
- * Outlook classic ignores padding/margin on spans, so we add non-breaking
- * spaces only for MSO via conditional comments.
- */
 function renderInlineTag(
   text: string,
   bg: string,
@@ -282,10 +296,6 @@ function renderDocuments(documents: EventDocument[]) {
   return `<div data-f="documents" style="width:100%;border-top:1px solid #dde4ec;margin-top:14px;padding-top:12px;text-align:center;">${links}</div>`;
 }
 
-/**
- * Button built as a table cell (bulletproof-ish for Outlook classic).
- * Padding + background live on the <td>; the link text sits inside.
- */
 function renderButton(
   label: string,
   href: string,
@@ -339,6 +349,53 @@ function renderButton(
 
 function renderEvents(event: EventItem) {
   const { day, monthYear } = getDateParts(event.date);
+
+  const eventExtraDetails = (event.dressCode?.trim() ||
+  getRegistrationDeadline(event))
+  ? `
+    <table width="100%" cellpadding="0" cellspacing="0"
+      border="0" role="presentation"
+      style="border-top:1px solid #e2e8f0;">
+      <tr>
+        ${
+          event.dressCode?.trim()
+            ? `
+              <td width="50%" valign="top"
+                style="padding:16px 22px;background:#fafbfd;">
+                <p style="margin:0 0 8px;font-family:${FONT};
+                  font-size:10px;font-weight:700;letter-spacing:1.5px;
+                  text-transform:uppercase;color:#8492a6;">
+                  Dress Code
+                </p>
+                <div style="font-family:${FONT};font-size:13px;
+                  color:#374151;line-height:1.65;">
+                  ${esc(event.dressCode)}
+                </div>
+              </td>`
+            : ""
+        }
+        ${
+          getRegistrationDeadline(event)
+            ? `
+              <td width="50%" valign="top"
+                style="padding:16px 22px;background:#ffffff;
+                  border-left:1px solid #e2e8f0;">
+                <p style="margin:0 0 8px;font-family:${FONT};
+                  font-size:10px;font-weight:700;letter-spacing:1.5px;
+                  text-transform:uppercase;color:#8492a6;">
+                  Registration Deadline
+                </p>
+                <div style="font-family:${FONT};font-size:13px;
+                  color:#374151;line-height:1.65;">
+                  ${esc(getRegistrationDeadline(event))}
+                </div>
+              </td>`
+            : ""
+        }
+      </tr>
+    </table>`
+  : "";
+
   const committees = joinTagGroups(
     renderCommitteeTags(event.committees ?? []),
     rendercustomCommitteeTags(event.customCommitteeTags ?? [])
@@ -615,6 +672,7 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
 
           </tr>
         </table>
+        ${eventExtraDetails}
 
       </td>
     </tr>
@@ -751,6 +809,10 @@ We look forward to bringing our members together and strengthening our collectiv
         programme: "",
         speakers: "",
         documents: [],
+        sponsors: "",
+        dressCode: "",
+        registrationDeadline: "",
+        remarks: "",
       },
     ]);
   };
