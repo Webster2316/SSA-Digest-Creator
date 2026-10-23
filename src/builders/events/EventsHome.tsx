@@ -287,30 +287,353 @@ function renderDocuments(documents: EventDocument[]) {
 function renderButton(
   label: string,
   href: string,
-  extraLinkAttrs = ""
+  extraLinkAttrs = "",
+  bg = "#1b76bc"
 ) {
-  return `<table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
-             <tr>
-               <td align="center" bgcolor="#1b76bc" style="background-color:#1b76bc;border-radius:3px;padding:8px 12px;mso-line-height-rule:exactly;line-height:14px;">
-                 <a class="register-link" ${extraLinkAttrs} href="${href}" target="_blank" style="font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;"><span style="color:#ffffff;">${esc(label)}</span></a>
-               </td>
-             </tr>
-           </table>`;
+  return `
+    <table
+      class="register-table"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      role="presentation"
+      align="center"
+    >
+      <tr>
+        <td
+          align="center"
+          bgcolor="${bg}"
+          style="
+            background-color:${bg};
+            border-radius:3px;
+            padding:8px 12px;
+            mso-line-height-rule:exactly;
+            line-height:14px;
+          "
+        >
+          <a
+            class="register-link"
+            ${extraLinkAttrs}
+            href="${href}"
+            target="_blank"
+            style="
+              font-family:${FONT};
+              font-size:10px;
+              font-weight:700;
+              letter-spacing:0.8px;
+              text-transform:uppercase;
+              color:#ffffff;
+              text-decoration:none;
+              white-space:nowrap;
+            "
+          >
+            <span style="color:#ffffff;">${esc(label)}</span>
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
 }
 
-function renderTentativeEvent(event: EventItem) {
-  const { day, monthYear } = getDateParts(event.date);
+// function renderTentativeEvent(event: EventItem) {
+//   const { day, monthYear } = getDateParts(event.date);
 
+//   const committees = joinTagGroups(
+//     renderCommitteeTags(event.committees ?? []),
+//     rendercustomCommitteeTags(event.customCommitteeTags ?? [])
+//   );
+
+//   const status = eventStatusOptions.Tentative;
+
+//   return `
+//     <!-- =====================================================
+//          TENTATIVE EVENT BLOCK
+//     ====================================================== -->
+//     <tr
+//       data-block="event"
+//       data-event-status="Tentative"
+//       data-id="${esc(event.id)}"
+//     >
+//       <td style="padding:0;border-bottom:8px solid #f0f4f8;">
+
+//         <!-- ROW 1: DATE | TITLE + COMMITTEE | STATUS -->
+//         <table
+//           width="100%"
+//           cellpadding="0"
+//           cellspacing="0"
+//           border="0"
+//           role="presentation"
+//           style="background:#ffffff;border-top:1px solid #d4dde8;"
+//         >
+//           <tr>
+
+//             <td
+//               class="event-date-cell"
+//               width="110"
+//               valign="middle"
+//               align="center"
+//               style="background:#7c49bf;padding:14px 8px;text-align:center;"
+//             >
+//               <span
+//                 data-f="date-day"
+//                 style="
+//                   display:block;
+//                   font-family:${FONT};
+//                   font-size:20px;
+//                   font-weight:700;
+//                   color:#ffffff;
+//                   line-height:1.15;
+//                 "
+//               >
+//                 ${esc(day)}
+//               </span>
+
+//               ${
+//                 monthYear
+//                   ? `
+//                     <span
+//                       data-f="date-month"
+//                       style="
+//                         display:block;
+//                         margin-top:3px;
+//                         font-family:${FONT};
+//                         font-size:10px;
+//                         font-weight:700;
+//                         letter-spacing:1.5px;
+//                         text-transform:uppercase;
+//                         color:#e6cffc;
+//                       "
+//                     >
+//                       ${esc(monthYear)}
+//                     </span>
+//                   `
+//                   : ""
+//               }
+//             </td>
+
+//             <td
+//               class="event-title-cell"
+//               valign="middle"
+//               style="padding:14px 18px;"
+//             >
+//               <span
+//                 data-f="title"
+//                 style="
+//                   font-family:${FONT};
+//                   font-size:16px;
+//                   font-weight:700;
+//                   color:#281e7e;
+//                   line-height:1.4;
+//                 "
+//               >
+//                 ${esc(event.title || "Untitled Event")}
+//               </span>
+
+
+
+//             </td>
+
+//             <td
+//               class="event-status-cell"
+//               width="125"
+//               valign="middle"
+//               align="right"
+//               style="padding:14px 18px 14px 8px;"
+//             >
+//               ${renderBadge(status, "event-status", "Tentative", "right")}
+//             </td>
+
+//           </tr>
+//         </table>
+
+
+//         <!-- ROW 2: EVENT DETAILS | DRAFT PROGRAMME -->
+//         <table
+//           width="100%"
+//           cellpadding="0"
+//           cellspacing="0"
+//           border="0"
+//           role="presentation"
+//           style="border-top:1px solid #e2e8f0;"
+//         >
+//           <tr>
+
+//             <!-- EVENT DETAILS -->
+//             <td
+//             class="event-details-cell"
+//             valign="top"
+//             style="padding:20px 22px;background:#fafbfd;"
+//           >
+//             <p
+//               style="
+//                 margin:0 0 10px;
+//                 font-family:${FONT};
+//                 font-size:10px;
+//                 font-weight:700;
+//                 letter-spacing:1.5px;
+//                 text-transform:uppercase;
+//                 color:#8492a6;
+//               "
+//             >
+//               Event Details
+//             </p>
+          
+//             <div
+//               data-f="event-details"
+//               style="
+//                 font-family:${FONT};
+//                 font-size:13px;
+//                 color:#374151;
+//                 line-height:1.65;
+//               "
+//             >
+//               ${event.details?.trim() || "&nbsp;"}
+//             </div>
+          
+//             ${
+//               committees
+//                 ? `
+//                 <div
+//                 data-f="committees"
+//                 style="
+//                   margin-top:14px;
+//                   padding-top:12px;
+//                   border-top:1px solid #e2e8f0;
+//                 "
+//               >
+//               <p
+//               style="
+//                 margin:0 0 10px;
+//                 font-family:${FONT};
+//                 font-size:10px;
+//                 font-weight:700;
+//                 letter-spacing:1.5px;
+//                 text-transform:uppercase;
+//                 color:#8492a6;
+//               "
+//             >
+//           Organising Committee(s)
+//             </p>
+//                 ${committees}
+//               </div>
+//                 `
+//                 : ""
+//             }
+//           </td>
+
+
+//             <!-- DRAFT PROGRAMME SYNOPSIS -->
+//             <td
+//               class="programme-cell"
+//               width="50%"
+//               valign="top"
+//               style="
+//                 padding:20px 22px;
+//                 background:#ffffff;
+//                 border-left:1px solid #e2e8f0;
+//               "
+//             >
+//               <p
+//                 style="
+//                   margin:0 0 10px;
+//                   font-family:${FONT};
+//                   font-size:10px;
+//                   font-weight:700;
+//                   letter-spacing:1.5px;
+//                   text-transform:uppercase;
+//                   color:#8492a6;
+//                 "
+//               >
+//                 Draft Programme Synopsis
+//               </p>
+
+//               <div
+//                 data-f="programme"
+//                 style="
+//                   font-family:${FONT};
+//                   font-size:13px;
+//                   color:#374151;
+//                   line-height:1.65;
+//                 "
+//               >
+//                 ${event.programme?.trim() || "&nbsp;"}
+//               </div>
+//             </td>
+
+//           </tr>
+//         </table>
+
+//       </td>
+//     </tr>
+
+//     <!-- =====================================================
+//          END TENTATIVE EVENT BLOCK
+//     ====================================================== -->
+//   `;
+// }
+
+function renderEvents(event: EventItem) {
+  const { day, monthYear } = getDateParts(event.date);
   const committees = joinTagGroups(
     renderCommitteeTags(event.committees ?? []),
     rendercustomCommitteeTags(event.customCommitteeTags ?? [])
   );
+  const speakersRow = hasRichContent(event.speakers)
+  ? `
+            <!-- ROW 3: SPEAKERS -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
+              <tr>
+                <td class="speakers-cell" valign="top" style="padding:20px 22px;background:#ffffff;">
+                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
+                    Speakers
+                  </p>
+                  <div data-f="speakers" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.6;">
+                    ${event.speakers}
+                  </div>
+                </td>
+              </tr>
+            </table>`
+  : "";
 
-  const status = eventStatusOptions.Tentative;
+  const programmeRow = hasRichContent(event.programme)
+  ? `
+            <!-- ROW 4: PROGRAMME SYNOPSIS -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
+              <tr>
+                <td class="programme-cell" valign="top" style="padding:20px 22px;background:#fafbfd;">
+                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
+                  Programme Synopsis
+                  </p>
+                  <div data-f="programme" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.65;">
+                    ${event.programme}
+                  </div>
+                </td>
+              </tr>
+            </table>`
+  : "";
+  const documents = renderDocuments(event.documents ?? []);
+  const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed", "right");
+  const registrationBadge = renderBadge(
+    registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open,
+    "registration-status",
+    event.registrationStatus,
+    "center"
+  );
+
+const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open
+  const registerAction =
+    event.eventStatus === "Confirmed" && event.registrationLink
+        ? renderButton(
+            "Open for Registration",
+            esc(event.registrationLink),
+            'data-f="registration-link"',
+            buttonStyle.bg
+          )
+        : "";
 
   return `
     <!-- =====================================================
-         TENTATIVE EVENT BLOCK
+        EVENT BLOCK
     ====================================================== -->
     <tr
       data-block="event"
@@ -391,20 +714,51 @@ function renderTentativeEvent(event: EventItem) {
               >
                 ${esc(event.title || "Untitled Event")}
               </span>
-
+              ${
+                committees
+                  ? `
+                  <div
+                  data-f="committees"
+                  style="
+                    margin-top:14px;
+                    padding-top:12px;
+                    border-top:1px solid #e2e8f0;
+                  "
+                >
+                  ${committees}
+                </div>
+                  `
+                  : ""
+              }
 
 
             </td>
 
             <td
-              class="event-status-cell"
-              width="125"
-              valign="middle"
-              align="right"
-              style="padding:14px 18px 14px 8px;"
-            >
-              ${renderBadge(status, "event-status", "Tentative", "right")}
-            </td>
+            class="event-status-cell"
+            width="150"
+            valign="middle"
+            align="right"
+            style="padding:14px 18px 14px 8px;"
+          >
+            ${renderBadge(
+              eventStatusOptions[event.eventStatus],
+              "event-status",
+              event.eventStatus,
+              "right"
+            )}
+          
+            ${
+              registerAction
+                ? `
+                  <div style="height:10px;line-height:10px;font-size:0;">
+                    &nbsp;
+                  </div>
+                  ${registerAction}
+                `
+                : ""
+            }
+          </td>
 
           </tr>
         </table>
@@ -453,35 +807,6 @@ function renderTentativeEvent(event: EventItem) {
               ${event.details?.trim() || "&nbsp;"}
             </div>
           
-            ${
-              committees
-                ? `
-                <div
-                data-f="committees"
-                style="
-                  margin-top:14px;
-                  padding-top:12px;
-                  border-top:1px solid #e2e8f0;
-                "
-              >
-              <p
-              style="
-                margin:0 0 10px;
-                font-family:${FONT};
-                font-size:10px;
-                font-weight:700;
-                letter-spacing:1.5px;
-                text-transform:uppercase;
-                color:#8492a6;
-              "
-            >
-          Organising Committee(s)
-            </p>
-                ${committees}
-              </div>
-                `
-                : ""
-            }
           </td>
 
 
@@ -521,6 +846,24 @@ function renderTentativeEvent(event: EventItem) {
               >
                 ${event.programme?.trim() || "&nbsp;"}
               </div>
+
+              <td
+              class="event-actions-cell"
+              width="160"
+              valign="middle"
+              align="center"
+              style="padding:18px 14px;background:#f7f9fc;border-left:1px solid #e2e8f0;text-align:center;"
+            >
+              ${registrationBadge}
+              <div style="height:${registerAction ? "10px" : "0"};line-height:${registerAction ? "10px" : "0"};font-size:0;mso-line-height-rule:exactly;">&nbsp;</div>
+              ${registerAction}
+              ${documents}
+            </td>
+          </tr>
+        </table>
+
+        ${speakersRow}
+        ${programmeRow}
             </td>
 
           </tr>
@@ -530,7 +873,7 @@ function renderTentativeEvent(event: EventItem) {
     </tr>
 
     <!-- =====================================================
-         END TENTATIVE EVENT BLOCK
+         END EVENT BLOCK
     ====================================================== -->
   `;
 }
@@ -882,8 +1225,8 @@ We look forward to bringing our members together and strengthening our collectiv
     const eventHtml = sortedEvents
       .map((event) =>
         event.eventStatus === "Tentative"
-          ? renderTentativeEvent(event)
-          : renderConfirmedEvent(event)
+          ? renderEvents(event)
+          : renderEvents(event)
       )
       .join("\n");
 
