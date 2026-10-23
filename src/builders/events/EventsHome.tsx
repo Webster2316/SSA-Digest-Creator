@@ -286,7 +286,7 @@ function joinTagGroups(...groups: string[]) {
 
 
 function hasContent(html?: string): boolean {
-  return boolean(
+  return Boolean(
     html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim()
   );
 
