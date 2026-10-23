@@ -216,7 +216,7 @@ function getMonthYearParts(date: string) {
   return { month: monthText, year: year || "" };
 }
 
-function getRegistrationDEadline(event: EventItem):string  {
+function getRegistrationDeadline(event: EventItem):string  {
 
   if (event.registrationDeadline?.trim()) {
     return event.registrationDeadline;
