@@ -364,7 +364,7 @@ function renderTentativeEvent(event: EventItem) {
                         font-weight:700;
                         letter-spacing:1.5px;
                         text-transform:uppercase;
-                        color:#dfc9f5;
+                        color:#e6cffc;
                       "
                     >
                       ${esc(monthYear)}
@@ -571,12 +571,12 @@ function renderConfirmedEvent(event: EventItem) {
 
   const programmeRow = hasRichContent(event.programme)
   ? `
-            <!-- ROW 4: PROGRAMME TOPICS -->
+            <!-- ROW 4: PROGRAMME SYNOPSIS -->
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
               <tr>
                 <td class="programme-cell" valign="top" style="padding:20px 22px;background:#fafbfd;">
                   <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
-                    Programme Topics
+                  Programme Synopsis
                   </p>
                   <div data-f="programme" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.65;">
                     ${event.programme}
@@ -631,7 +631,7 @@ function renderConfirmedEvent(event: EventItem) {
                   style="background:#7c49bf;padding:14px 8px;text-align:center;"
                 >
                   <span data-f="date-day" style="display:block;font-family:${FONT};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
-                  ${monthYear ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dfc9f5;">${esc(monthYear)}</span>` : ""}
+                  ${monthYear ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>` : ""}
                 </td>
 
                 <td
