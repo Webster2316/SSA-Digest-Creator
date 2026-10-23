@@ -288,7 +288,7 @@ function renderButton(
   label: string,
   href: string,
   extraLinkAttrs = "",
-  bg = "#1b76bc"
+  bg = "#384a1b"
 ) {
   return `
     <table
@@ -1216,12 +1216,8 @@ We look forward to bringing our members together and strengthening our collectiv
 
   const buildFullHtml = () => {
     const eventHtml = sortedEvents
-      .map((event) =>
-        event.eventStatus === "Tentative"
-          ? renderEvents(event)
-          : renderEvents(event)
-      )
-      .join("\n");
+    .map((event) => renderEvents(event))
+    .join("\n");
 
     // This shell intentionally keeps the original 680px email sizing and
     // Outlook conditional wrapper from the supplied reference HTML.
