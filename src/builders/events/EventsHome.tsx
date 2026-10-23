@@ -364,7 +364,7 @@ function renderTentativeEvent(event: EventItem) {
                         font-weight:700;
                         letter-spacing:1.5px;
                         text-transform:uppercase;
-                        color:#d8c0f0;
+                        color:#dfc9f5;
                       "
                     >
                       ${esc(monthYear)}
@@ -631,7 +631,7 @@ function renderConfirmedEvent(event: EventItem) {
                   style="background:#7c49bf;padding:14px 8px;text-align:center;"
                 >
                   <span data-f="date-day" style="display:block;font-family:${FONT};font-size:20px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
-                  ${monthYear ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d8c0f0;">${esc(monthYear)}</span>` : ""}
+                  ${monthYear ? `<span data-f="date-month" style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#dfc9f5;">${esc(monthYear)}</span>` : ""}
                 </td>
 
                 <td
