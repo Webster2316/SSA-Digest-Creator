@@ -613,12 +613,6 @@ function renderEvents(event: EventItem) {
   : "";
   const documents = renderDocuments(event.documents ?? []);
   const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed", "right");
-  const registrationBadge = renderBadge(
-    registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open,
-    "registration-status",
-    event.registrationStatus,
-    "center"
-  );
 
 const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open
   const registerAction =
@@ -854,7 +848,6 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
               align="center"
               style="padding:18px 14px;background:#f7f9fc;border-left:1px solid #e2e8f0;text-align:center;"
             >
-              ${registrationBadge}
               <div style="height:${registerAction ? "10px" : "0"};line-height:${registerAction ? "10px" : "0"};font-size:0;mso-line-height-rule:exactly;">&nbsp;</div>
               ${registerAction}
               ${documents}
