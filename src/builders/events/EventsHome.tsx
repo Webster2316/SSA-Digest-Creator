@@ -966,16 +966,17 @@ ${eventHtml}
 
         <!-- FOOTER - follow weekly digest-->
         <tr>
-          <td class="footer-cell" style="background:#281e7e;padding:24px 28px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-              <tr>
-                <td align="center">
-                  <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
-                  You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
-                  </p>
-                </td>
-              </tr>
-            </table>
+          <td class="footer-cell" style="background:#262261;padding:24px 28px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+       border="0" bgcolor="#262261"
+       style="background-color:#262261;">
+  <tr>
+    <td class="footer-cell" bgcolor="#262261"
+        style="background-color:#262261; padding:24px 28px;">
+      <!-- Keep your existing footer text here -->
+    </td>
+  </tr>
+</table>
           </td>
         </tr>
 
