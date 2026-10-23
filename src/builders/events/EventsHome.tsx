@@ -46,6 +46,11 @@ export interface EventItem {
   details: string;
   programme: string;
   speakers: string;
+  sponsors: string;
+  dressCode: string;
+  registrationDeadline: string;
+  remarks: string;
+
   documents: EventDocument[];
 }
 
@@ -74,10 +79,7 @@ const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
   },
 };
 
-const registrationStatusOpt: Record<
-  EventItem["registrationStatus"],
-  TagStyle
-> = {
+const registrationStatusOpt: Record<EventItem["registrationStatus"],TagStyle> = {
   Open: {
     text: "Open",
     bg: "#76914a",
@@ -589,7 +591,7 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
                   color:#8492a6;
                 "
               >
-                Draft Programme Synopsis
+                Programme Synopsis
               </p>
 
               <div
@@ -609,8 +611,6 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
           </tr>
         </table>
 
-        ${speakersRow}
-        ${programmeRow}
             </td>
 
           </tr>
