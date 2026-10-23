@@ -1054,7 +1054,7 @@ We look forward to bringing our members together and strengthening our collectiv
           <td style="padding:0;font-size:0;line-height:0;">
             <img
               class="header-img"
-              src="https://raw.githubusercontent.com/Webster2316/SSA_Training_Bulletin/refs/heads/main/Banner4.png"
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/refs/heads/main/Banner4.png"
               width="680"
               alt="SSA Upcoming Events"
               style="display:block;width:100%;max-width:680px;height:auto;border:0;"
