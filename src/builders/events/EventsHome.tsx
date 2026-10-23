@@ -179,7 +179,7 @@ function normaliseEvent(ev: any): EventItem {
     sponsors: ev?.sponsors ?? "",
     dressCode: ev?.dressCode ?? "",
     registrationDeadline: ev?.registrationDeadline ?? "",
-    remarks: ev?.remarks
+    remarks: ev?.remarks ?? "",
   };
 }
 
@@ -461,6 +461,27 @@ function renderEvents(event: EventItem) {
   </table>
 `;
 
+const eventRemarks = hasContent(event.remarks)
+  ? `
+    <table role="presentation" width="100%" cellpadding="0"
+      cellspacing="0" border="0">
+      <tr>
+        <td style="padding:16px 22px;background:#fafbfd;
+          border-top:1px solid #e2e8f0;">
+          <p style="margin:0 0 8px;font-family:${FONT};
+            font-size:10px;font-weight:700;letter-spacing:1.5px;
+            text-transform:uppercase;color:#8492a6;">
+            Remarks
+          </p>
+          <div style="font-family:${FONT};font-size:13px;
+            color:#374151;line-height:1.65;">
+            ${event.remarks}
+          </div>
+        </td>
+      </tr>
+    </table>`
+  : "";
+
   const programmeRow = hasRichContent(event.programme)
   ? `
             <!-- ROW 4: PROGRAMME SYNOPSIS -->
@@ -718,6 +739,7 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
         </table>
         ${eventExtraDetails}
         ${eventPeopleSections}
+        ${eventRemarks}
 
       </td>
     </tr>
