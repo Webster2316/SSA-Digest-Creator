@@ -54,6 +54,13 @@ export interface EventItem {
   documents: EventDocument[];
 }
 
+export interface upcomingEvents {
+  id: string;
+  title: string;
+  date: string; 
+  eventStatus: "Tentative" | "Confirmed";
+}
+
 type TagStyle = {
   text: string;
   bg: string;
@@ -143,9 +150,7 @@ function normaliseEvent(ev: any): EventItem {
     "Full",
   ];
 
-  const registrationStatus: EventItem["registrationStatus"] =
-    ev?.registrationStatus === "Available"
-      ? "Open"
+  const registrationStatus: EventItem["registrationStatus"] = ev?.registrationStatus === "Available" ? "Open"
       : allowedRegistrationStatuses.includes(ev?.registrationStatus)
         ? ev.registrationStatus
         : "Open";
@@ -1078,7 +1083,7 @@ We look forward to bringing our members together and strengthening our collectiv
         <!-- SECTION TITLE -->
         <tr>
           <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:12pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
+            <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
           </td>
         </tr>
 
@@ -1093,7 +1098,12 @@ We look forward to bringing our members together and strengthening our collectiv
 
 ${eventHtml}
 
-        <!-- FOOTER - follow weekly digest-->
+<tr>
+<td style="background:#262261;padding:14px 24px;">
+  <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">Upcoming Events</span>
+</td>
+</tr>
+        <!-- FOOTER -->
         <tr>
           <td class="footer-cell" style="background:#262261;padding:24px 28px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
