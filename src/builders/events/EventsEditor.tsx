@@ -216,7 +216,7 @@ export default function EventsEditor({
           {/* =====================================================
               CONFIRMED
           ====================================================== */}
-          {event.eventStatus === "Confirmed" || "Tentative" && (
+         <>
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Event Date">
@@ -258,7 +258,35 @@ export default function EventsEditor({
                 </Field>
               </div>
 
-              {/* Registration link and documents are kept together. ?? same line */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <Field label="Dress Code">
+  <input
+    type="text"
+    className={inputCls}
+    value={event.dressCode || ""}
+    onChange={(e) =>
+      updateEvent("dressCode", e.target.value)
+    }
+    placeholder="e.g. Business Attire"
+  />
+</Field>
+              <Field label="Registration Deadline">
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={event.registrationDeadline ?? ""}
+                    onChange={(e) =>
+                      updateEvent({
+                        registrationDeadline: e.target.value,
+                      })
+                    }
+                  />
+                </Field>
+
+                </div>
+
+              {/* Registration link + doc*/}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div>
                   {event.registrationStatus !== "Full" ? (
@@ -285,6 +313,7 @@ export default function EventsEditor({
                     </div>
                   )}
                 </div>
+
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
@@ -491,7 +520,7 @@ export default function EventsEditor({
 </Field>
 
             </>
-          )}
+       </>
    </div>
       </fieldset>
       </div>
