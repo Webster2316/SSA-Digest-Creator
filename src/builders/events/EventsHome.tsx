@@ -188,6 +188,18 @@ function normaliseEvent(ev: any): EventItem {
   };
 }
 
+
+function normaliseList(raw: unknown): upcomingEvents[] {
+if (!Array.isArray) return [];
+
+return raw.map((item: any) => ({
+  id: typeof item?.id === "string" && item.id ? item.id : crypto.randomUUID(),
+  title: typeof item?.title === "string" ? item.title : "",
+  date: typeof item?.date === "string" ? item.date : "",
+  eventStatus: item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+}));
+}
+
 function getDateParts(date: string) {
   if (!date) return { day: "TBC", monthYear: "" };
 
@@ -750,6 +762,74 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
   `;
 }
 
+
+function renderUpcomingEvents(items: upcomingEvents[]) {
+  if (!items.length) return "";
+
+  const rows = items
+    .map((item) => {
+      const { day, monthYear } = getDateParts(item.date);
+
+      return `
+            <tr data-id="${esc(item.id)}" data-event-status="${esc(item.eventStatus)}">
+              <td style="padding:0;border-top:1px solid #e2e8f0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;">
+                  <tr>
+                    <td
+                      width="90"
+                      valign="middle"
+                      align="center"
+                      bgcolor="#7c49bf"
+                      style="background:#7c49bf;padding:12px 8px;text-align:center;"
+                    >
+                      <span style="display:block;font-family:${FONT};font-size:18px;font-weight:700;color:#ffffff;line-height:1.15;">
+                        ${esc(day)}
+                      </span>
+                      ${
+                        monthYear
+                          ? `<span style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
+                          : ""
+                      }
+                    </td>
+
+                    <td valign="middle" style="padding:12px 18px;">
+                      <span style="font-family:${FONT};font-size:14px;font-weight:700;color:#281e7e;line-height:1.4;">
+                        ${esc(item.title || "Untitled Event")}
+                      </span>
+                    </td>
+
+                    <td width="130" valign="middle" align="right" style="padding:12px 18px 12px 8px;">
+                      ${renderBadge(
+                        eventStatusOptions[item.eventStatus],
+                        "upcoming-status",
+                        item.eventStatus,
+                        "right"
+                      )}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`;
+    })
+    .join("\n");
+
+  return `
+        <!-- =====================================================
+             UPCOMING EVENT LIST
+        ====================================================== -->
+        <tr data-block="upcomingList">
+          <td style="padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+${rows}
+            </table>
+          </td>
+        </tr>
+        <!-- =====================================================
+             END OF UPCOMING EVENT LIST
+        ====================================================== -->
+  `;
+}
+
 function hasRichContent(html?: string) {
   if (!html) return false;
   if (/<img\b/i.test(html)) return true; // keep if it contains an image
@@ -778,6 +858,7 @@ function renderGreeting(text: string) {
 export default function EventsHome() {
   const [tab, setTab] = useState<"Events" | "preview" | "history">("Events");
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [upcomingList, setUpcomingList] = useState<upcomingEvents[]>([]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -807,6 +888,11 @@ We look forward to bringing our members together and strengthening our collectiv
           if (Array.isArray(data?.events)) {
             setEvents(data.events.map(normaliseEvent));
           }
+
+          if (Array.isArray(data?.upcomingList)) {
+            setUpcomingList(data.upcomingList.map(normaliseList));
+          }
+
           if (typeof data?.greeting === "string") {
             setGreeting(data.greeting);
           }
@@ -840,6 +926,7 @@ We look forward to bringing our members together and strengthening our collectiv
             greeting,
             issueRange,
             builtHtml,
+            upcomingList
           }),
         });
 
@@ -856,7 +943,7 @@ We look forward to bringing our members together and strengthening our collectiv
 
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, greeting, issueRange, loaded]);
+  }, [events, upcomingList, greeting, issueRange, loaded]);
 
   const handleAddEvents = (title: string) => {
     setEvents((prev) => [
@@ -900,8 +987,8 @@ We look forward to bringing our members together and strengthening our collectiv
     .map((event) => renderEvents(event))
     .join("\n");
 
-    // This shell intentionally keeps the original 680px email sizing and
-    // Outlook conditional wrapper from the supplied reference HTML.
+
+    const upcomingHtml = renderUpcomingEvents(upcomingList);
     return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -1093,12 +1180,15 @@ We look forward to bringing our members together and strengthening our collectiv
 
 ${eventHtml}
 
+
 <tr>
   <td style="background-color:#262261; padding:14px 24px; text-align:center;">
     <span style="font-family:${FONT}; font-size:12pt; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:#ffffff;">Upcoming Events
     </span>
   </td>
 </tr>
+
+${upcomingHtml}
         <!-- FOOTER -->
         <tr>
           <td class="footer-cell" style="background:#262261;padding:24px 28px;">
