@@ -214,173 +214,9 @@ export default function EventsEditor({
           </div>
 
           {/* =====================================================
-              TENTATIVE
-          ====================================================== */}
-          {event.eventStatus === "Tentative" && (
-            <>
-              {/* <Field label="Month & Year">
-                <input
-                  type="month"
-                  className={inputCls}
-                  value={event.date ?? ""}
-                  onChange={(e) =>
-                    updateEvent({
-                      date: e.target.value,
-                      dateMode: "month",
-                    })
-                  }
-                />
-              </Field> */}
-                   <Field label="Event Date">
-                  <input
-                    type="date"
-                    className={inputCls}
-                    value={event.date ?? ""}
-                    onChange={(e) =>
-                      updateEvent({
-                        date: e.target.value,
-                        dateMode: "exact",
-                      })
-                    }
-                  />
-                </Field>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2">
-                  Committee(s) <span className="font-normal text-gray-400">(optional)</span>
-                </label>
-
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(committeeOptions).map(([key, option]) => {
-                    const selected = committees.includes(key);
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() =>
-                          updateEvent({
-                            committees: selected
-                              ? committees.filter((item) => item !== key)
-                              : [...committees, key],
-                          })
-                        }
-                        className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
-                          selected
-                            ? "ring-2 ring-indigo-300 opacity-100"
-                            : "opacity-55 hover:opacity-100"
-                        }`}
-                        style={{
-                          backgroundColor: option.bg,
-                          color: option.color,
-                          borderColor: option.border,
-                        }}
-                      >
-                        {option.text}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-3">
-  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-    Custom Committee
-  </label>
-
-  <div className="flex gap-2">
-    <input
-      className={inputCls}
-      placeholder="Type committee name..."
-      value={newCustomCommittee}
-      onChange={(e) => setNewCustomCommittee(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-
-          const value = newCustomCommittee.trim();
-
-          if (!value) return;
-
-          updateEvent({
-            customCommitteeTags: [...customCommitteeTags, value],
-          });
-
-          setNewCustomCommittee("");
-        }
-      }}
-    />
-
-    <button
-      type="button"
-      onClick={() => {
-        const value = newCustomCommittee.trim();
-
-        if (!value) return;
-
-        updateEvent({
-          customCommitteeTags: [...customCommitteeTags, value],
-        });
-
-        setNewCustomCommittee("");
-      }}
-      className="flex items-center gap-1 px-2 py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-black-800 shrink-0"
-    >
-      <Plus size={14} />
-      Add
-    </button>
-  </div>
-
-  {customCommitteeTags.length > 0 && (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {customCommitteeTags.map((tag, index) => (
-        <div
-          key={`${tag}-${index}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-600 bg-gray-50 text-gray-700 text-xs font-medium"
-        >
-          <span>{tag}</span>
-
-          <button
-            type="button"
-            onClick={() =>
-              updateEvent({
-                customCommitteeTags: customCommitteeTags.filter(
-                  (_, i) => i !== index
-                ),
-              })
-            }
-            className="text-gray-400 hover:text-red-600"
-            title="Remove custom committee"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
-         
-              </div>
-
-              <Field label="Event Details">
-                <RichTextEditor
-                  value={event.details ?? ""}
-                  onChange={(html) => updateEvent({ details: html })}
-                />
-              </Field>
-
-              <Field label="Draft Programme Synopsis">
-                <RichTextEditor
-                  value={event.programme ?? ""}
-                  onChange={(html) => updateEvent({ programme: html })}
-                />
-              </Field>
-            </>
-          )}
-
-          {/* =====================================================
               CONFIRMED
           ====================================================== */}
-          {event.eventStatus === "Confirmed" && (
+          {event.eventStatus === "Confirmed" || "Tentative" && (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Field label="Event Date">
@@ -639,6 +475,16 @@ export default function EventsEditor({
     onChange={(html) =>
       updateEvent({
         speakers: html,
+      })
+    }
+  />
+</Field>
+<Field label="Remarks">
+  <RichTextEditor
+    value={event.remarks ?? ""}
+    onChange={(html) =>
+      updateEvent({
+        remarks: html,
       })
     }
   />
