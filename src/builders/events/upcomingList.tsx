@@ -5,7 +5,7 @@ import { uid } from "../../shared/utils";
 
 type UpcomingListProps = {
     upcomingList: UpcomingEvent[];
-    setUpcominList: React.Dispatch<React.SetStateAction<UpcomingEvent[]>
+    setUpcomingList: React.Dispatch<React.SetStateAction<UpcomingEvent[]>
     >;
 }
 type TagStyle = {
@@ -100,7 +100,7 @@ event.id === id
             </button>
           </div>
     
-          {sortedEvents.length === 0 ? (
+          {sortedEv.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center">
               <p className="text-sm text-gray-500">
                 No upcoming events added yet.
@@ -111,7 +111,7 @@ event.id === id
             </div>
           ) : (
             <div className="space-y-3">
-              {sortedEvents.map((event, index) => {
+              {sortedEv.map((event, index) => {
                 const statusStyle =
                   eventStatusOptions[event.eventStatus];
     
