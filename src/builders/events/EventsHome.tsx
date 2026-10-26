@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Trash2,
   SquareArrowOutUpRight,
@@ -15,12 +15,24 @@ import useConfirmDelete from "../../shared/useConfirmDelete";
 import Field from "../../shared/field";
 import { uid, esc, inputCls } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
-import EventsEditor from "./EventsEditor";
-import EventsHistory from "./EventsHistory";
 import RecordsPanel from "../../shared/recordsPanel";
 import RecordViewer from "../../shared/recordViewer";
+import EventsEditor from "./EventsEditor";
+import EventsHistory from "./EventsHistory";
 
-const EVENTS_BUILDER_KEY = "events-builder-data";
+/* ================================================================== */
+/* TYPES                                                              */
+/* ================================================================== */
+
+export type EventStatus = "Tentative" | "Confirmed";
+export type RegistrationStatus =
+  | "Open"
+  | "LimitedSlots"
+  | "Waitlist"
+  | "ClosingSoon"
+  | "Full";
+export type CompletionStatus = "InProgress" | "Completed";
+export type DateMode = "exact" | "month";
 
 export interface EventDocument {
   label: string;
@@ -30,16 +42,11 @@ export interface EventDocument {
 export interface EventItem {
   id: string;
   title: string;
-  date: string;
-  dateMode: "exact" | "month";
-  registrationStatus:
-    | "Open"
-    | "LimitedSlots"
-    | "Waitlist"
-    | "ClosingSoon"
-    | "Full";
-  eventStatus: "Tentative" | "Confirmed";
-  completionStatus: "InProgress" | "Completed";
+  date: string; // "YYYY-MM-DD" (exact) or "YYYY-MM" (month)
+  dateMode: DateMode;
+  registrationStatus: RegistrationStatus;
+  eventStatus: EventStatus;
+  completionStatus: CompletionStatus;
   registrationLink: string;
   committees: string[];
   customCommitteeTags: string[];
@@ -50,80 +57,73 @@ export interface EventItem {
   dressCode: string;
   registrationDeadline: string;
   remarks: string;
-
   documents: EventDocument[];
 }
 
-export interface upcomingEvents {
+/** One line in the "Upcoming Events" list at the bottom of the email. */
+export interface UpcomingEvent {
   id: string;
   title: string;
-  date: string; 
-  eventStatus: "Tentative" | "Confirmed";
+  date: string;
+  eventStatus: EventStatus;
 }
 
-type TagStyle = {
+export type TagStyle = {
   text: string;
   bg: string;
   color: string;
   border: string;
 };
 
-const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+/** Everything needed to build the email HTML. */
+export interface EmailData {
+  events: EventItem[];
+  upcomingList: UpcomingEvent[];
+  greeting: string;
+  issueRange: string;
+}
 
-// Keep the builder's original colour system.
-const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
-  Confirmed: {
-    text: "Confirmed",
-    bg: "#e1ffba",
-    color: "#416e07",
-    border: "#416e07",
-  },
-  Tentative: {
-    text: "Tentative",
-    bg: "#f2bbbf",
-    color: "#700710",
-    border: "#700710",
-  },
+/* ================================================================== */
+/* CONFIG                                                             */
+/* ================================================================== */
+
+const EVENTS_BUILDER_KEY = "events-builder-data";
+
+const FONT =
+  "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
+
+const NAVY = "#262261";
+const PAGE_BG = "#f0f4f8";
+const CONTACT_EMAIL = "sarah@ssa.org.sg";
+const BANNER_URL =
+  "https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/refs/heads/main/Banner4.png";
+
+const DEFAULT_ISSUE_RANGE = "Monthly Issue: ";
+
+const DEFAULT_GREETING = `Dear Members,
+
+We are pleased to invite you to our upcoming and future planned events, designed to bring our members together and provide an opportunity to engage directly with our Chairs, Councillors and Committee Experts.
+
+These in-person sessions will provide an overview of the work being undertaken across our committees, while creating opportunities for members to exchange insights, connect with fellow industry professionals and learn more about how to engage with our activities.
+
+We encourage you to register your interest and join us at these upcoming sessions.
+
+We look forward to bringing our members together and strengthening our collective engagement across the association.`;
+
+const EVENT_STATUS_STYLES: Record<EventStatus, TagStyle> = {
+  Confirmed: { text: "Confirmed", bg: "#e1ffba", color: "#416e07", border: "#416e07" },
+  Tentative: { text: "Tentative", bg: "#f2bbbf", color: "#700710", border: "#700710" },
 };
 
-const registrationStatusOpt: Record<EventItem["registrationStatus"],TagStyle> = {
-  Open: {
-    text: "Open",
-    bg: "#76914a",
-    color: "#287333",
-    border: "#384a1b",
-  },
-
-  LimitedSlots: {
-    text: "Limited Seats",
-    bg: "#dbd679",
-    color: "#8a6c00",
-    border: "#7d7704",
-  },
-
-  ClosingSoon: {
-    text: "Closing Soon",
-    bg: "#e6ad63",
-    color: "#9a4a16",
-    border: "#7d4804",
-  },
-
-  Waitlist: {
-    text: "Waitlist",
-    bg: "#c5e0eb",
-    color: "#5c3b7e",
-    border: "#042f40",
-  },
-
-  Full: {
-    text: "Full",
-    bg: "#f3f0f5",
-    color: "#5a5f6d",
-    border: "#c7ccd6",
-  },
+const REGISTRATION_STATUS_STYLES: Record<RegistrationStatus, TagStyle> = {
+  Open: { text: "Open", bg: "#76914a", color: "#287333", border: "#384a1b" },
+  LimitedSlots: { text: "Limited Seats", bg: "#dbd679", color: "#8a6c00", border: "#7d7704" },
+  ClosingSoon: { text: "Closing Soon", bg: "#e6ad63", color: "#9a4a16", border: "#7d4804" },
+  Waitlist: { text: "Waitlist", bg: "#c5e0eb", color: "#5c3b7e", border: "#042f40" },
+  Full: { text: "Full", bg: "#f3f0f5", color: "#5a5f6d", border: "#c7ccd6" },
 };
 
-const committeeOptions: Record<string, TagStyle> = {
+const COMMITTEE_STYLES: Record<string, TagStyle> = {
   DEC: { text: "Decarbonisation", bg: "#8ede96", color: "#1d7d26", border: "#1d7d26" },
   DIG: { text: "Digitalisation", bg: "#9eb2de", color: "#103687", border: "#103687" },
   INT: { text: "International", bg: "#f2dc9d", color: "#bf9708", border: "#bf9708" },
@@ -134,26 +134,115 @@ const committeeOptions: Record<string, TagStyle> = {
   YEG: { text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57" },
 };
 
-function getDateTime() {
-  return new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
+/* ================================================================== */
+/* HELPERS                                                            */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* Dates                                                               */
+/* ------------------------------------------------------------------ */
+
+const MONTHS = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+
+function getTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+/** "2026-11-05" -> { day: "5", monthYear: "NOV 2026" }; "2026-11" -> { day: "TBC", ... } */
+function getDateParts(date: string) {
+  if (!date) return { day: "TBC", monthYear: "" };
+
+  const [year, month, day] = date.split("-");
+  const monthText = MONTHS[Number(month) - 1] ?? "";
+  const dayNumber = Number(day);
+
+  return {
+    day: day && !Number.isNaN(dayNumber) ? String(dayNumber) : "TBC",
+    monthYear: [monthText, year].filter(Boolean).join(" "),
+  };
+}
+
+/** Defaults to 14 days before an exact event date, formatted DD/MM/YYYY. */
+function getRegistrationDeadline(event: EventItem): string {
+  if (event.registrationDeadline?.trim()) return event.registrationDeadline;
+  if (!event.date || event.dateMode !== "exact") return "";
+
+  const d = new Date(`${event.date}T12:00:00`);
+  d.setDate(d.getDate() - 14);
+
+  return [
+    String(d.getDate()).padStart(2, "0"),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    d.getFullYear(),
+  ].join("/");
+}
+
+/* ------------------------------------------------------------------ */
+/* Sorting (undated items go last)                                     */
+/* ------------------------------------------------------------------ */
+
+const sortKey = (date: string) => (date.length === 7 ? `${date}-01` : date);
+
+function sortByDate<T extends { date: string }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return sortKey(a.date).localeCompare(sortKey(b.date));
   });
 }
 
-function normaliseEvent(ev: any): EventItem {
-  const allowedRegistrationStatuses: EventItem["registrationStatus"][] = [
-    "Open",
-    "LimitedSlots",
-    "Waitlist",
-    "ClosingSoon",
-    "Full",
-  ];
+/* ------------------------------------------------------------------ */
+/* Content checks                                                      */
+/* ------------------------------------------------------------------ */
 
-  const registrationStatus: EventItem["registrationStatus"] = ev?.registrationStatus === "Available" ? "Open"
-      : allowedRegistrationStatuses.includes(ev?.registrationStatus)
+/** True if the HTML has visible text or an image. */
+function hasContent(html?: string): boolean {
+  if (!html) return false;
+  if (/<img\b/i.test(html)) return true;
+  return (
+    html.replace(/<[^>]*>/g, "").replace(/&nbsp;/gi, " ").trim().length > 0
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Normalisers (run once, at the data boundary)                        */
+/* ------------------------------------------------------------------ */
+
+const REGISTRATION_STATUSES: RegistrationStatus[] = [
+  "Open",
+  "LimitedSlots",
+  "Waitlist",
+  "ClosingSoon",
+  "Full",
+];
+
+// `any` on purpose: this receives untrusted/legacy saved data.
+function normaliseEvent(ev: any): EventItem {
+  const registrationStatus: RegistrationStatus =
+    ev?.registrationStatus === "Available"
+      ? "Open"
+      : REGISTRATION_STATUSES.includes(ev?.registrationStatus)
         ? ev.registrationStatus
         : "Open";
+
+  // Older saves stored speakers as an array of objects.
+  const speakers =
+    typeof ev?.speakers === "string"
+      ? ev.speakers
+      : Array.isArray(ev?.speakers)
+        ? ev.speakers
+            .map(
+              (s: any) =>
+                `<p><strong>${esc(s?.name ?? "")}</strong><br>${esc(
+                  s?.designation ?? ""
+                )}<br>${esc(s?.company ?? "")}</p>`
+            )
+            .join("")
+        : "";
 
   return {
     id: ev?.id ?? uid(),
@@ -162,96 +251,44 @@ function normaliseEvent(ev: any): EventItem {
     dateMode: ev?.dateMode === "exact" ? "exact" : "month",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
-    completionStatus: ev?.completionStatus === "Completed" ? "Completed" : "InProgress",
+    completionStatus:
+      ev?.completionStatus === "Completed" ? "Completed" : "InProgress",
     registrationLink: ev?.registrationLink ?? "",
-    committees: Array.isArray(ev?.committees) ? ev.committees : [],
-    customCommitteeTags: Array.isArray(ev?.customCommitteeTags) ? ev.customCommitteeTags : [],
+    committees: Array.isArray(ev?.committees) ? [...ev.committees] : [],
+    customCommitteeTags: Array.isArray(ev?.customCommitteeTags)
+      ? [...ev.customCommitteeTags]
+      : [],
     details: ev?.details ?? "",
     programme: ev?.programme ?? "",
-    speakers: typeof ev?.speakers === "string"
-    ? ev.speakers
-    : Array.isArray(ev?.speakers)
-      ? ev.speakers
-          .map(
-            (s: any) =>
-              `<p><strong>${esc(s.name ?? "")}</strong><br>${esc(
-                s.designation ?? ""
-              )}<br>${esc(s.company ?? "")}</p>`
-          )
-          .join("")
-      : "",
-    documents: Array.isArray(ev?.documents) ? ev.documents : [],
+    speakers,
     sponsors: ev?.sponsors ?? "",
     dressCode: ev?.dressCode ?? "",
     registrationDeadline: ev?.registrationDeadline ?? "",
     remarks: ev?.remarks ?? "",
+    documents: Array.isArray(ev?.documents)
+      ? ev.documents.map((d: any) => ({ label: d?.label ?? "", url: d?.url ?? "" }))
+      : [],
   };
 }
 
+function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
+  if (!Array.isArray(raw)) return [];
 
-function normaliseList(raw: unknown): upcomingEvents[] {
-if (!Array.isArray) return [];
-
-return raw.map((item: any) => ({
-  id: typeof item?.id === "string" && item.id ? item.id : crypto.randomUUID(),
-  title: typeof item?.title === "string" ? item.title : "",
-  date: typeof item?.date === "string" ? item.date : "",
-  eventStatus: item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
-}));
+  return raw.map((item: any) => ({
+    id: typeof item?.id === "string" && item.id ? item.id : uid(),
+    title: typeof item?.title === "string" ? item.title : "",
+    date: typeof item?.date === "string" ? item.date : "",
+    eventStatus: item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+  }));
 }
 
-function getDateParts(date: string) {
-  if (!date) return { day: "TBC", monthYear: "" };
+/* ================================================================== */
+/* EMAIL TEMPLATE                                                     */
+/* ================================================================== */
 
-  const [year, month, day] = date.split("-");
-  const monthNumber = Number(month);
-  const monthText =
-    monthNumber >= 1 && monthNumber <= 12
-      ? new Date(2000, monthNumber - 1, 1)
-          .toLocaleString("en-US", { month: "short" })
-          .toUpperCase()
-      : "";
-
-  return {
-    day: day ? String(Number(day)) : "TBC",
-    monthYear: [monthText, year].filter(Boolean).join(" "),
-  };
-}
-
-function getMonthYearParts(date: string) {
-  if (!date) return { month: "TBC", year: "" };
-
-  const [year, month] = date.split("-");
-  const monthNumber = Number(month);
-  const monthText =
-    monthNumber >= 1 && monthNumber <= 12
-      ? new Date(2000, monthNumber - 1, 1)
-          .toLocaleString("en-US", { month: "short" })
-          .toUpperCase()
-      : "TBC";
-
-  return { month: monthText, year: year || "" };
-}
-
-function getRegistrationDeadline(event: EventItem):string  {
-
-  if (event.registrationDeadline?.trim()) {
-    return event.registrationDeadline;
-  }
-
-  if (!event.date || event.dateMode !== "exact") {
-    return "";
-  }
-
-  const eventDate = new Date(`${event.date}T12:00:00`);
-  eventDate.setDate(eventDate.getDate() - 14);
-
-  return [
-    String(eventDate.getDate()).padStart(2, "0"),
-    String(eventDate.getMonth() + 1).padStart(2, "0"),
-    eventDate.getFullYear(),
-  ].join("/");
-}
+/* ------------------------------------------------------------------ */
+/* Small building blocks                                               */
+/* ------------------------------------------------------------------ */
 
 function renderBadge(
   style: TagStyle,
@@ -264,583 +301,80 @@ function renderBadge(
   } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
 }
 
-function renderInlineTag(
-  text: string,
-  bg: string,
-  color: string,
-  border: string
-) {
+function renderInlineTag(text: string, { bg, color, border }: Omit<TagStyle, "text">) {
   return `<span style="display:inline-block;margin:0 0 4px 0;padding:5px 9px;border-radius:3px;background:${bg};background-color:${bg};border:1px solid ${border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${color};mso-line-height-rule:exactly;line-height:12px;"><!--[if mso]>&nbsp;&nbsp;<![endif]-->${esc(text)}<!--[if mso]>&nbsp;&nbsp;<![endif]--></span>`;
 }
 
-function renderCommitteeTags(codes: string[]) {
-  if (!codes.length) return "";
+const CUSTOM_TAG_STYLE = { bg: "#f5f5f5", color: "#383838", border: "#383838" };
 
-  return codes
-    .map((code) => {
-      const option = committeeOptions[code];
-      if (!option) return "";
+function renderTags(event: EventItem) {
+  const committeeTags = (event.committees ?? [])
+    .map((code) => COMMITTEE_STYLES[code])
+    .filter((style): style is TagStyle => Boolean(style))
+    .map((style) => renderInlineTag(style.text, style));
 
-      return renderInlineTag(option.text, option.bg, option.color, option.border);
-    })
+  const customTags = (event.customCommitteeTags ?? [])
+    .map((tag) => tag.trim())
     .filter(Boolean)
-    .join(" ");
+    .map((tag) => renderInlineTag(tag, CUSTOM_TAG_STYLE));
+
+  return [...committeeTags, ...customTags].join(" ");
 }
 
-function rendercustomCommitteeTags(tags: string[]) {
-  if (!tags.length) return "";
-
-  return tags
-    .filter((tag) => tag.trim())
-    .map((tag) => renderInlineTag(tag.trim(), "#f5f5f5", "#383838", "#383838"))
-    .join(" ");
-}
-
-// Joins the two tag groups with a space so they don't touch in Outlook.
-function joinTagGroups(...groups: string[]) {
-  return groups.filter(Boolean).join(" ");
-}
-
-
-function hasContent(html?: string): boolean {
-  return Boolean(
-    html?.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim()
-  );
-
-}
 function renderDocuments(documents: EventDocument[]) {
   if (!documents.length) return "";
 
   const links = documents
     .map(
-      (doc, index) => `<div style="margin:${index === 0 ? "0" : "6px"} 0 0;line-height:1.35;"><a href="${esc(doc.url)}" target="_blank" style="font-family:${FONT};font-size:9px;font-weight:700;color:#1b76bc;text-decoration:underline;">${esc(doc.label || "Document")}</a></div>`
+      (doc, i) =>
+        `<div style="margin:${i === 0 ? "0" : "6px"} 0 0;line-height:1.35;"><a href="${esc(doc.url)}" target="_blank" style="font-family:${FONT};font-size:9px;font-weight:700;color:#1b76bc;text-decoration:underline;">${esc(doc.label || "Document")}</a></div>`
     )
     .join("");
 
   return `<div data-f="documents" style="width:100%;border-top:1px solid #dde4ec;margin-top:14px;padding-top:12px;text-align:center;">${links}</div>`;
 }
 
-function renderButton(
-  label: string,
-  href: string,
-  extraLinkAttrs = "",
-  bg = "#384a1b"
-) {
+function renderButton(label: string, href: string, extraLinkAttrs: string, bg: string) {
   return `
-    <table
-      class="register-table"
-      cellpadding="0"
-      cellspacing="0"
-      border="0"
-      role="presentation"
-      align="center"
-    >
+    <table class="register-table" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
       <tr>
-        <td
-          align="center"
-          bgcolor="${bg}"
-          style="
-            background-color:${bg};
-            border-radius:3px;
-            padding:8px 12px;
-            mso-line-height-rule:exactly;
-            line-height:14px;
-          "
-        >
-          <a
-            class="register-link"
-            ${extraLinkAttrs}
-            href="${href}"
-            target="_blank"
-            style="
-              font-family:${FONT};
-              font-size:10px;
-              font-weight:700;
-              letter-spacing:0.8px;
-              text-transform:uppercase;
-              color:#ffffff;
-              text-decoration:none;
-              white-space:nowrap;
-            "
-          >
+        <td align="center" bgcolor="${bg}" style="background-color:${bg};border-radius:3px;padding:8px 12px;mso-line-height-rule:exactly;line-height:14px;">
+          <a class="register-link" ${extraLinkAttrs} href="${esc(href)}" target="_blank" style="font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#ffffff;text-decoration:none;white-space:nowrap;">
             <span style="color:#ffffff;">${esc(label)}</span>
           </a>
         </td>
       </tr>
-    </table>
-  `;
+    </table>`;
 }
 
-function renderEvents(event: EventItem) {
-  const { day, monthYear } = getDateParts(event.date);
-
-  const eventExtraDetails = (event.dressCode?.trim() ||getRegistrationDeadline(event))
-  ? `
-    <table width="100%" cellpadding="0" cellspacing="0"
-      border="0" role="presentation"
-      style="border-top:1px solid #e2e8f0;">
-      <tr>
-        ${
-          event.dressCode?.trim()
-            ? `
-              <td width="50%" valign="top"
-                style="padding:16px 22px;background:#fafbfd;">
-                <p style="margin:0 0 8px;font-family:${FONT};
-                  font-size:10px;font-weight:700;letter-spacing:1.5px;
-                  text-transform:uppercase;color:#8492a6;">
-                  Dress Code
-                </p>
-                <div style="font-family:${FONT};font-size:13px;
-                  color:#374151;line-height:1.65;">
-                  ${esc(event.dressCode)}
-                </div>
-              </td>`
-            : ""
-        }
-        ${
-          getRegistrationDeadline(event)
-            ? `
-              <td width="50%" valign="top"
-                style="padding:16px 22px;background:#ffffff;
-                  border-left:1px solid #e2e8f0;">
-                <p style="margin:0 0 8px;font-family:${FONT};
-                  font-size:10px;font-weight:700;letter-spacing:1.5px;
-                  text-transform:uppercase;color:#8492a6;">
-                  Registration Deadline
-                </p>
-                <div style="font-family:${FONT};font-size:13px;
-                  color:#374151;line-height:1.65;">
-                  ${esc(getRegistrationDeadline(event))}
-                </div>
-              </td>`
-            : ""
-        }
-      </tr>
-    </table>`
-  : "";
-
-  const committees = joinTagGroups( renderCommitteeTags(event.committees ?? []), rendercustomCommitteeTags(event.customCommitteeTags ?? []));
-  const speakersRow = hasRichContent(event.speakers)
-  ? `
-            <!-- ROW 3: SPEAKERS -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
-              <tr>
-                <td class="speakers-cell" valign="top" style="padding:20px 22px;background:#ffffff;">
-                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
-                    Speakers
-                  </p>
-                  <div data-f="speakers" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.6;">
-                    ${event.speakers}
-                  </div>
-                </td>
-              </tr>
-            </table>`
-  : "";
-
-
-  const eventPeopleSections = `
-  <table role="presentation" width="100%" cellpadding="0"
-    cellspacing="0" border="0" style="table-layout:fixed;">
-    <tr>
-      <td width="50%" valign="top"
-        style="padding:16px 22px;background:#fafbfd;">
-        <p style="margin:0 0 8px;font-family:${FONT};
-          font-size:10px;font-weight:700;letter-spacing:1.5px;
-          text-transform:uppercase;color:#8492a6;">
-          Sponsors
-        </p>
-        ${
-          hasContent(event.sponsors)
-            ? event.sponsors
-            : `Call for Sponsors.<br />
-               Please reach out to
-               <a href="mailto:sarah@ssa.org.sg">sarah@ssa.org.sg</a>.`
-        }
-      </td>
-
-      <td width="50%" valign="top"
-        style="padding:16px 22px;background:#ffffff;
-          border-left:1px solid #e2e8f0;">
-        <p style="margin:0 0 8px;font-family:${FONT};
-          font-size:10px;font-weight:700;letter-spacing:1.5px;
-          text-transform:uppercase;color:#8492a6;">
-          Speakers
-        </p>
-        ${
-          hasContent(event.speakers)
-            ? event.speakers
-            : `Call for Speakers.<br />
-               Please reach out to
-               <a href="mailto:sarah@ssa.org.sg">sarah@ssa.org.sg</a>.`
-        }
-      </td>
-    </tr>
-  </table>
-`;
-
-const eventRemarks = hasContent(event.remarks)
-  ? `
-    <table role="presentation" width="100%" cellpadding="0"
-      cellspacing="0" border="0">
-      <tr>
-        <td style="padding:16px 22px;background:#fafbfd;
-          border-top:1px solid #e2e8f0;">
-          <p style="margin:0 0 8px;font-family:${FONT};
-            font-size:10px;font-weight:700;letter-spacing:1.5px;
-            text-transform:uppercase;color:#8492a6;">
-            Remarks
-          </p>
-          <div style="font-family:${FONT};font-size:13px;
-            color:#374151;line-height:1.65;">
-            ${event.remarks}
-          </div>
-        </td>
-      </tr>
-    </table>`
-  : "";
-
-  const programmeRow = hasRichContent(event.programme)
-  ? `
-            <!-- ROW 4: PROGRAMME SYNOPSIS -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;">
-              <tr>
-                <td class="programme-cell" valign="top" style="padding:20px 22px;background:#fafbfd;">
-                  <p style="margin:0 0 10px;font-family:${FONT};font-size:10pt;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">
-                  Programme Synopsis
-                  </p>
-                  <div data-f="programme" style="font-family:${FONT};font-size:10pt;color:#374151;line-height:1.65;">
-                    ${event.programme}
-                  </div>
-                </td>
-              </tr>
-            </table>`
-  : "";
-  const documents = renderDocuments(event.documents ?? []);
-  const eventBadge = renderBadge(eventStatusOptions.Confirmed, "event-status", "Confirmed", "right");
-
-const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open
-  const registerAction =
-    event.eventStatus === "Confirmed" && event.registrationLink
-        ? renderButton(
-            "Open for Registration",
-            esc(event.registrationLink),
-            'data-f="registration-link"',
-            buttonStyle.bg
-          )
-        : "";
+function renderDateCell(
+  day: string,
+  monthYear: string,
+  opts: { className: string; width: number; daySize: number; padding: string; dataFields?: boolean }
+) {
+  const dayAttr = opts.dataFields ? ' data-f="date-day"' : "";
+  const monthAttr = opts.dataFields ? ' data-f="date-month"' : "";
 
   return `
-    <!-- =====================================================
-        EVENT BLOCK
-    ====================================================== -->
-    <tr
-      data-block="event"
-      data-event-status="Tentative"
-      data-id="${esc(event.id)}"
-    >
-      <td style="padding:0;border-bottom:8px solid #f0f4f8;">
-
-        <!-- ROW 1: DATE | TITLE + COMMITTEE | STATUS -->
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="background:#ffffff;border-top:1px solid #d4dde8;"
-        >
-          <tr>
-
-            <td
-              class="event-date-cell"
-              width="110"
-              valign="middle"
-              align="center"
-              style="background:#7c49bf;padding:14px 8px;text-align:center;"
-            >
-              <span
-                data-f="date-day"
-                style="
-                  display:block;
-                  font-family:${FONT};
-                  font-size:20px;
-                  font-weight:700;
-                  color:#ffffff;
-                  line-height:1.15;
-                "
-              >
-                ${esc(day)}
-              </span>
-
+            <td class="${opts.className}" width="${opts.width}" valign="middle" align="center" bgcolor="#7c49bf" style="background:#7c49bf;padding:${opts.padding};text-align:center;">
+              <span${dayAttr} style="display:block;font-family:${FONT};font-size:${opts.daySize}px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
               ${
                 monthYear
-                  ? `
-                    <span
-                      data-f="date-month"
-                      style="
-                        display:block;
-                        margin-top:3px;
-                        font-family:${FONT};
-                        font-size:10px;
-                        font-weight:700;
-                        letter-spacing:1.5px;
-                        text-transform:uppercase;
-                        color:#e6cffc;
-                      "
-                    >
-                      ${esc(monthYear)}
-                    </span>
-                  `
+                  ? `<span${monthAttr} style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
                   : ""
               }
-            </td>
-
-            <td
-              class="event-title-cell"
-              valign="middle"
-              style="padding:14px 18px;"
-            >
-              <span
-                data-f="title"
-                style="
-                  font-family:${FONT};
-                  font-size:16px;
-                  font-weight:700;
-                  color:#281e7e;
-                  line-height:1.4;
-                "
-              >
-                ${esc(event.title || "Untitled Event")}
-              </span>
-              ${
-                committees
-                  ? `
-                  <div
-                  data-f="committees"
-                  style="
-                    margin-top:14px;
-                    padding-top:12px;
-                    border-top:1px solid #e2e8f0;
-                  "
-                >
-                  ${committees}
-                </div>
-                  `
-                  : ""
-              }
-
-
-            </td>
-
-            <td
-            class="event-status-cell"
-            width="150"
-            valign="middle"
-            align="right"
-            style="padding:14px 18px 14px 8px;"
-          >
-            ${renderBadge(
-              eventStatusOptions[event.eventStatus],
-              "event-status",
-              event.eventStatus,
-              "right"
-            )}
-          
-            ${
-              registerAction
-                ? `
-                  <div style="height:10px;line-height:10px;font-size:0;">
-                    &nbsp;
-                  </div>
-                  ${registerAction}
-                `
-                : ""
-            }
-          </td>
-
-          </tr>
-        </table>
-
-
-        <!-- ROW 2: EVENT DETAILS | DRAFT PROGRAMME -->
-        <table
-          width="100%"
-          cellpadding="0"
-          cellspacing="0"
-          border="0"
-          role="presentation"
-          style="border-top:1px solid #e2e8f0;"
-        >
-          <tr>
-
-            <!-- EVENT DETAILS -->
-            <td
-            class="event-details-cell"
-            valign="top"
-            style="padding:20px 22px;background:#fafbfd;"
-          >
-            <p
-              style="
-                margin:0 0 10px;
-                font-family:${FONT};
-                font-size:10px;
-                font-weight:700;
-                letter-spacing:1.5px;
-                text-transform:uppercase;
-                color:#8492a6;
-              "
-            >
-              Event Details
-            </p>
-          
-            <div
-              data-f="event-details"
-              style="
-                font-family:${FONT};
-                font-size:13px;
-                color:#374151;
-                line-height:1.65;
-              "
-            >
-              ${event.details?.trim() || "&nbsp;"}
-            </div>
-          
-          </td>
-
-
-            <!-- DRAFT PROGRAMME SYNOPSIS -->
-            <td
-              class="programme-cell"
-              width="50%"
-              valign="top"
-              style="
-                padding:20px 22px;
-                background:#ffffff;
-                border-left:1px solid #e2e8f0;
-              "
-            >
-              <p
-                style="
-                  margin:0 0 10px;
-                  font-family:${FONT};
-                  font-size:10px;
-                  font-weight:700;
-                  letter-spacing:1.5px;
-                  text-transform:uppercase;
-                  color:#8492a6;
-                "
-              >
-                Programme Synopsis
-              </p>
-
-              <div
-                data-f="programme"
-                style="
-                  font-family:${FONT};
-                  font-size:13px;
-                  color:#374151;
-                  line-height:1.65;
-                "
-              >
-                ${event.programme?.trim() || "&nbsp;"}
-                ${documents}
-              </div>
-
-             </td>
-          </tr>
-        </table>
-        ${eventExtraDetails}
-        ${eventPeopleSections}
-        ${eventRemarks}
-
-      </td>
-    </tr>
-
-    <!-- =====================================================
-         END EVENT BLOCK
-    ====================================================== -->
-  `;
+            </td>`;
 }
 
-
-function renderUpcomingEvents(items: upcomingEvents[]) {
-  if (!items.length) return "";
-
-  const rows = items
-    .map((item) => {
-      const { day, monthYear } = getDateParts(item.date);
-
-      return `
-            <tr data-id="${esc(item.id)}" data-event-status="${esc(item.eventStatus)}">
-              <td style="padding:0;border-top:1px solid #e2e8f0;">
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;">
-                  <tr>
-                    <td
-                      width="90"
-                      valign="middle"
-                      align="center"
-                      bgcolor="#7c49bf"
-                      style="background:#7c49bf;padding:12px 8px;text-align:center;"
-                    >
-                      <span style="display:block;font-family:${FONT};font-size:18px;font-weight:700;color:#ffffff;line-height:1.15;">
-                        ${esc(day)}
-                      </span>
-                      ${
-                        monthYear
-                          ? `<span style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
-                          : ""
-                      }
-                    </td>
-
-                    <td valign="middle" style="padding:12px 18px;">
-                      <span style="font-family:${FONT};font-size:14px;font-weight:700;color:#281e7e;line-height:1.4;">
-                        ${esc(item.title || "Untitled Event")}
-                      </span>
-                    </td>
-
-                    <td width="130" valign="middle" align="right" style="padding:12px 18px 12px 8px;">
-                      ${renderBadge(
-                        eventStatusOptions[item.eventStatus],
-                        "upcoming-status",
-                        item.eventStatus,
-                        "right"
-                      )}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>`;
-    })
-    .join("\n");
-
+/** Full-width navy bar used for the issue range and "Upcoming Events". */
+function renderSectionBar(text: string, align: "left" | "center" = "left") {
   return `
-        <!-- =====================================================
-             UPCOMING EVENT LIST
-        ====================================================== -->
-        <tr data-block="upcomingList">
-          <td style="padding:0;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-${rows}
-            </table>
+        <tr>
+          <td bgcolor="${NAVY}" align="${align}" style="background-color:${NAVY};padding:14px 24px;text-align:${align};">
+            <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(text)}</span>
           </td>
-        </tr>
-        <!-- =====================================================
-             END OF UPCOMING EVENT LIST
-        ====================================================== -->
-  `;
+        </tr>`;
 }
-
-function hasRichContent(html?: string) {
-  if (!html) return false;
-  if (/<img\b/i.test(html)) return true; // keep if it contains an image
-  const text = html
-    .replace(/<br\s*\/?>/gi, "")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/gi, " ")
-    .trim();
-  return text.length > 0;
-}
-
 
 function renderGreeting(text: string) {
   const safe = esc(text ?? "").trim();
@@ -849,147 +383,285 @@ function renderGreeting(text: string) {
   return safe
     .split(/\n\s*\n/)
     .map(
-      (paragraph, index, all) =>
-        `<p style="margin:0 0 ${index === all.length - 1 ? "0" : "12px"};">${paragraph.replace(/\n/g, "<br>")}</p>`
+      (paragraph, i, all) =>
+        `<p style="margin:0 0 ${i === all.length - 1 ? "0" : "12px"};">${paragraph.replace(/\n/g, "<br>")}</p>`
     )
     .join("");
 }
 
-export default function EventsHome() {
-  const [tab, setTab] = useState<"Events" | "preview" | "history">("Events");
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [upcomingList, setUpcomingList] = useState<upcomingEvents[]>([]);
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("idle");
-  const [viewingRecordId, setViewingRecordId] = useState<number | null>(null);
-  const { confirmDelete, deleteModal } = useConfirmDelete();
-  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
-  const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null)
-  const [copied, setCopied] = useState(false);
-  const [issueRange, setIssueRange] = useState("Monthly Issue: ");
-  const [greeting, setGreeting] = useState(`Dear Members,
+/* ------------------------------------------------------------------ */
+/* Label + body columns (details, programme, dress code, people, ...)  */
+/* ------------------------------------------------------------------ */
 
-We are pleased to invite you to our upcoming and future planned events, designed to bring our members together and provide an opportunity to engage directly with our Chairs, Councillors and Committee Experts.
+interface ColumnSpec {
+  label: string;
+  body: string; // trusted HTML
+  field?: string; // data-f attribute for the body
+  padding?: string;
+}
 
-These in-person sessions will provide an overview of the work being undertaken across our committees, while creating opportunities for members to exchange insights, connect with fellow industry professionals and learn more about how to engage with our activities.
+/** One row of 1-N equal columns. Columns stack on mobile (see EMAIL_STYLES). */
+function renderColumnsRow(columns: ColumnSpec[]) {
+  if (!columns.length) return "";
 
-We encourage you to register your interest and join us at these upcoming sessions.
+  const width = `${Math.floor(100 / columns.length)}%`;
 
-We look forward to bringing our members together and strengthening our collective engagement across the association.`);
+  const cells = columns
+    .map(({ label, body, field, padding = "16px 22px" }, i) => {
+      const divided = i > 0;
+      const bg = i % 2 === 0 ? "#fafbfd" : "#ffffff";
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/load-digest?key=events-builder-data");
-        if (res.ok) {
-          const data = await res.json();
+      return `
+      <td class="col-cell${divided ? " col-divider" : ""}" width="${width}" valign="top" style="padding:${padding};background:${bg};${divided ? "border-left:1px solid #e2e8f0;" : ""}">
+        <p style="margin:0 0 8px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">${esc(label)}</p>
+        <div${field ? ` data-f="${field}"` : ""} style="font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">${body}</div>
+      </td>`;
+    })
+    .join("");
 
-          if (Array.isArray(data?.events)) {
-            setEvents(data.events.map(normaliseEvent));
-          }
+  return `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;table-layout:fixed;">
+          <tr>${cells}
+          </tr>
+        </table>`;
+}
 
-          if (Array.isArray(data?.upcomingList)) {
-            setUpcomingList(data.upcomingList.map(normaliseList));
-          }
+const callFor = (what: string) =>
+  `Call for ${what}.<br />Please reach out to <a href="mailto:${CONTACT_EMAIL}" style="color:#1b76bc;">${CONTACT_EMAIL}</a>.`;
 
-          if (typeof data?.greeting === "string") {
-            setGreeting(data.greeting);
-          }
-          if (typeof data?.issueRange === "string") {
-            setIssueRange(data.issueRange);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load events builder:", e);
+/* ------------------------------------------------------------------ */
+/* Event block                                                         */
+/* ------------------------------------------------------------------ */
+
+function renderEvent(event: EventItem) {
+  const { day, monthYear } = getDateParts(event.date);
+  const tags = renderTags(event);
+  const dressCode = event.dressCode?.trim();
+  const deadline = getRegistrationDeadline(event);
+
+  const statusStyle = EVENT_STATUS_STYLES[event.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
+  const registrationStyle =
+    REGISTRATION_STATUS_STYLES[event.registrationStatus] ?? REGISTRATION_STATUS_STYLES.Open;
+
+  const registerButton =
+    event.eventStatus === "Confirmed" && event.registrationLink
+      ? renderButton(
+          "Open for Registration",
+          event.registrationLink,
+          'data-f="registration-link"',
+          registrationStyle.bg
+        )
+      : "";
+
+  // ROW 1: date | title + committee tags | status (+ register button)
+  const headerRow = `
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid #d4dde8;">
+          <tr>
+            ${renderDateCell(day, monthYear, {
+              className: "event-date-cell",
+              width: 110,
+              daySize: 20,
+              padding: "14px 8px",
+              dataFields: true,
+            })}
+
+            <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
+              <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
+              ${
+                tags
+                  ? `<div data-f="committees" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">${tags}</div>`
+                  : ""
+              }
+            </td>
+
+            <td class="event-status-cell" width="150" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
+              ${renderBadge(statusStyle, "event-status", event.eventStatus, "right")}
+              ${
+                registerButton
+                  ? `<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>${registerButton}`
+                  : ""
+              }
+            </td>
+          </tr>
+        </table>`;
+
+  // ROW 2: details | programme (+ documents)
+  const detailsRow = renderColumnsRow([
+    {
+      label: "Event Details",
+      body: event.details?.trim() || "&nbsp;",
+      field: "event-details",
+      padding: "20px 22px",
+    },
+    {
+      label: "Programme Synopsis",
+      body: `${event.programme?.trim() || "&nbsp;"}${renderDocuments(event.documents ?? [])}`,
+      field: "programme",
+      padding: "20px 22px",
+    },
+  ]);
+
+  // ROW 3: dress code | registration deadline (either may be missing)
+  const extraRow = renderColumnsRow([
+    ...(dressCode ? [{ label: "Dress Code", body: esc(dressCode) }] : []),
+    ...(deadline ? [{ label: "Registration Deadline", body: esc(deadline) }] : []),
+  ]);
+
+  // ROW 4: sponsors | speakers
+  const peopleRow = renderColumnsRow([
+    {
+      label: "Sponsors",
+      body: hasContent(event.sponsors) ? event.sponsors : callFor("Sponsors"),
+      field: "sponsors",
+    },
+    {
+      label: "Speakers",
+      body: hasContent(event.speakers) ? event.speakers : callFor("Speakers"),
+      field: "speakers",
+    },
+  ]);
+
+  // ROW 5: remarks
+  const remarksRow = hasContent(event.remarks)
+    ? renderColumnsRow([{ label: "Remarks", body: event.remarks, field: "remarks" }])
+    : "";
+
+  return `
+    <!-- EVENT BLOCK -->
+    <tr data-block="event" data-event-status="${esc(event.eventStatus)}" data-id="${esc(event.id)}">
+      <td style="padding:0;border-bottom:8px solid ${PAGE_BG};">
+        ${headerRow}
+        ${detailsRow}
+        ${extraRow}
+        ${peopleRow}
+        ${remarksRow}
+      </td>
+    </tr>
+    <!-- END EVENT BLOCK -->`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Upcoming events list                                                */
+/* ------------------------------------------------------------------ */
+
+function renderUpcomingRow(item: UpcomingEvent) {
+  const { day, monthYear } = getDateParts(item.date);
+  const statusStyle = EVENT_STATUS_STYLES[item.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
+
+  return `
+            <tr data-id="${esc(item.id)}" data-event-status="${esc(item.eventStatus)}">
+              <td style="padding:0;border-top:1px solid #e2e8f0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;">
+                  <tr>
+                    ${renderDateCell(day, monthYear, {
+                      className: "upcoming-date-cell",
+                      width: 90,
+                      daySize: 18,
+                      padding: "12px 8px",
+                    })}
+                    <td valign="middle" style="padding:12px 18px;">
+                      <span style="font-family:${FONT};font-size:14px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(item.title || "Untitled Event")}</span>
+                    </td>
+                    <td class="upcoming-status-cell" width="130" valign="middle" align="right" style="padding:12px 18px 12px 8px;">
+                      ${renderBadge(statusStyle, "upcoming-status", item.eventStatus, "right")}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>`;
+}
+
+/** Heading + list. Returns "" when there's nothing to show, so no empty heading. */
+function renderUpcomingEvents(items: UpcomingEvent[]) {
+  if (!items.length) return "";
+
+  return `
+        ${renderSectionBar("Upcoming Events", "center")}
+        <!-- UPCOMING EVENT LIST -->
+        <tr data-block="upcomingList">
+          <td style="padding:0;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+${items.map(renderUpcomingRow).join("\n")}
+            </table>
+          </td>
+        </tr>
+        <!-- END UPCOMING EVENT LIST -->`;
+}
+
+/* ------------------------------------------------------------------ */
+/* Page shell                                                          */
+/* ------------------------------------------------------------------ */
+
+const EMAIL_STYLES = `
+    body, table, td, a {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    table, td {
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      display: block;
+      outline: none;
+      text-decoration: none;
+    }
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: ${PAGE_BG};
+    }
+    a[x-apple-data-detectors] {
+      color: inherit !important;
+      text-decoration: none !important;
+    }
+
+    @media only screen and (max-width: 620px) {
+      .email-container { width: 100% !important; max-width: 100% !important; }
+      .header-img { width: 100% !important; height: auto !important; }
+      .pad-sides { padding-left: 16px !important; padding-right: 16px !important; }
+
+      /* Cells that stack vertically on mobile */
+      .event-date-cell,
+      .event-title-cell,
+      .event-status-cell,
+      .col-cell {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
       }
-      setLoaded(true);
-    })();
-  }, []);
+      .event-date-cell { text-align: left !important; padding: 10px 12px !important; }
+      .event-title-cell { padding: 14px 16px 10px 16px !important; }
+      .event-status-cell { text-align: left !important; padding: 0 16px 14px 16px !important; }
+      .col-cell { padding-left: 16px !important; padding-right: 16px !important; }
+      .col-divider { border-left: 0 !important; border-top: 1px solid #e2e8f0 !important; }
 
-  // Home is the single save owner. Editor only updates this events state.
-  useEffect(() => {
-    if (!loaded) return;
+      /* Upcoming list stays as a single row, just tighter */
+      .upcoming-date-cell { width: 64px !important; padding: 10px 6px !important; }
+      .upcoming-status-cell { width: auto !important; padding-right: 12px !important; }
 
-    setSaveStatus("saving");
-
-    const t = setTimeout(async () => {
-      try {
-        // Build the HTML here so it always matches the state being saved.
-        const builtHtml = buildFullHtml();
-
-        const res = await fetch("/api/save-digest?key=events-builder-data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            events,
-            greeting,
-            issueRange,
-            builtHtml,
-            upcomingList
-          }),
-        });
-
-        if (res.ok) {
-          setSaveStatus(`Saved at ${getDateTime()}`);
-        } else {
-          setSaveStatus("error");
-        }
-      } catch (e) {
-        console.error("Failed to save events builder:", e);
-        setSaveStatus("error");
+      .register-table { width: 100% !important; }
+      .register-link {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
       }
-    }, 700);
+      .footer-cell { padding: 20px 16px !important; }
+    }`;
 
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, upcomingList, greeting, issueRange, loaded]);
+function buildEmailHtml({
+  events,
+  upcomingList,
+  greeting,
+  issueRange,
+}: EmailData): string {
+  const eventsHtml = sortByDate(events).map(renderEvent).join("\n");
+  const upcomingHtml = renderUpcomingEvents(sortByDate(upcomingList));
 
-  const handleAddEvents = (title: string) => {
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: uid(),
-        title,
-        date: "",
-        dateMode: "month",
-        eventStatus: "Tentative",
-        registrationStatus: "Open",
-        completionStatus: "InProgress",
-        registrationLink: "",
-        committees: [],
-        customCommitteeTags: [],
-        details: "",
-        programme: "",
-        speakers: "",
-        documents: [],
-        sponsors: "",
-        dressCode: "",
-        registrationDeadline: "",
-        remarks: "",
-      },
-    ]);
-  };
-
-  const sortedEvents = [...events].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
-
-    const aDate = a.dateMode === "month" ? `${a.date}-01` : a.date;
-    const bDate = b.dateMode === "month" ? `${b.date}-01` : b.date;
-
-    return aDate.localeCompare(bDate);
-  });
-
-  const buildFullHtml = () => {
-    const eventHtml = sortedEvents
-    .map((event) => renderEvents(event))
-    .join("\n");
-
-
-    const upcomingHtml = renderUpcomingEvents(upcomingList);
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
@@ -1012,125 +684,15 @@ We look forward to bringing our members together and strengthening our collectiv
   </noscript>
   <![endif]-->
 
-  <style type="text/css">
-    body,
-    table,
-    td,
-    a {
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }
-
-    table,
-    td {
-      mso-table-lspace: 0pt;
-      mso-table-rspace: 0pt;
-    }
-
-    img {
-      -ms-interpolation-mode: bicubic;
-      border: 0;
-      display: block;
-      outline: none;
-      text-decoration: none;
-    }
-
-    body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background-color: #f0f4f8;
-    }
-
-    a[x-apple-data-detectors] {
-      color: inherit !important;
-      text-decoration: none !important;
-    }
-
-    @media only screen and (max-width: 620px) {
-      .email-container {
-        width: 100% !important;
-        max-width: 100% !important;
-      }
-
-      .header-img {
-        width: 100% !important;
-        height: auto !important;
-      }
-
-      .pad-sides {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-      }
-
-      .event-date-cell,
-      .event-title-cell,
-      .event-status-cell,
-      .event-details-cell,
-      .event-actions-cell,
-      .programme-cell,
-      .speakers-cell {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-      }
-
-      .event-date-cell {
-        text-align: left !important;
-        padding: 10px 12px !important;
-      }
-
-      .event-title-cell {
-        padding: 14px 16px 10px 16px !important;
-      }
-
-      .event-status-cell {
-        text-align: left !important;
-        padding: 0 16px 14px 16px !important;
-      }
-
-      .event-details-cell {
-        padding: 18px 16px !important;
-      }
-
-      .event-actions-cell {
-        padding: 0 16px 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .programme-cell {
-        padding: 18px 16px !important;
-      }
-
-      .speakers-cell {
-        padding: 18px 16px !important;
-        border-left: 0 !important;
-        border-top: 1px solid #e2e8f0 !important;
-      }
-
-      .register-table {
-        width: 100% !important;
-      }
-
-      .register-link {
-        display: block !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-        text-align: center !important;
-      }
-
-      .footer-cell {
-        padding: 20px 16px !important;
-      }
-    }
+  <style type="text/css">${EMAIL_STYLES}
   </style>
 </head>
 
-<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
+<body style="margin:0;padding:0;background-color:${PAGE_BG};font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:#f0f4f8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:${PAGE_BG};">
   <tr>
-    <td align="center" style="padding-top:32px;padding-bottom:32px;padding-left:20px;padding-right:20px;">
+    <td align="center" style="padding:32px 20px;">
 
       <!--[if mso]>
       <table width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center">
@@ -1138,36 +700,17 @@ We look forward to bringing our members together and strengthening our collectiv
           <td width="680">
       <![endif]-->
 
-      <table
-        class="email-container"
-        width="680"
-        cellpadding="0"
-        cellspacing="0"
-        border="0"
-        role="presentation"
-        align="center"
-        style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;"
-      >
+      <table class="email-container" width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;">
 
         <!-- BANNER -->
         <tr>
           <td style="padding:0;font-size:0;line-height:0;">
-            <img
-              class="header-img"
-              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/refs/heads/main/Banner4.png"
-              width="680"
-              alt="SSA Upcoming Events"
-              style="display:block;width:100%;max-width:680px;height:auto;border:0;"
-            >
+            <img class="header-img" src="${BANNER_URL}" width="680" alt="SSA Upcoming Events" style="display:block;width:100%;max-width:680px;height:auto;border:0;">
           </td>
         </tr>
 
-        <!-- SECTION TITLE -->
-        <tr>
-          <td style="background:#262261;padding:14px 24px;">
-            <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</span>
-          </td>
-        </tr>
+        <!-- ISSUE RANGE -->
+        ${renderSectionBar(issueRange)}
 
         <!-- GREETING -->
         <tr>
@@ -1178,31 +721,15 @@ We look forward to bringing our members together and strengthening our collectiv
           </td>
         </tr>
 
-${eventHtml}
-
-
-<tr>
-  <td style="background-color:#262261; padding:14px 24px; text-align:center;">
-    <span style="font-family:${FONT}; font-size:12pt; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:#ffffff;">Upcoming Events
-    </span>
-  </td>
-</tr>
-
+${eventsHtml}
 ${upcomingHtml}
+
         <!-- FOOTER -->
         <tr>
-          <td class="footer-cell" style="background:#262261;padding:24px 28px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-          border="0" bgcolor="#262261"
-          style="background-color:#262261;">
-       <td class="footer-cell" bgcolor="#262261"
-           style="background-color:#262261; padding:24px 28px;">
-           <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
-           You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:sarah@ssa.org.sg" style="color:#81bce9;text-decoration:none;">sarah@ssa.org.sg</a>.
-           </p>
-       </td>
-     </tr>
-   </table>
+          <td class="footer-cell" bgcolor="${NAVY}" style="background-color:${NAVY};padding:24px 28px;">
+            <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
+              You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:${CONTACT_EMAIL}" style="color:#81bce9;text-decoration:none;">${CONTACT_EMAIL}</a>.
+            </p>
           </td>
         </tr>
 
@@ -1220,26 +747,348 @@ ${upcomingHtml}
 
 </body>
 </html>`;
+}
+
+/* ================================================================== */
+/* COMPONENT                                                          */
+/* ================================================================== */
+
+// Re-exported so existing `import { EventItem } from "./EventsHome"` lines keep working.
+
+type Tab = "events" | "preview" | "history";
+
+/* ------------------------------------------------------------------ */
+/* Small presentational pieces                                         */
+/* ------------------------------------------------------------------ */
+
+function TabButton({
+  active,
+  onClick,
+  className = "",
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
+        active
+          ? "border-indigo-700 text-indigo-700"
+          : "border-transparent text-gray-500 hover:text-gray-700"
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SaveIndicator({ status }: { status: string }) {
+  if (status === "saving") {
+    return (
+      <>
+        <Loader2 size={13} className="animate-spin" /> Saving…
+      </>
+    );
+  }
+  if (status.startsWith("Saved at")) {
+    return (
+      <>
+        <Save size={13} /> {status}
+      </>
+    );
+  }
+  if (status === "error") return <span className="text-red-600">Save failed</span>;
+  return null;
+}
+
+/** Renders the email in an iframe and grows it to fit the content. */
+function EmailPreview({ html }: { html: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+
+  const fitHeight = () => {
+    const frame = ref.current;
+    const doc = frame?.contentDocument;
+    if (frame && doc?.documentElement) {
+      frame.style.height = `${doc.documentElement.scrollHeight}px`;
+    }
   };
 
-  //copy event item
-  const copyEvent = (event: any) => {
-    const copy = { ...event, id: uid() };
-  
-      const index = events.findIndex((x) => x.id === event.id);
-  
-      setEvents([
-        ...events.slice(0, index + 1),
-        copy,
-        ...events.slice(index + 1),
-      ])
-  
-  };
+  return (
+    <iframe
+      ref={ref}
+      title="SSA Upcoming Events Preview"
+      srcDoc={html}
+      onLoad={fitHeight}
+      style={{ width: 680, minWidth: 680, height: 1100 }}
+      className="block mx-auto bg-white border-0"
+    />
+  );
+}
 
-  //handles copy for HTML
-  const handleCopy = async () => {
+function EventRow({
+  event,
+  onStatusChange,
+  onComplete,
+  onOpen,
+  onCopy,
+  onDelete,
+}: {
+  event: EventItem;
+  onStatusChange: (status: EventStatus) => void;
+  onComplete: () => void;
+  onOpen: () => void;
+  onCopy: () => void;
+  onDelete: () => void;
+}) {
+  const badge = EVENT_STATUS_STYLES[event.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
+      <span className="text-sm font-semibold text-gray-800">
+        {event.title || "Untitled Event"}
+      </span>
+
+      <div className="flex items-center gap-2">
+        <select
+          value={event.eventStatus}
+          onChange={(e) => onStatusChange(e.target.value as EventStatus)}
+          className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
+          style={{
+            backgroundColor: badge.bg,
+            color: badge.color,
+            borderColor: badge.border,
+          }}
+        >
+          <option value="Tentative">Tentative</option>
+          <option value="Confirmed">Confirmed</option>
+        </select>
+
+        <div className="relative group">
+          <button
+            type="button"
+            onClick={onComplete}
+            className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+          >
+            <CircleCheck size={16} />
+          </button>
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-100 z-50">
+            Mark event as completed
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpen}
+          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
+          title="Open event"
+        >
+          <SquareArrowOutUpRight size={16} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onCopy}
+          className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
+          title="Copy event"
+        >
+          <Copy size={16} />
+        </button>
+
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+          title="Delete event"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Main component                                                      */
+/* ------------------------------------------------------------------ */
+
+export default function EventsHome() {
+  // --- data ---
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [upcomingList, setUpcomingList] = useState<UpcomingEvent[]>([]);
+  const [greeting, setGreeting] = useState(DEFAULT_GREETING);
+  const [issueRange, setIssueRange] = useState(DEFAULT_ISSUE_RANGE);
+
+  // --- load / save status ---
+  const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("idle");
+
+  // --- ui ---
+  const [tab, setTab] = useState<Tab>("events");
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedArchivedEvent, setSelectedArchivedEvent] = useState<EventItem | null>(null);
+  // null = builder, "list" = issue archive, number = a specific archived issue
+  const [recordsView, setRecordsView] = useState<"list" | number | null>(null);
+  const { confirmDelete, deleteModal } = useConfirmDelete();
+
+  const sortedEvents = useMemo(() => sortByDate(events), [events]);
+
+  const emailHtml = useMemo(
+    () => buildEmailHtml({ events, upcomingList, greeting, issueRange }),
+    [events, upcomingList, greeting, issueRange]
+  );
+
+  /* ---------------- load ---------------- */
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/load-digest?key=${EVENTS_BUILDER_KEY}`);
+
+        // 404 = nothing saved yet, which is fine. Anything else is a real failure.
+        if (!res.ok && res.status !== 404) {
+          throw new Error(`Load failed with status ${res.status}`);
+        }
+
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+
+          if (Array.isArray(data?.events)) setEvents(data.events.map(normaliseEvent));
+          setUpcomingList(normaliseUpcomingList(data?.upcomingList));
+          if (typeof data?.greeting === "string") setGreeting(data.greeting);
+          if (typeof data?.issueRange === "string") setIssueRange(data.issueRange);
+        }
+
+        if (!cancelled) setLoaded(true);
+      } catch (e) {
+        console.error("Failed to load events builder:", e);
+        // Leave `loaded` false so autosave can't overwrite the saved data with blanks.
+        if (!cancelled) setLoadFailed(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /* ---------------- autosave (Home owns saving; the editor only edits state) ---------------- */
+  useEffect(() => {
+    if (!loaded) return;
+
+    setSaveStatus("saving");
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/save-digest?key=${EVENTS_BUILDER_KEY}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            events,
+            upcomingList,
+            greeting,
+            issueRange,
+            builtHtml: emailHtml,
+          }),
+        });
+        setSaveStatus(res.ok ? `Saved at ${getTimeLabel()}` : "error");
+      } catch (e) {
+        console.error("Failed to save events builder:", e);
+        setSaveStatus("error");
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [loaded, events, upcomingList, greeting, issueRange, emailHtml]);
+
+  /* ---------------- event actions ---------------- */
+  const addEvent = (title: string) =>
+    setEvents((prev) => [...prev, normaliseEvent({ title })]);
+
+  const updateEventStatus = (id: string, eventStatus: EventStatus) =>
+    setEvents((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, eventStatus } : item))
+    );
+
+  const duplicateEvent = (event: EventItem) =>
+    setEvents((prev) => {
+      const copy = normaliseEvent({ ...event, id: uid() });
+      const index = prev.findIndex((item) => item.id === event.id);
+      if (index === -1) return [...prev, copy];
+      return [...prev.slice(0, index + 1), copy, ...prev.slice(index + 1)];
+    });
+
+  const deleteEvent = (event: EventItem) =>
+    confirmDelete({
+      itemType: "event",
+      itemName: event.title,
+      action: () => setEvents((prev) => prev.filter((item) => item.id !== event.id)),
+    });
+
+  /** Archive an event: save it to history, then remove it from the current list. */
+  const completeEvent = async (event: EventItem) => {
     try {
-      await navigator.clipboard.writeText(buildFullHtml());
+      const res = await fetch("/api/events-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          builderKey: EVENTS_BUILDER_KEY,
+          event: { ...event, completionStatus: "Completed" },
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Failed to archive event:", res.status, await res.text());
+        return;
+      }
+
+      setEvents((prev) => prev.filter((item) => item.id !== event.id));
+    } catch (e) {
+      console.error("Failed to archive event:", e);
+    }
+  };
+
+  /** Copy an archived event back into the current list (keeps the archive entry). */
+  const copyToCurrent = (eventData: unknown) => {
+    setEvents((prev) => [
+      ...prev,
+      normaliseEvent({ ...(eventData as object), id: uid(), completionStatus: "InProgress" }),
+    ]);
+    setTab("events");
+  };
+
+  /** Move an archived event back into the current list (removes the archive entry). */
+  const restoreEvent = async (archiveId: number, eventData: unknown) => {
+    try {
+      const res = await fetch(`/api/events-history?id=${archiveId}`, { method: "DELETE" });
+
+      if (!res.ok) {
+        console.error("Failed to restore event:", res.status);
+        return;
+      }
+
+      setEvents((prev) => [
+        ...prev,
+        normaliseEvent({ ...(eventData as object), completionStatus: "InProgress" }),
+      ]);
+      setTab("events");
+    } catch (e) {
+      console.error("Failed to restore event:", e);
+    }
+  };
+
+  const copyHtml = async () => {
+    try {
+      await navigator.clipboard.writeText(emailHtml);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch (e) {
@@ -1248,90 +1097,20 @@ ${upcomingHtml}
     }
   };
 
-const handleMovetoCurrent = (eventData: any) => {
-  const copy = normaliseEvent({
-    ...eventData,
-    id: uid(),
-    completionStatus: "InProgress",
-  });
-
-  setEvents((prev) => [
-    ...prev,
-    copy,
-  ]);
-
-  setTab("Events");
-};
-
-const handleRestoreEvent = async (archiveId: number, eventData: any) => {
-  try {
-    const res = await fetch(`/api/events-history?id=${archiveId}`,
-    {
-      method: "DELETE",
-    });
-
-    if(!res.ok) {
-      console.error("Failed to restore event");
-      return;
-    }
-    const restored = normaliseEvent({
-      ...eventData,
-      completionStatus: "InProgress",
-    });
-
-    setEvents((prev) => [
-      ...prev,
-      restored,
-    ]);
-
-    setTab("Events");
-  } catch (e) {
-console.error("Failed to restore event:", e)
+  /* ---------------- full-screen sub-views ---------------- */
+  if (selectedArchivedEvent) {
+    return (
+      <EventsEditor
+        archivedEvent={selectedArchivedEvent}
+        events={events}
+        setEvents={setEvents}
+        onBack={() => setSelectedArchivedEvent(null)}
+        saveStatus={saveStatus}
+        readOnly
+      />
+    );
   }
-};
 
-
-const completedEvent = async (event: EventItem) => {
-  try {
-    const res = await fetch("/api/events-history", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        builderKey: EVENTS_BUILDER_KEY,
-        event: {
-          ...event,
-          completionStatus: "Completed",
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("Failed to move event into archive:", res.status, errorText);
-      return;
-    }
-
-    setEvents((prev) => prev.filter((item) => item.id !== event.id));
-  } catch (e) {
-    console.error("Failed to move to archive", e);
-  }
-};
-
-if (selectedArchivedEvent) {
-  return (
-    <EventsEditor
-      archivedEvent={selectedArchivedEvent}
-      events={events}
-      setEvents={setEvents}
-      onBack={() => setSelectedArchivedEvent(null)}
-      saveStatus={saveStatus}
-      readOnly
-    />
-  );
-}
-  
   if (selectedEventId) {
     return (
       <EventsEditor
@@ -1344,6 +1123,7 @@ if (selectedArchivedEvent) {
     );
   }
 
+  /* ---------------- main view ---------------- */
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
@@ -1354,273 +1134,157 @@ if (selectedArchivedEvent) {
             alt="SSA Logo"
             className="h-8 w-auto"
           />
-
           <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
-
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-            {saveStatus === "saving" && (
-              <>
-                <Loader2 size={13} className="animate-spin" /> Saving…
-              </>
-            )}
-            {saveStatus.startsWith("Saved at") && (
-              <>
-                <Save size={13} /> {saveStatus}
-              </>
-            )}
-            {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
+            <SaveIndicator status={saveStatus} />
           </div>
         </div>
-        {viewingRecordId === null ? (
-          <>
-        {/* HOME TABS ONLY — editor remains a separate component/file */}
-        <div className="flex gap-1 mb-5 border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setTab("Events")}
-            className={`px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "Events"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Events
-          </button>
 
-          <button
-            type="button"
-            onClick={() => setTab("preview")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-              tab === "preview"
-                ? "border-indigo-700 text-indigo-700"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            <Eye size={15} /> Preview & Export
-          </button>
-          <button
-                onClick={() => setViewingRecordId(-1)}
+        {loadFailed && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            Couldn&apos;t load your saved events, so autosave is paused to avoid overwriting
+            them. Refresh the page to try again.
+          </div>
+        )}
+
+        {recordsView === "list" ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordsPanel
+              builderKey={EVENTS_BUILDER_KEY}
+              onSelect={(id) => setRecordsView(id)}
+            />
+            <button
+              type="button"
+              onClick={() => setRecordsView(null)}
+              className="mt-3 text-sm text-gray-500 hover:text-indigo-700"
+            >
+              ← Back to builder
+            </button>
+          </div>
+        ) : typeof recordsView === "number" ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <RecordViewer recordId={recordsView} onBack={() => setRecordsView(null)} />
+          </div>
+        ) : (
+          <>
+            {/* TABS */}
+            <div className="flex gap-1 mb-5 border-b border-gray-200">
+              <TabButton active={tab === "events"} onClick={() => setTab("events")}>
+                Events
+              </TabButton>
+              <TabButton active={tab === "preview"} onClick={() => setTab("preview")}>
+                <Eye size={15} /> Preview &amp; Export
+              </TabButton>
+              <button
+                type="button"
+                onClick={() => setRecordsView("list")}
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-700 px-2"
               >
                 <Archive size={15} /> Issue Archive
               </button>
-          <button
-  type="button"
-  onClick={() => setTab("history")}
-  className={`ml-auto flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-    tab === "history"
-      ? "border-indigo-700 text-gray-700"
-      : "border-transparent text-gray-500 hover:text-gray-700"
-  }`}
->
-  <Archive size={15} />
-  Event History
-</button>
-  
-        </div>
-
-        {tab === "Events" && (
-          <>
-            <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
-              <Field label="Issue Range">
-                <input
-                  className={inputCls}
-                  value={issueRange}
-                  onChange={(e) => setIssueRange(e.target.value)}
-                />
-              </Field>
-
-              <Field label="Header Greeting">
-                <textarea
-                  className={inputCls}
-                  rows={8}
-                  value={greeting}
-                  onChange={(e) => setGreeting(e.target.value)}
-                />
-              </Field>
-            </div>
-
-            {/* EVENT LIST */}
-            <div className="space-y-2">
-              {events.length === 0 ? (
-                <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
-                  <p className="text-sm text-gray-500">No upcoming events yet.</p>
-                </div>
-              ) : (
-                sortedEvents.map((ev) => {
-                  const badge = eventStatusOptions[ev.eventStatus]; //?? eventStatusOptions.Tentative;
-
-                  return (
-                    <div
-                      key={ev.id}
-                      className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between"
-                    >
-                      <span className="text-sm font-semibold text-gray-800">
-                        {ev.title || "Untitled Event"}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={ev.eventStatus}
-                          onChange={(e) => {
-                            const nextStatus = e.target.value as EventItem["eventStatus"];
-                            setEvents((prev) =>
-                              prev.map((item) =>
-                                item.id === ev.id
-                                  ? {
-                                      ...item,
-                                      eventStatus: nextStatus,
-                                      // dateMode: nextStatus === "Tentative" ? "month" : "exact",
-                                    }
-                                  : item
-                              )
-                            );
-                          }}
-                          className="px-2.5 py-1 text-xs font-semibold rounded border cursor-pointer"
-                          style={{
-                            backgroundColor: badge.bg,
-                            color: badge.color,
-                            borderColor: badge.border,
-                          }}
-                        >
-                          <option value="Tentative">Tentative</option>
-                          <option value="Confirmed">Confirmed</option>
-                        </select>
-                        <div className="relative group">
-  <button
-    type="button"
-    onClick={() => completedEvent(ev)}
-    className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-  >
-    <CircleCheck size={16} />
-  </button>
-
-  <div
-    className="
-      absolute bottom-full left-1/2 -translate-x-1/2 mb-2
-      whitespace-nowrap
-      rounded bg-gray-800 px-2 py-1
-      text-xs text-white
-      opacity-0 pointer-events-none
-      group-hover:opacity-100
-      transition-opacity duration-100
-      z-50
-    "
-  >
-    Mark event as completed
-  </div>
-</div>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedEventId(ev.id)}
-                          className="p-1.5 text-gray-400 hover:text-indigo-700 hover:bg-gray-100 rounded"
-                          title="Open event"
-                        >
-                          <SquareArrowOutUpRight size={16} />
-                        </button>
-
-                        <button
-  onClick={() => copyEvent(ev)}
-  className="p-1 rounded hover:bg-gray-100 text-gray-500"
-  title="Copy event"
->
-  <Copy size={16} /></button>
-
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            confirmDelete({
-                              itemType: "event",
-                              itemName: ev.title,
-                              action: () =>
-                                setEvents((prev) => prev.filter((item) => item.id !== ev.id)),
-                            })
-                          }
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                          title="Delete event"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsNameModalOpen(true)}
-              className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-            >
-              <Plus size={16} /> Add Event
-            </button>
-
-            <NamePopUp
-  isOpen={isNameModalOpen}
-  onClose={() => setIsNameModalOpen(false)}
-  onAdd={handleAddEvents}
-  heading="Create New Event"
-  fieldLabel="Event Name"
-  placeholder="e.g. SSA Maritime Digitalisation Forum"
-  buttonText="Create Event"
-/>
-          </>
-        )}
-
-        {tab === "preview" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
-            <div>
-            <button
-                type="button"
-                onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
+              <TabButton
+                active={tab === "history"}
+                onClick={() => setTab("history")}
+                className="ml-auto"
               >
-                {copied ? <Check size={15} /> : <Copy size={15} />}
-                {copied ? "Copied!" : "Copy HTML"}
-              </button>
-                <p className="text-xs text-gray-500">
-                 Live Preview 
-                </p>
-            
+                <Archive size={15} /> Event History
+              </TabButton>
+            </div>
+
+            {/* EVENTS TAB */}
+            {tab === "events" && (
+              <>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
+                  <Field label="Issue Range">
+                    <input
+                      className={inputCls}
+                      value={issueRange}
+                      onChange={(e) => setIssueRange(e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Header Greeting">
+                    <textarea
+                      className={inputCls}
+                      rows={8}
+                      value={greeting}
+                      onChange={(e) => setGreeting(e.target.value)}
+                    />
+                  </Field>
+                </div>
+
+                <div className="space-y-2">
+                  {sortedEvents.length === 0 ? (
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+                      <p className="text-sm text-gray-500">No upcoming events yet.</p>
+                    </div>
+                  ) : (
+                    sortedEvents.map((ev) => (
+                      <EventRow
+                        key={ev.id}
+                        event={ev}
+                        onStatusChange={(status) => updateEventStatus(ev.id, status)}
+                        onComplete={() => completeEvent(ev)}
+                        onOpen={() => setSelectedEventId(ev.id)}
+                        onCopy={() => duplicateEvent(ev)}
+                        onDelete={() => deleteEvent(ev)}
+                      />
+                    ))
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsNameModalOpen(true)}
+                  className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+                >
+                  <Plus size={16} /> Add Event
+                </button>
+
+                <NamePopUp
+                  isOpen={isNameModalOpen}
+                  onClose={() => setIsNameModalOpen(false)}
+                  onAdd={addEvent}
+                  heading="Create New Event"
+                  fieldLabel="Event Name"
+                  placeholder="e.g. SSA Maritime Digitalisation Forum"
+                  buttonText="Create Event"
+                />
+              </>
+            )}
+
+            {/* PREVIEW TAB */}
+            {tab === "preview" && (
+              <div className="space-y-4">
+                <div>
+                  <button
+                    type="button"
+                    onClick={copyHtml}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-800 text-white text-sm rounded font-medium hover:bg-indigo-900"
+                  >
+                    {copied ? <Check size={15} /> : <Copy size={15} />}
+                    {copied ? "Copied!" : "Copy HTML"}
+                  </button>
+                  <p className="mt-1 text-xs text-gray-500">Live Preview</p>
+                </div>
+
+                <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
+                  <EmailPreview html={emailHtml} />
+                </div>
               </div>
+            )}
 
-            </div>
-
-            <div className="bg-gray-200 border border-gray-300 rounded-lg p-4 overflow-auto">
-              <iframe
-                title="SSA Upcoming Events Preview"
-                srcDoc={buildFullHtml()}
-                style={{ width: 680, minWidth: 680, height: 1100 }}
-                className="block mx-auto bg-white border-0"
+            {/* HISTORY TAB */}
+            {tab === "history" && (
+              <EventsHistory
+                builderKey={EVENTS_BUILDER_KEY}
+                viewPastEventDetails={setSelectedArchivedEvent}
+                onCopyToCurrent={copyToCurrent}
+                onRestoreEvent={restoreEvent}
               />
-            </div>
-          </div>
-        )}
+            )}
 
-{tab === "history" && (
-  <EventsHistory
-    builderKey={EVENTS_BUILDER_KEY}
-    viewPastEventDetails={setSelectedArchivedEvent}
-    onCopyToCurrent={handleMovetoCurrent}
-    onRestoreEvent={handleRestoreEvent}
-  />
-)}
-   {deleteModal}
+            {deleteModal}
           </>
-        ) : viewingRecordId === -1 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <RecordsPanel builderKey="events-builder-data" onSelect={(id) => setViewingRecordId(id)} />
-            <button onClick={() => setViewingRecordId(null)} className="mt-3 text-sm text-gray-500 hover:text-indigo-700">
-              ← Back to builder
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
-            <RecordViewer recordId={viewingRecordId} onBack={() => setViewingRecordId(null)} />
-          </div>
         )}
       </div>
     </div>
