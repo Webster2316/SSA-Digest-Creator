@@ -730,12 +730,17 @@ ${upcomingHtml}
 
         <!-- FOOTER -->
         <tr>
-          <td class="footer-cell" bgcolor="${NAVY}" style="background-color:${NAVY};padding:24px 28px;">
-            <p style="margin:0;font-family:${FONT}Sfont-size:12px;color:#ffffff;line-height:1.7;text-align:center">
-              You are receiving this Event Calendar because you are a Tier 1-4 member of an SSA Committee. This Calendar is circulated to keep committee members informed of all events hosted by or organised by SSA Committees. Members who wish to discontinue receiving the newsletter, please email <strong>"unsubscribe"</strong> to <a href="mailto:${CONTACT_EMAIL}" style="color:#81bce9;text-decoration:none;">${CONTACT_EMAIL}</a>.
-            </p>
-          </td>
-        </tr>
+  <td
+    class="footer-cell"
+    bgcolor="${NAVY}"
+    style="background-color:${NAVY};padding:14px 24px;"
+  >
+    <p style="margin:0;font-family:${FONT};font-size:10px;color:#ffffff;line-height:1.5;text-align:center;">
+      You are receiving this Event Calendar because you are a Tier 1–4 member of an SSA Committee. This calendar keeps committee members informed of events hosted or organised by SSA Committees. To discontinue receiving the calendar, please email <strong>unsubscribe</strong> to
+      <a href="mailto:${CONTACT_EMAIL}" style="color:#81bce9;text-decoration:none;">${CONTACT_EMAIL}</a>.
+    </p>
+  </td>
+</tr>
 
       </table>
 
