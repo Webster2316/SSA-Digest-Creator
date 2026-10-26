@@ -1105,7 +1105,6 @@ ${eventHtml}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
           border="0" bgcolor="#262261"
           style="background-color:#262261;">
-     <tr>
        <td class="footer-cell" bgcolor="#262261"
            style="background-color:#262261; padding:24px 28px;">
            <p style="margin:0;font-family:${FONT};font-size:12px;color:#ffffff;line-height:1.7;">
