@@ -464,21 +464,21 @@ function renderEvent(event: EventItem) {
     dataFields: true,
   })}
 
-            <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
-              <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
-              ${tags
-      ? `<div data-f="committees" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">${tags}</div>`
-      : ""
-    }
-            </td>
+  <td
+  class="event-status-cell"
+  width="150"
+  valign="middle"
+  align="center"
+  style="padding:14px 18px 14px 8px; text-align:center;"
+>
+  ${renderBadge(statusStyle, "event-status", event.eventStatus, "center")}
 
-            <td class="event-status-cell" width="150" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
-              ${renderBadge(statusStyle, "event-status", event.eventStatus, "right")}
-              ${registerButton
-      ? `<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>${registerButton}`
-      : ""
-    }
-            </td>
+  ${registerButton
+    ? `<div style="height:10px; line-height:10px; font-size:0;">&nbsp;</div>
+       ${registerButton}`
+    : ""
+  }
+</td>
           </tr>
         </table>`;
 
