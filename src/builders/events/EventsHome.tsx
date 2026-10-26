@@ -19,7 +19,7 @@ import RecordsPanel from "../../shared/recordsPanel";
 import RecordViewer from "../../shared/recordViewer";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
-import UpcomingList from "./UpcomingList";
+import UpcomingList from "./upcomingList";
 
 /* ================================================================== */
 /* TYPES                                                              */

@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import { Plus, Trash2, Copy } from "lucide-react";
 import { UpcomingEvent } from "./EventsHome";
-import { uid } from "../../shared/utils";
+import { uid } from "../../shared/utils"; 
 
 type UpcomingListProps = {
     upcomingList: UpcomingEvent[];
