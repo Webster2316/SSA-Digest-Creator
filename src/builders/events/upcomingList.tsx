@@ -86,9 +86,6 @@ event.id === id
               <h2 className="text-lg font-semibold">
                 Upcoming Events List
               </h2>
-              <p className="text-sm text-gray-500">
-                Manage upcoming events displayed in your email.
-              </p>
             </div>
     
             <button
