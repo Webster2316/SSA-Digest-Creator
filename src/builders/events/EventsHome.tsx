@@ -734,12 +734,7 @@ const buttonStyle = registrationStatusOpt[event.registrationStatus] ?? registrat
                 ${documents}
               </div>
 
-             
-          </tr>
-        </table>
-
-            </td>
-
+             </td>
           </tr>
         </table>
         ${eventExtraDetails}
@@ -1100,8 +1095,7 @@ ${eventHtml}
 
 <tr>
   <td style="background-color:#262261; padding:14px 24px; text-align:center;">
-    <span style="font-family:${FONT}; font-size:12pt; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:#ffffff;">
-      Upcoming Events
+    <span style="font-family:${FONT}; font-size:12pt; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:#ffffff;">Upcoming Events
     </span>
   </td>
 </tr>
