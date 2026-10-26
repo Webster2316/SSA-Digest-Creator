@@ -1099,9 +1099,11 @@ We look forward to bringing our members together and strengthening our collectiv
 ${eventHtml}
 
 <tr>
-<td style="background:#262261;padding:14px 24px;">
-  <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">Upcoming Events</span>
-</td>
+  <td style="background-color:#262261; padding:14px 24px; text-align:center;">
+    <span style="font-family:${FONT}; font-size:12pt; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:#ffffff;">
+      Upcoming Events
+    </span>
+  </td>
 </tr>
         <!-- FOOTER -->
         <tr>
