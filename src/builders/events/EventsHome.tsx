@@ -19,6 +19,7 @@ import RecordsPanel from "../../shared/recordsPanel";
 import RecordViewer from "../../shared/recordViewer";
 import EventsEditor from "./EventsEditor";
 import EventsHistory from "./EventsHistory";
+import UpcomingList from "./UpcomingList";
 
 /* ================================================================== */
 /* TYPES                                                              */
@@ -235,13 +236,13 @@ function normaliseEvent(ev: any): EventItem {
       ? ev.speakers
       : Array.isArray(ev?.speakers)
         ? ev.speakers
-            .map(
-              (s: any) =>
-                `<p><strong>${esc(s?.name ?? "")}</strong><br>${esc(
-                  s?.designation ?? ""
-                )}<br>${esc(s?.company ?? "")}</p>`
-            )
-            .join("")
+          .map(
+            (s: any) =>
+              `<p><strong>${esc(s?.name ?? "")}</strong><br>${esc(
+                s?.designation ?? ""
+              )}<br>${esc(s?.company ?? "")}</p>`
+          )
+          .join("")
         : "";
 
   return {
@@ -296,9 +297,8 @@ function renderBadge(
   dataStatus: string,
   align?: "left" | "center" | "right"
 ) {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${
-    align ? ` align="${align}"` : ""
-  } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${align ? ` align="${align}"` : ""
+    } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
 }
 
 function renderInlineTag(text: string, { bg, color, border }: Omit<TagStyle, "text">) {
@@ -358,11 +358,10 @@ function renderDateCell(
   return `
             <td class="${opts.className}" width="${opts.width}" valign="middle" align="center" bgcolor="#7c49bf" style="background:#7c49bf;padding:${opts.padding};text-align:center;">
               <span${dayAttr} style="display:block;font-family:${FONT};font-size:${opts.daySize}px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
-              ${
-                monthYear
-                  ? `<span${monthAttr} style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
-                  : ""
-              }
+              ${monthYear
+      ? `<span${monthAttr} style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
+      : ""
+    }
             </td>`;
 }
 
@@ -446,11 +445,11 @@ function renderEvent(event: EventItem) {
   const registerButton =
     event.eventStatus === "Confirmed" && event.registrationLink
       ? renderButton(
-          "Open for Registration",
-          event.registrationLink,
-          'data-f="registration-link"',
-          registrationStyle.bg
-        )
+        "Open for Registration",
+        event.registrationLink,
+        'data-f="registration-link"',
+        registrationStyle.bg
+      )
       : "";
 
   // ROW 1: date | title + committee tags | status (+ register button)
@@ -458,29 +457,27 @@ function renderEvent(event: EventItem) {
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid #d4dde8;">
           <tr>
             ${renderDateCell(day, monthYear, {
-              className: "event-date-cell",
-              width: 110,
-              daySize: 20,
-              padding: "14px 8px",
-              dataFields: true,
-            })}
+    className: "event-date-cell",
+    width: 110,
+    daySize: 20,
+    padding: "14px 8px",
+    dataFields: true,
+  })}
 
             <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
               <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
-              ${
-                tags
-                  ? `<div data-f="committees" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">${tags}</div>`
-                  : ""
-              }
+              ${tags
+      ? `<div data-f="committees" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">${tags}</div>`
+      : ""
+    }
             </td>
 
             <td class="event-status-cell" width="150" valign="middle" align="right" style="padding:14px 18px 14px 8px;">
               ${renderBadge(statusStyle, "event-status", event.eventStatus, "right")}
-              ${
-                registerButton
-                  ? `<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>${registerButton}`
-                  : ""
-              }
+              ${registerButton
+      ? `<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>${registerButton}`
+      : ""
+    }
             </td>
           </tr>
         </table>`;
@@ -554,11 +551,11 @@ function renderUpcomingRow(item: UpcomingEvent) {
                 <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;">
                   <tr>
                     ${renderDateCell(day, monthYear, {
-                      className: "upcoming-date-cell",
-                      width: 90,
-                      daySize: 18,
-                      padding: "12px 8px",
-                    })}
+    className: "upcoming-date-cell",
+    width: 90,
+    daySize: 18,
+    padding: "12px 8px",
+  })}
                     <td valign="middle" style="padding:12px 18px;">
                       <span style="font-family:${FONT};font-size:14px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(item.title || "Untitled Event")}</span>
                     </td>
@@ -755,7 +752,7 @@ ${upcomingHtml}
 
 // Re-exported so existing `import { EventItem } from "./EventsHome"` lines keep working.
 
-type Tab = "events" | "preview" | "history";
+type Tab = "events" | "Others" | "preview" | "history";
 
 /* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
@@ -776,11 +773,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-        active
+      className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${active
           ? "border-indigo-700 text-indigo-700"
           : "border-transparent text-gray-500 hover:text-gray-700"
-      } ${className}`}
+        } ${className}`}
     >
       {children}
     </button>
@@ -1172,9 +1168,16 @@ export default function EventsHome() {
               <TabButton active={tab === "events"} onClick={() => setTab("events")}>
                 Events
               </TabButton>
+
+              <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}
+              >
+                Upcoming List
+              </TabButton>
+
               <TabButton active={tab === "preview"} onClick={() => setTab("preview")}>
                 <Eye size={15} /> Preview &amp; Export
               </TabButton>
+
               <button
                 type="button"
                 onClick={() => setRecordsView("list")}
@@ -1250,6 +1253,13 @@ export default function EventsHome() {
                   buttonText="Create Event"
                 />
               </>
+            )}
+
+            {tab === "Others" && (
+              <UpcomingList
+              upcomingList={upcomingList}
+              setUpcoming={setUpcomingList}
+              />
             )}
 
             {/* PREVIEW TAB */}
