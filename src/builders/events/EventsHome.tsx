@@ -1256,9 +1256,9 @@ export default function EventsHome() {
             )}
 
             {tab === "upcoming" && (
-              <UpcomingList
-              upcomingList={upcomingList}
-              setUpcoming={setUpcomingList}
+                <UpcomingList
+                upcomingList={upcomingList}
+                setUpcomingList={setUpcomingList}
               />
             )}
 
