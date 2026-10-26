@@ -36,12 +36,13 @@ type TagStyle = {
 //Auto order by date!
 function sortEventsByDate(event: UpcomingEvent[]) {
     return [...event].sort((a,b) => {
+        if (!a.date && !b.date) return 0;
         //checks for empty fields
         if(!a.date) return 1;
         if(!b.date)return -1;
 
         //compare method
-        return a.date.localCompare(b.date);
+        return a.date.localeCompare(b.date);
     })
 }
 
