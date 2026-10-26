@@ -1255,7 +1255,7 @@ export default function EventsHome() {
               </>
             )}
 
-            {tab === "Others" && (
+            {tab === "upcoming" && (
               <UpcomingList
               upcomingList={upcomingList}
               setUpcoming={setUpcomingList}
