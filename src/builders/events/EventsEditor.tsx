@@ -123,15 +123,16 @@ export default function EventsEditor({
   const registrationBadge =
     registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
 
-
-
+  
   const updateEvent = (updates: Partial<EventItem>) => {
     if (readOnly || !eventId) return;
+  
     setEvents((prev) =>
-      prev.map((ev) => (ev.id === eventId ? { ...ev, ...updates } : ev))
+      prev.map((ev) =>
+        ev.id === eventId ? { ...ev, ...updates } : ev
+      )
     );
   };
-  
 
   const addDocuments = (docs: EventDocument[]) => {
     updateEvent({
@@ -264,9 +265,11 @@ export default function EventsEditor({
   <input
     type="text"
     className={inputCls}
-    value={event.dressCode || ""}
+    value={event.dressCode ?? ""}
     onChange={(e) =>
-      updateEvent("dressCode", e.target.value)
+      updateEvent({
+        dressCode: e.target.value,
+      })
     }
     placeholder="e.g. Business Attire"
   />
