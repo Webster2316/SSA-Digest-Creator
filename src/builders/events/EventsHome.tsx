@@ -43,7 +43,7 @@ export interface EventDocument {
 export interface EventItem {
   id: string;
   title: string;
-  date: string; // "YYYY-MM-DD" (exact) or "YYYY-MM" (month)
+  date: string; // "YYYY-MM-DD" (exact), "YYYY-MM" (month) or "YYYY-Q1".."YYYY-Q4" (quarter)
   dateMode: DateMode;
   registrationStatus: RegistrationStatus;
   eventStatus: EventStatus;
@@ -139,23 +139,7 @@ const COMMITTEE_STYLES: Record<string, TagStyle> = {
 /* ================================================================== */
 /* HELPERS                                                            */
 /* ================================================================== */
-/** Strips empty paragraphs, repeated <br>s, and leading/trailing blank lines. */
-function cleanRichHtml(html?: string): string {
-  if (!html) return "";
 
-  return html
-    // empty <p>/<div> (only whitespace, &nbsp; or <br>)
-    .replace(/<(p|div)\b[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, "")
-    // runs of <br> -> one
-    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
-    // leading / trailing <br> and whitespace
-    .replace(/^(\s|<br\s*\/?>)+/i, "")
-    .replace(/(\s|<br\s*\/?>)+$/i, "")
-    // tighten default margins on bare tags
-    .replace(/<p>/gi, '<p style="margin:0 0 8px;">')
-    .replace(/<ul>/gi, '<ul style="margin:0 0 8px;padding-left:20px;">')
-    .trim();
-}
 /* ------------------------------------------------------------------ */
 /* Dates                                                               */
 /* ------------------------------------------------------------------ */
@@ -167,6 +151,17 @@ const MONTHS = [
 
 function getTimeLabel() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+/** Accepts "2026-Q4", "2026Q4" or "Q4-2026". */
+function parseQuarter(date: string): { year: string; quarter: string } | null {
+  const match = date.match(/^(?:(\d{4})-?(Q[1-4])|(Q[1-4])-?(\d{4}))$/i);
+  if (!match) return null;
+
+  return {
+    year: (match[1] ?? match[4]) as string,
+    quarter: ((match[2] ?? match[3]) as string).toUpperCase(),
+  };
 }
 
 /** "2026-11-05" -> { day: "5", monthYear: "NOV 2026" }; "2026-11" -> { day: "TBC", ... } */
@@ -183,18 +178,15 @@ function getDateParts(date: string) {
   };
 }
 
+/** Handles every date mode (used by the upcoming list and by quarter/TBC events). */
 function getUpcomingDateParts(date: string, dateMode: string) {
   if (dateMode === "tbc" || !date) {
     return { day: "TBC", monthYear: "" };
   }
 
   if (dateMode === "quarter") {
-    const [year, quarter] = date.split("-");
-
-    return {
-      day: quarter,
-      monthYear: year,
-    };
+    const q = parseQuarter(date);
+    return q ? { day: q.quarter, monthYear: q.year } : { day: "TBC", monthYear: "" };
   }
 
   if (dateMode === "month") {
@@ -203,19 +195,20 @@ function getUpcomingDateParts(date: string, dateMode: string) {
 
     return {
       day: "",
-      monthYear: `${monthText} ${year}`,
+      monthYear: `${monthText} ${year}`.trim(),
     };
   }
 
   return getDateParts(date);
 }
 
-/** Defaults to 14 days before an exact event date, formatted DD/MM/YYYY. */
+/** Defaults to 14 days before an exact event date, formatted DD-MM-YYYY. */
 function getRegistrationDeadline(event: EventItem): string {
   if (event.registrationDeadline?.trim()) return event.registrationDeadline;
   if (!event.date || event.dateMode !== "exact") return "";
 
   const d = new Date(`${event.date}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "";
   d.setDate(d.getDate() - 14);
 
   return [
@@ -228,53 +221,36 @@ function getRegistrationDeadline(event: EventItem): string {
 /* ------------------------------------------------------------------ */
 /* Sorting (undated items go last)                                     */
 /* ------------------------------------------------------------------ */
-const sortKey = (event: {
-  date: string;
-  dateMode: DateMode;
-}): string => {
+
+const sortKey = (event: { date: string; dateMode: DateMode }): string => {
   const { date, dateMode } = event;
 
-  if (!date || dateMode === "tbc") {
-    return "9999-99-99";
-  }
+  if (!date || dateMode === "tbc") return "9999-99-99";
 
   if (dateMode === "quarter") {
-    const match = date.match(
-      /^(?:(\d{4})-?(Q[1-4])|(Q[1-4])-?(\d{4}))$/i
-    );
+    const q = parseQuarter(date);
+    if (!q) return "9999-99-99";
 
-    if (match) {
-      const year = match[1] ?? match[4];
-      const quarter = (match[2] ?? match[3]).toUpperCase();
+    const quarterStartMonths: Record<string, string> = {
+      Q1: "01",
+      Q2: "04",
+      Q3: "07",
+      Q4: "10",
+    };
 
-      const quarterStartMonths: Record<string, string> = {
-        Q1: "01",
-        Q2: "04",
-        Q3: "07",
-        Q4: "10",
-      };
-
-      return `${year}-${quarterStartMonths[quarter]}-01`;
-    }
-
-    // If the stored quarter format is unexpected, place it last.
-    return "9999-99-99";
+    return `${q.year}-${quarterStartMonths[q.quarter]}-01`;
   }
 
   // YYYY-MM-DD and YYYY-MM formats sort chronologically as strings.
   return date;
 };
 
-function sortEventsByDate<T extends {
-  date: string;
-  dateMode: DateMode;
-}>(items: T[]): T[] {
-  return [...items].sort((a, b) =>
-    sortKey(a).localeCompare(sortKey(b))
-  );
+function sortEventsByDate<T extends { date: string; dateMode: DateMode }>(items: T[]): T[] {
+  return [...items].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
 }
+
 /* ------------------------------------------------------------------ */
-/* Content checks                                                      */
+/* Rich-text HTML (from the editor) -> email-safe HTML                 */
 /* ------------------------------------------------------------------ */
 
 /** True if the HTML has visible text or an image. */
@@ -282,8 +258,75 @@ function hasContent(html?: string): boolean {
   if (!html) return false;
   if (/<img\b/i.test(html)) return true;
   return (
-    html.replace(/<[^>]*>/g, "").replace(/&nbsp;/gi, " ").trim().length > 0
+    html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;|\u00a0/gi, " ")
+      .trim().length > 0
   );
+}
+
+/** Base text style, repeated on every block tag because Outlook (Word engine) doesn't inherit it. */
+const RICH_BASE = `font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;`;
+
+/** Adds `base` to every <tag>, merged in front of any style the editor already set. */
+function addBaseStyle(html: string, tag: string, base: string): string {
+  const re = new RegExp(`<${tag}\\b([^>]*)>`, "gi");
+
+  return html.replace(re, (_match: string, attrs: string) => {
+    const existing = attrs.match(/\sstyle\s*=\s*(["'])(.*?)\1/i);
+
+    if (existing) {
+      const merged = `${base}${existing[2]}`.replace(/"/g, "&quot;");
+      return `<${tag}${attrs.replace(existing[0], ` style="${merged}"`)}>`;
+    }
+
+    return `<${tag}${attrs} style="${base}">`;
+  });
+}
+
+/**
+ * Cleans rich-text HTML for email:
+ * - removes empty paragraphs / divs and runs of <br>
+ * - unwraps <li><p>…</p></li> (the editor's list items otherwise get paragraph margins)
+ * - sets explicit margins and fonts so Outlook renders it like the preview
+ */
+function cleanRichHtml(html?: string): string {
+  if (!html) return "";
+
+  let out = html.replace(/\u00a0/g, "&nbsp;");
+
+  // Empty <p> (including <p><span> </span></p>, <p><strong><br></strong></p>, ...)
+  out = out.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match: string, inner: string) =>
+    hasContent(inner) ? match : ""
+  );
+
+  // Simple empty <div>
+  out = out.replace(/<div\b[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, "");
+
+  // <li><p>text</p></li> -> <li>text</li>
+  out = out.replace(
+    /(<li\b[^>]*>)\s*<p\b[^>]*>((?:(?!<\/p>)[\s\S])*)<\/p>\s*(<\/li>)/gi,
+    "$1$2$3"
+  );
+
+  // Trailing <br> inside a paragraph / list item, then runs of <br>
+  out = out.replace(/(?:<br\s*\/?>\s*)+(<\/(?:p|li)>)/gi, "$1");
+  out = out.replace(/(?:<br\s*\/?>\s*){2,}/gi, "<br>");
+
+  // Leading / trailing blank space
+  out = out
+    .replace(/^(?:\s|<br\s*\/?>)+/i, "")
+    .replace(/(?:\s|<br\s*\/?>)+$/i, "")
+    .trim();
+
+  if (!out) return "";
+
+  out = addBaseStyle(out, "p", `margin:0 0 8px 0;${RICH_BASE}`);
+  out = addBaseStyle(out, "ul", "margin:0 0 8px 22px;padding:0;");
+  out = addBaseStyle(out, "ol", "margin:0 0 8px 22px;padding:0;");
+  out = addBaseStyle(out, "li", `margin:0 0 4px 0;${RICH_BASE}`);
+
+  return out;
 }
 
 /* ------------------------------------------------------------------ */
@@ -297,6 +340,8 @@ const REGISTRATION_STATUSES: RegistrationStatus[] = [
   "ClosingSoon",
   "Full",
 ];
+
+const DATE_MODES: DateMode[] = ["exact", "month", "quarter", "tbc"];
 
 // `any` on purpose: this receives untrusted/legacy saved data.
 function normaliseEvent(ev: any): EventItem {
@@ -326,7 +371,8 @@ function normaliseEvent(ev: any): EventItem {
     id: ev?.id ?? uid(),
     title: ev?.title ?? "",
     date: ev?.date ?? "",
-    dateMode: ev?.dateMode === "exact" ? "exact" : "month",
+    // Keep quarter / tbc as saved; older saves without a mode default to "month".
+    dateMode: DATE_MODES.includes(ev?.dateMode) ? ev.dateMode : "month",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     completionStatus:
@@ -353,10 +399,9 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
   if (!Array.isArray(raw)) return [];
 
   return raw.map((item: any) => {
-    const dateMode: DateMode =
-      ["exact", "month", "quarter", "tbc"].includes(item?.dateMode)
-        ? item.dateMode
-        : "exact";
+    const dateMode: DateMode = DATE_MODES.includes(item?.dateMode)
+      ? item.dateMode
+      : "exact";
 
     return {
       id: typeof item?.id === "string" && item.id ? item.id : uid(),
@@ -368,13 +413,26 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
     };
   });
 }
+
 /* ================================================================== */
 /* EMAIL TEMPLATE                                                     */
 /* ================================================================== */
+/*
+ * Outlook notes (desktop Outlook uses the Word rendering engine):
+ *  - no padding/margin on <span>, no display:block, no max-width, no border-radius
+ *  - so: layout is tables, padding goes on <td>, blocks are <div>/<p> with explicit margins
+ *  - fonts/colours are repeated on each element (Word doesn't inherit them reliably)
+ *  - bgcolor attributes sit beside background-color styles
+ *  - new Outlook (web-based) is closer to a normal browser; the same markup works there
+ */
 
 /* ------------------------------------------------------------------ */
 /* Small building blocks                                               */
 /* ------------------------------------------------------------------ */
+
+/** Fixed-height gap. Word ignores margins on tables, so use a spacer instead. */
+const spacer = (height: number) =>
+  `<div style="height:${height}px;line-height:${height}px;font-size:0;mso-line-height-rule:exactly;">&nbsp;</div>`;
 
 function renderBadge(
   style: TagStyle,
@@ -387,6 +445,7 @@ function renderBadge(
 }
 
 function renderInlineTag(text: string, { bg, color, border }: Omit<TagStyle, "text">) {
+  // Word ignores padding on <span>, so the &nbsp;&nbsp; (MSO only) fakes the side padding.
   return `<span style="display:inline-block;margin:0 0 4px 0;padding:5px 9px;border-radius:3px;background:${bg};background-color:${bg};border:1px solid ${border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${color};mso-line-height-rule:exactly;line-height:12px;"><!--[if mso]>&nbsp;&nbsp;<![endif]-->${esc(text)}<!--[if mso]>&nbsp;&nbsp;<![endif]--></span>`;
 }
 
@@ -412,11 +471,11 @@ function renderDocuments(documents: EventDocument[]) {
   const links = documents
     .map(
       (doc, i) =>
-        `<div style="margin:${i === 0 ? "0" : "6px"} 0 0;line-height:1.35;"><a href="${esc(doc.url)}" target="_blank" style="font-family:${FONT};font-size:9px;font-weight:700;color:#1b76bc;text-decoration:underline;">${esc(doc.label || "Document")}</a></div>`
+        `<div style="margin:${i === 0 ? "0" : "6px"} 0 0 0;line-height:1.35;text-align:center;"><a href="${esc(doc.url)}" target="_blank" style="font-family:${FONT};font-size:9px;font-weight:700;color:#1b76bc;text-decoration:underline;">${esc(doc.label || "Document")}</a></div>`
     )
     .join("");
 
-  return `<div data-f="documents" style="width:100%;border-top:1px solid #dde4ec;margin-top:14px;padding-top:12px;text-align:center;">${links}</div>`;
+  return `<div data-f="documents">${spacer(14)}<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="border-top:1px solid #dde4ec;padding:12px 0 0 0;text-align:center;">${links}</td></tr></table></div>`;
 }
 
 function renderButton(label: string, href: string, extraLinkAttrs: string, bg: string) {
@@ -440,13 +499,19 @@ function renderDateCell(
   const dayAttr = opts.dataFields ? ' data-f="date-day"' : "";
   const monthAttr = opts.dataFields ? ' data-f="date-month"' : "";
 
+  // <div>s (not display:block spans) so the day and month stack in Outlook too.
+  const dayHtml = day
+    ? `<div${dayAttr} style="font-family:${FONT};font-size:${opts.daySize}px;font-weight:700;color:#ffffff;mso-line-height-rule:exactly;line-height:${Math.round(opts.daySize * 1.2)}px;">${esc(day)}</div>`
+    : "";
+
+  const monthHtml = monthYear
+    ? `<div${monthAttr} style="margin:${day ? "3px" : "0"} 0 0 0;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;mso-line-height-rule:exactly;line-height:14px;">${esc(monthYear)}</div>`
+    : "";
+
   return `
-            <td class="${opts.className}" width="${opts.width}" valign="middle" align="center" bgcolor="#7c49bf" style="background:#7c49bf;padding:${opts.padding};text-align:center;">
-              <span${dayAttr} style="display:block;font-family:${FONT};font-size:${opts.daySize}px;font-weight:700;color:#ffffff;line-height:1.15;">${esc(day)}</span>
-              ${monthYear
-      ? `<span${monthAttr} style="display:block;margin-top:3px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#e6cffc;">${esc(monthYear)}</span>`
-      : ""
-    }
+            <td class="${opts.className}" width="${opts.width}" valign="middle" align="center" bgcolor="#7c49bf" style="background-color:#7c49bf;padding:${opts.padding};text-align:center;">
+              ${dayHtml}
+              ${monthHtml}
             </td>`;
 }
 
@@ -468,7 +533,7 @@ function renderGreeting(text: string) {
     .split(/\n\s*\n/)
     .map(
       (paragraph, i, all) =>
-        `<p style="margin:0 0 ${i === all.length - 1 ? "0" : "12px"};">${paragraph.replace(/\n/g, "<br>")}</p>`
+        `<p style="margin:0 0 ${i === all.length - 1 ? "0" : "12px"} 0;font-family:${FONT};font-size:10pt;color:#1f3b7a;line-height:1.6;">${paragraph.replace(/\n/g, "<br>")}</p>`
     )
     .join("");
 }
@@ -495,30 +560,34 @@ function renderColumnsRow(columns: ColumnSpec[]) {
       const divided = i > 0;
       const bg = i % 2 === 0 ? "#fafbfd" : "#ffffff";
 
+      // The top border lives on each <td> (Word is unreliable with borders on <table>).
       return `
-      <td class="col-cell${divided ? " col-divider" : ""}" width="${width}" valign="top" style="padding:${padding};background:${bg};${divided ? "border-left:1px solid #e2e8f0;" : ""}">
-        <p style="margin:0 0 8px;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">${esc(label)}</p>
+      <td class="col-cell${divided ? " col-divider" : ""}" width="${width}" valign="top" bgcolor="${bg}" style="padding:${padding};background-color:${bg};border-top:1px solid #e2e8f0;${divided ? "border-left:1px solid #e2e8f0;" : ""}">
+        <p style="margin:0 0 8px 0;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">${esc(label)}</p>
         <div${field ? ` data-f="${field}"` : ""} style="font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">${body}</div>
       </td>`;
     })
     .join("");
 
   return `
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-top:1px solid #e2e8f0;table-layout:fixed;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="table-layout:fixed;">
           <tr>${cells}
           </tr>
         </table>`;
 }
 
 const callFor = (what: string) =>
-  `Call for ${what}.<br />Please reach out to <a href="mailto:${CONTACT_EMAIL}" style="color:#1b76bc;">${CONTACT_EMAIL}</a>.`;
+  `<p style="margin:0;font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">Call for ${what}.<br />Please reach out to <a href="mailto:${CONTACT_EMAIL}" style="color:#1b76bc;">${CONTACT_EMAIL}</a>.</p>`;
 
 /* ------------------------------------------------------------------ */
 /* Event block                                                         */
 /* ------------------------------------------------------------------ */
 
 function renderEvent(event: EventItem) {
-  const { day, monthYear } = getDateParts(event.date);
+  const { day, monthYear } =
+    event.dateMode === "quarter" || event.dateMode === "tbc"
+      ? getUpcomingDateParts(event.date, event.dateMode)
+      : getDateParts(event.date);
   const tags = renderTags(event);
   const dressCode = event.dressCode?.trim();
   const deadline = getRegistrationDeadline(event);
@@ -539,7 +608,7 @@ function renderEvent(event: EventItem) {
 
   // ROW 1: date | title + committee tags | status (+ register button)
   const headerRow = `
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;border-top:1px solid #d4dde8;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="background-color:#ffffff;">
           <tr>
             ${renderDateCell(day, monthYear, {
     className: "event-date-cell",
@@ -549,28 +618,21 @@ function renderEvent(event: EventItem) {
     dataFields: true,
   })}
 
-            <td class="event-title-cell" valign="middle" style="padding:14px 18px;">
+            <td class="event-title-cell" valign="middle" style="padding:14px 18px;border-top:1px solid #d4dde8;">
               <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
               ${tags
-      ? `<div data-f="committees" style="margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;">${tags}</div>`
+      ? `<div data-f="committees">${spacer(14)}<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="border-top:1px solid #e2e8f0;padding:12px 0 0 0;">${tags}</td></tr></table></div>`
       : ""
     }
             </td>
 
-            <td
-            class="event-status-cell"
-            width="150"
-            valign="middle"
-            align="center"
-            style="padding:14px 18px 14px 8px; text-align:center;"
-          >
-            ${renderBadge(statusStyle, "event-status", event.eventStatus, "center")}
-          
-            ${registerButton
-              ? `<div style="height:10px;line-height:10px;font-size:0;">&nbsp;</div>${registerButton}`
-              : ""
-            }
-          </td>
+            <td class="event-status-cell" width="150" valign="middle" align="center" style="padding:14px 18px 14px 8px;text-align:center;border-top:1px solid #d4dde8;">
+              ${renderBadge(statusStyle, "event-status", event.eventStatus, "center")}
+              ${registerButton
+      ? `${spacer(10)}${registerButton}`
+      : ""
+    }
+            </td>
           </tr>
         </table>`;
 
@@ -597,22 +659,26 @@ function renderEvent(event: EventItem) {
   ]);
 
   // ROW 4: sponsors | speakers
+  const sponsors = cleanRichHtml(event.sponsors);
+  const speakers = cleanRichHtml(event.speakers);
+
   const peopleRow = renderColumnsRow([
     {
       label: "Sponsors",
-      body: cleanRichHtml(hasContent(event.sponsors)) ? event.sponsors : callFor("Sponsors"),
+      body: hasContent(sponsors) ? sponsors : callFor("Sponsors"),
       field: "sponsors",
     },
     {
       label: "Speakers",
-      body: cleanRichHtml(hasContent(event.speakers)) ? event.speakers : callFor("Speakers"),
+      body: hasContent(speakers) ? speakers : callFor("Speakers"),
       field: "speakers",
     },
   ]);
 
   // ROW 5: remarks
-  const remarksRow = cleanRichHtml(hasContent(event.remarks))
-    ? renderColumnsRow([{ label: "Remarks", body: event.remarks, field: "remarks" }])
+  const remarks = cleanRichHtml(event.remarks);
+  const remarksRow = hasContent(remarks)
+    ? renderColumnsRow([{ label: "Remarks", body: remarks, field: "remarks" }])
     : "";
 
   return `
@@ -634,13 +700,13 @@ function renderEvent(event: EventItem) {
 /* ------------------------------------------------------------------ */
 
 function renderUpcomingRow(item: UpcomingEvent) {
-  const { day, monthYear } =  getUpcomingDateParts(item.date, item.dateMode);
+  const { day, monthYear } = getUpcomingDateParts(item.date, item.dateMode);
   const statusStyle = EVENT_STATUS_STYLES[item.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
 
   return `
             <tr data-id="${esc(item.id)}" data-event-status="${esc(item.eventStatus)}">
               <td style="padding:0;border-top:1px solid #e2e8f0;">
-                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background:#ffffff;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="background-color:#ffffff;">
                   <tr>
                     ${renderDateCell(day, monthYear, {
     className: "upcoming-date-cell",
@@ -682,9 +748,16 @@ ${items.map(renderUpcomingRow).join("\n")}
 /* ------------------------------------------------------------------ */
 
 const EMAIL_STYLES = `
+    :root {
+      color-scheme: light only;
+      supported-color-schemes: light only;
+    }
     body, table, td, a {
       -webkit-text-size-adjust: 100%;
       -ms-text-size-adjust: 100%;
+    }
+    table {
+      border-collapse: collapse;
     }
     table, td {
       mso-table-lspace: 0pt;
@@ -747,18 +820,18 @@ function buildEmailHtml({
   greeting,
   issueRange,
 }: EmailData): string {
-  const eventsHtml = sortEventsByDate(events)
-  .map(renderEvent)
-  .join("\n");
-  const upcomingHtml = renderUpcomingEvents(
-    sortEventsByDate(upcomingList)
-  );
+  const eventsHtml = sortEventsByDate(events).map(renderEvent).join("\n");
+  const upcomingHtml = renderUpcomingEvents(sortEventsByDate(upcomingList));
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <meta name="supported-color-schemes" content="light only">
 
   <!--[if !mso]><!-->
   <meta name="x-apple-disable-message-reformatting">
@@ -783,7 +856,7 @@ function buildEmailHtml({
 
 <body style="margin:0;padding:0;background-color:${PAGE_BG};font-family:${FONT};color:#000000;font-size:15px;line-height:1.6;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="background-color:${PAGE_BG};">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="${PAGE_BG}" style="background-color:${PAGE_BG};">
   <tr>
     <td align="center" style="padding:32px 20px;">
 
@@ -793,12 +866,12 @@ function buildEmailHtml({
           <td width="680">
       <![endif]-->
 
-      <table class="email-container" width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" style="width:100%;max-width:680px;background:#ffffff;border:1px solid #d4dde8;">
+      <table class="email-container" width="680" cellpadding="0" cellspacing="0" border="0" role="presentation" align="center" bgcolor="#ffffff" style="width:100%;max-width:680px;background-color:#ffffff;border:1px solid #d4dde8;">
 
         <!-- BANNER -->
         <tr>
           <td style="padding:0;font-size:0;line-height:0;">
-            <img class="header-img" src="${BANNER_URL}" width="680" alt="SSA Upcoming Events" style="display:block;width:100%;max-width:680px;height:auto;border:0;">
+            <img class="header-img" src="${BANNER_URL}" width="680" border="0" alt="SSA Upcoming Events" style="display:block;width:100%;max-width:680px;height:auto;border:0;">
           </td>
         </tr>
 
@@ -807,7 +880,7 @@ function buildEmailHtml({
 
         <!-- GREETING -->
         <tr>
-          <td class="pad-sides" style="background:#ffffff;padding:20px 24px;border-bottom:1px solid #d4dde8;">
+          <td class="pad-sides" bgcolor="#ffffff" style="background-color:#ffffff;padding:20px 24px;border-bottom:1px solid #d4dde8;">
             <div data-f="greeting" style="font-family:${FONT};font-size:10pt;color:#1f3b7a;line-height:1.6;">
               ${renderGreeting(greeting)}
             </div>
@@ -815,21 +888,17 @@ function buildEmailHtml({
         </tr>
 
 ${eventsHtml}
-${upcomingHtml} 
+${upcomingHtml}
 
         <!-- FOOTER -->
         <tr>
-  <td
-    class="footer-cell"
-    bgcolor="${NAVY}"
-    style="background-color:${NAVY};padding:14px 24px;"
-  >
-    <p style="margin:0;font-family:${FONT};font-size:10.5px;color:#ffffff;line-height:1.5;text-align:center;">
-      You are receiving this Event Calendar because you are a Tier 1–4 member of an SSA Committee. This calendar keeps committee members informed of events hosted or organised by SSA Committees. To discontinue receiving the calendar, please email <strong>unsubscribe</strong> to
-      <a href="mailto:${CONTACT_EMAIL}" style="color:#81bce9;text-decoration:none;">${CONTACT_EMAIL}</a>.
-    </p>
-  </td>
-</tr>
+          <td class="footer-cell" bgcolor="${NAVY}" style="background-color:${NAVY};padding:14px 24px;">
+            <p style="margin:0;font-family:${FONT};font-size:10.5px;color:#ffffff;line-height:1.5;text-align:center;">
+              You are receiving this Event Calendar because you are a Tier 1–4 member of an SSA Committee. This calendar keeps committee members informed of events hosted or organised by SSA Committees. To discontinue receiving the calendar, please email <strong>unsubscribe</strong> to
+              <a href="mailto:${CONTACT_EMAIL}" style="color:#81bce9;text-decoration:none;">${CONTACT_EMAIL}</a>.
+            </p>
+          </td>
+        </tr>
 
       </table>
 
@@ -850,8 +919,6 @@ ${upcomingHtml}
 /* ================================================================== */
 /* COMPONENT                                                          */
 /* ================================================================== */
-
-// Re-exported so existing `import { EventItem } from "./EventsHome"` lines keep working.
 
 type Tab = "events" | "upcoming" | "preview" | "history";
 
@@ -875,8 +942,8 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${active
-          ? "border-indigo-700 text-indigo-700"
-          : "border-transparent text-gray-500 hover:text-gray-700"
+        ? "border-indigo-700 text-indigo-700"
+        : "border-transparent text-gray-500 hover:text-gray-700"
         } ${className}`}
     >
       {children}
@@ -1035,10 +1102,7 @@ export default function EventsHome() {
   const [recordsView, setRecordsView] = useState<"list" | number | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
 
-  const sortedEvents = useMemo(
-    () => sortEventsByDate(events),
-    [events]
-  );
+  const sortedEvents = useMemo(() => sortEventsByDate(events), [events]);
 
   const emailHtml = useMemo(
     () => buildEmailHtml({ events, upcomingList, greeting, issueRange }),
@@ -1273,8 +1337,7 @@ export default function EventsHome() {
                 Events
               </TabButton>
 
-              <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}
-              >
+              <TabButton active={tab === "upcoming"} onClick={() => setTab("upcoming")}>
                 Upcoming List
               </TabButton>
 
@@ -1359,8 +1422,9 @@ export default function EventsHome() {
               </>
             )}
 
+            {/* UPCOMING LIST TAB */}
             {tab === "upcoming" && (
-                <UpcomingList
+              <UpcomingList
                 upcomingList={upcomingList}
                 setUpcomingList={setUpcomingList}
               />
