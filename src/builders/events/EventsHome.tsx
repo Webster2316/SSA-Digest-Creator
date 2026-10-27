@@ -212,35 +212,38 @@ function getRegistrationDeadline(event: EventItem): string {
 /* ------------------------------------------------------------------ */
 /* Sorting (undated items go last)                                     */
 /* ------------------------------------------------------------------ */
+const sortKey = (event: {
+  date: string;
+  dateMode: DateMode;
+}): string => {
+  const { date, dateMode } = event;
 
-const sortKey = (date: string) => (date.length === 7 ? `${date}-01` : date);
+  if (!date || dateMode === "tbc") return "9999-99";
 
-function sortByDate(event: UpcomingEvent): string {
-    const { date, dateMode } = event;
-  
-    if (!date || dateMode === "tbc") return "9999-99";
-  
-    if (dateMode === "quarter") {
-      const [year, quarter] = date.split("-");
-      const quarterStartMonths: Record<string, string> = {
-        Q1: "01",
-        Q2: "04",
-        Q3: "07",
-        Q4: "10",
-      };
-  
-      return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
-    }
-  
-    // Exact date: 2027-05-15
-    // Month:      2027-05
-    return date;
+  if (dateMode === "quarter") {
+    const [year, quarter] = date.split("-");
+
+    const quarterStartMonths: Record<string, string> = {
+      Q1: "01",
+      Q2: "04",
+      Q3: "07",
+      Q4: "10",
+    };
+
+    return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
   }
-  function sortEventsByDate(event: UpcomingEvent[]) {
-    return [...event].sort((a, b) =>
-      getSortDate(a).localeCompare(getSortDate(b))
-    );
-  }
+
+  return date;
+};
+
+function sortEventsByDate<T extends {
+  date: string;
+  dateMode: DateMode;
+}>(items: T[]): T[] {
+  return [...items].sort((a, b) =>
+    sortKey(a).localeCompare(sortKey(b))
+  );
+}
 /* ------------------------------------------------------------------ */
 /* Content checks                                                      */
 /* ------------------------------------------------------------------ */
@@ -708,8 +711,12 @@ function buildEmailHtml({
   greeting,
   issueRange,
 }: EmailData): string {
-  const eventsHtml = sortEventsByDate(events).map(renderEvent).join("\n");
-  const upcomingHtml = renderUpcomingEvents(sortByDate(upcomingList));
+  const eventsHtml = sortEventsByDate(events)
+  .map(renderEvent)
+  .join("\n");
+  const upcomingHtml = renderUpcomingEvents(
+    sortEventsByDate(upcomingList)
+  );
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -810,7 +817,7 @@ ${upcomingHtml}
 
 // Re-exported so existing `import { EventItem } from "./EventsHome"` lines keep working.
 
-type Tab = "events" | "Others" | "preview" | "history";
+type Tab = "events" | "upcoming" | "preview" | "history";
 
 /* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
@@ -992,7 +999,10 @@ export default function EventsHome() {
   const [recordsView, setRecordsView] = useState<"list" | number | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
 
-  const sortedEvents = useMemo(() => sortEventsByDate(events), [events]);
+  const sortedEvents = useMemo(
+    () => sortEventsByDate(events),
+    [events]
+  );
 
   const emailHtml = useMemo(
     () => buildEmailHtml({ events, upcomingList, greeting, issueRange }),
