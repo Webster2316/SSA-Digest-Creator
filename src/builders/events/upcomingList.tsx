@@ -88,15 +88,7 @@ event.id === id
                 Upcoming Events List
               </h2>
             </div>
-    
-            <button
-              type="button"
-              onClick={handleAddEvent}
-              className="rounded-md bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-800"
-            >
-              <Plus size={16} className="mr-2 inline" />
-              Add Event
-            </button>
+  
           </div>
     
           {sortedEv.length === 0 ? (
@@ -310,6 +302,14 @@ event.id === id
               })}
             </div>
           )}
+            <button
+              type="button"
+              onClick={handleAddEvent}
+              className="rounded-md bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-800"
+            >
+              <Plus size={16} className="mr-2 inline" />
+              Add Event
+            </button>
         </div>
       );
     }
