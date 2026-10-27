@@ -215,7 +215,7 @@ function getRegistrationDeadline(event: EventItem): string {
 
 const sortKey = (date: string) => (date.length === 7 ? `${date}-01` : date);
 
-function getSortDate(
+function sortByDate(
   date: string,
   dateMode?: string
 ): string {
