@@ -88,7 +88,7 @@ event.id === id
                 Upcoming Events List
               </h2>
             </div>
-  
+  <p>events will be sorted by date in the final output.</p>
           </div>
     
           {sortedEv.length === 0 ? (
