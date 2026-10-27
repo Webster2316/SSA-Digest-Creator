@@ -115,30 +115,33 @@ event.id === id
                     key={event.id}
                     className="rounded-lg border bg-white p-4"
                   >
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-500">
-                        Event {index + 1}
-                      </span>
+                 <div className="mb-3 flex items-center justify-between">
+  <span className="text-sm font-medium text-gray-500">
+    Event {index + 1}
+  </span>
 
-                      <button
-                        type="button"
-                        onClick={() => copyItem(event)}
-                        className="rounded-md p-2 text-red-600 hover:bg-red-50"
-                        aria-label={`Copy ${event.title || "event"}`}
-                        title="Copy event?"
-                      >
-                        <Copy size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteEvent(event.id)}
-                        className="rounded-md p-2 text-red-600 hover:bg-red-50"
-                        aria-label={`Delete ${event.title || "event"}`}
-                        title="Delete event"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+  <div className="flex items-center">
+    <button
+      type="button"
+      onClick={() => copyItem(event)}
+      className="rounded-md p-2 text-red-600 hover:bg-red-50"
+      aria-label={`Copy ${event.title || "event"}`}
+      title="Copy event"
+    >
+      <Copy size={16} />
+    </button>
+
+    <button
+      type="button"
+      onClick={() => handleDeleteEvent(event.id)}
+      className="rounded-md p-2 text-red-600 hover:bg-red-50"
+      aria-label={`Delete ${event.title || "event"}`}
+      title="Delete event"
+    >
+      <Trash2 size={16} />
+    </button>
+  </div>
+</div>
     
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div>
