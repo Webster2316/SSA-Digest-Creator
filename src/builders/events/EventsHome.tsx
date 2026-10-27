@@ -218,21 +218,34 @@ const sortKey = (event: {
 }): string => {
   const { date, dateMode } = event;
 
-  if (!date || dateMode === "tbc") return "9999-99";
-
-  if (dateMode === "quarter") {
-    const [year, quarter] = date.split("-");
-
-    const quarterStartMonths: Record<string, string> = {
-      Q1: "01",
-      Q2: "04",
-      Q3: "07",
-      Q4: "10",
-    };
-
-    return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
+  if (!date || dateMode === "tbc") {
+    return "9999-99-99";
   }
 
+  if (dateMode === "quarter") {
+    const match = date.match(
+      /^(?:(\d{4})-?(Q[1-4])|(Q[1-4])-?(\d{4}))$/i
+    );
+
+    if (match) {
+      const year = match[1] ?? match[4];
+      const quarter = (match[2] ?? match[3]).toUpperCase();
+
+      const quarterStartMonths: Record<string, string> = {
+        Q1: "01",
+        Q2: "04",
+        Q3: "07",
+        Q4: "10",
+      };
+
+      return `${year}-${quarterStartMonths[quarter]}-01`;
+    }
+
+    // If the stored quarter format is unexpected, place it last.
+    return "9999-99-99";
+  }
+
+  // YYYY-MM-DD and YYYY-MM formats sort chronologically as strings.
   return date;
 };
 
@@ -323,15 +336,22 @@ function normaliseEvent(ev: any): EventItem {
 function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
   if (!Array.isArray(raw)) return [];
 
-  return raw.map((item: any) => ({
-    id: typeof item?.id === "string" && item.id ? item.id : uid(),
-    title: typeof item?.title === "string" ? item.title : "",
-    date: typeof item?.date === "string" ? item.date : "",
-    dateMode: typeof item?.dateMode === "string" ? item.dateMode : "",
-    eventStatus: item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
-  }));
-}
+  return raw.map((item: any) => {
+    const dateMode: DateMode =
+      ["exact", "month", "quarter", "tbc"].includes(item?.dateMode)
+        ? item.dateMode
+        : "exact";
 
+    return {
+      id: typeof item?.id === "string" && item.id ? item.id : uid(),
+      title: typeof item?.title === "string" ? item.title : "",
+      date: typeof item?.date === "string" ? item.date : "",
+      dateMode,
+      eventStatus:
+        item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+    };
+  });
+}
 /* ================================================================== */
 /* EMAIL TEMPLATE                                                     */
 /* ================================================================== */
