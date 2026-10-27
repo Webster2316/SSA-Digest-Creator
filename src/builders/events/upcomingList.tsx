@@ -124,7 +124,7 @@ event.id === id
     <button
       type="button"
       onClick={() => copyItem(event)}
-      className="rounded-md p-2 text-red-600 hover:bg-red-50"
+      className="rounded-md p-2 text-red-600 hover:bg-indigo-50"
       aria-label={`Copy ${event.title || "event"}`}
       title="Copy event"
     >
