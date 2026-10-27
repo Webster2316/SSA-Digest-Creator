@@ -45,6 +45,11 @@ function sortEventsByDate(event: UpcomingEvent[]) {
         return a.date.localeCompare(b.date);
     })
 }
+const copyItem = (item: any) => {
+  const copy = { ...item, id: uid() };
+
+  setUpcomingList((prev) => [...prev, copy]);
+};
 
 export default function UpcomingList({ upcomingList, setUpcomingList }: UpcomingListProps) {
     const sortedEv = sortEventsByDate(upcomingList);
@@ -115,7 +120,16 @@ event.id === id
                       <span className="text-sm font-medium text-gray-500">
                         Event {index + 1}
                       </span>
-    
+
+                      <button
+                        type="button"
+                        onClick={() => copyItem(event)}
+                        className="rounded-md p-2 text-red-600 hover:bg-red-50"
+                        aria-label={`Copy ${event.title || "event"}`}
+                        title="Copy event?"
+                      >
+                        <Copy size={16} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteEvent(event.id)}
