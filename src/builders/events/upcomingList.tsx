@@ -165,7 +165,7 @@ event.id === id
         name="dateMode"
         value="exact"
         checked={event.dateMode === "exact"}
-        onChange={() => updateEvent({ dateMode: "exact" })}
+        onChange={() => updateEvent(event.id, { dateMode: "exact" })}
       />
       Exact Date
     </label>
@@ -176,7 +176,7 @@ event.id === id
         name="dateMode"
         value="month"
         checked={event.dateMode === "month"}
-        onChange={() => updateEvent({ dateMode: "month" })}
+        onChange={() => updateEvent(event.id,{ dateMode: "month" })}
       />
       Month & Year
     </label>
@@ -187,7 +187,7 @@ event.id === id
         name="dateMode"
         value="quarter"
         checked={event.dateMode === "quarter"}
-        onChange={() => updateEvent({ dateMode: "quarter" })}
+        onChange={() => updateEvent(event.id,{ dateMode: "quarter" })}
       />
       Quarter & Year
     </label>
@@ -197,7 +197,7 @@ event.id === id
         name="dateMode"
         value="tbc"
         checked={event.dateMode === "tbc"}
-        onChange={() => updateEvent({ dateMode: "tbc" })}
+        onChange={() => updateEvent(event.id,{ dateMode: "tbc" })}
       />
      TBC
     </label>

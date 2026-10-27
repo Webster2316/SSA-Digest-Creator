@@ -307,6 +307,7 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
     id: typeof item?.id === "string" && item.id ? item.id : uid(),
     title: typeof item?.title === "string" ? item.title : "",
     date: typeof item?.date === "string" ? item.date : "",
+    dateMode: typeof item?.dateMode === "string" ? item.dateMode : "",
     eventStatus: item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
   }));
 }
