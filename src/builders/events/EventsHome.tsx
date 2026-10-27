@@ -139,7 +139,23 @@ const COMMITTEE_STYLES: Record<string, TagStyle> = {
 /* ================================================================== */
 /* HELPERS                                                            */
 /* ================================================================== */
+/** Strips empty paragraphs, repeated <br>s, and leading/trailing blank lines. */
+function cleanRichHtml(html?: string): string {
+  if (!html) return "";
 
+  return html
+    // empty <p>/<div> (only whitespace, &nbsp; or <br>)
+    .replace(/<(p|div)\b[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, "")
+    // runs of <br> -> one
+    .replace(/(<br\s*\/?>\s*){2,}/gi, "<br>")
+    // leading / trailing <br> and whitespace
+    .replace(/^(\s|<br\s*\/?>)+/i, "")
+    .replace(/(\s|<br\s*\/?>)+$/i, "")
+    // tighten default margins on bare tags
+    .replace(/<p>/gi, '<p style="margin:0 0 8px;">')
+    .replace(/<ul>/gi, '<ul style="margin:0 0 8px;padding-left:20px;">')
+    .trim();
+}
 /* ------------------------------------------------------------------ */
 /* Dates                                                               */
 /* ------------------------------------------------------------------ */
@@ -562,13 +578,13 @@ function renderEvent(event: EventItem) {
   const detailsRow = renderColumnsRow([
     {
       label: "Event Details",
-      body: event.details?.trim() || "&nbsp;",
+      body: cleanRichHtml(event.details) || "&nbsp;",
       field: "event-details",
       padding: "20px 22px",
     },
     {
       label: "Programme Synopsis",
-      body: `${event.programme?.trim() || "&nbsp;"}${renderDocuments(event.documents ?? [])}`,
+      body: `${cleanRichHtml(event.programme) || "&nbsp;"}${renderDocuments(event.documents ?? [])}`,
       field: "programme",
       padding: "20px 22px",
     },
@@ -584,18 +600,18 @@ function renderEvent(event: EventItem) {
   const peopleRow = renderColumnsRow([
     {
       label: "Sponsors",
-      body: hasContent(event.sponsors) ? event.sponsors : callFor("Sponsors"),
+      body: cleanRichHtml(hasContent(event.sponsors)) ? event.sponsors : callFor("Sponsors"),
       field: "sponsors",
     },
     {
       label: "Speakers",
-      body: hasContent(event.speakers) ? event.speakers : callFor("Speakers"),
+      body: cleanRichHtml(hasContent(event.speakers)) ? event.speakers : callFor("Speakers"),
       field: "speakers",
     },
   ]);
 
   // ROW 5: remarks
-  const remarksRow = hasContent(event.remarks)
+  const remarksRow = cleanRichHtml(hasContent(event.remarks))
     ? renderColumnsRow([{ label: "Remarks", body: event.remarks, field: "remarks" }])
     : "";
 
