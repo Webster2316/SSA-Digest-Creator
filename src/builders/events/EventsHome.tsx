@@ -265,68 +265,128 @@ function hasContent(html?: string): boolean {
   );
 }
 
-/** Base text style, repeated on every block tag because Outlook (Word engine) doesn't inherit it. */
-const RICH_BASE = `font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;`;
+/** Base text style. Pixel line-height + exact rule stops Word inflating the spacing. */
+const RICH_BASE = `font-family:${FONT};font-size:13px;color:#374151;line-height:21px;mso-line-height-rule:exactly;`;
 
-/** Adds `base` to every <tag>, merged in front of any style the editor already set. */
-function addBaseStyle(html: string, tag: string, base: string): string {
-  const re = new RegExp(`<${tag}\\b([^>]*)>`, "gi");
+const BLOCK_TAGS = new Set([
+  "P", "DIV", "UL", "OL", "LI", "H1", "H2", "H3", "H4", "H5", "H6", "BLOCKQUOTE",
+]);
 
-  return html.replace(re, (_match: string, attrs: string) => {
-    const existing = attrs.match(/\sstyle\s*=\s*(["'])(.*?)\1/i);
-
-    if (existing) {
-      const merged = `${base}${existing[2]}`.replace(/"/g, "&quot;");
-      return `<${tag}${attrs.replace(existing[0], ` style="${merged}"`)}>`;
-    }
-
-    return `<${tag}${attrs} style="${base}">`;
+function inlineChildren(parent: Node): string {
+  let out = "";
+  parent.childNodes.forEach((c) => {
+    out += inlineNode(c);
   });
+  return out;
 }
 
-/**
- * Cleans rich-text HTML for email:
- * - removes empty paragraphs / divs and runs of <br>
- * - unwraps <li><p>…</p></li> (the editor's list items otherwise get paragraph margins)
- * - sets explicit margins and fonts so Outlook renders it like the preview
- */
-function cleanRichHtml(html?: string): string {
-  if (!html) return "";
+/** One node -> email-safe inline HTML. Unknown tags (span, font, ...) are unwrapped. */
+function inlineNode(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return esc((node.textContent ?? "").replace(/\s+/g, " "));
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return "";
 
-  let out = html.replace(/\u00a0/g, "&nbsp;");
+  const el = node as HTMLElement;
+  const inner = inlineChildren(el);
 
-  // Empty <p> (including <p><span> </span></p>, <p><strong><br></strong></p>, ...)
-  out = out.replace(/<p\b[^>]*>([\s\S]*?)<\/p>/gi, (match: string, inner: string) =>
-    hasContent(inner) ? match : ""
-  );
+  switch (el.tagName) {
+    case "BR":
+      return "<br>";
+    case "STRONG":
+    case "B":
+      return inner.trim() ? `<strong>${inner}</strong>` : inner;
+    case "EM":
+    case "I":
+      return inner.trim() ? `<em>${inner}</em>` : inner;
+    case "U":
+      return inner.trim() ? `<u>${inner}</u>` : inner;
+    case "A": {
+      const href = el.getAttribute("href");
+      return href
+        ? `<a href="${esc(href)}" target="_blank" style="color:#1b76bc;text-decoration:underline;">${inner}</a>`
+        : inner;
+    }
+    case "IMG": {
+      const src = el.getAttribute("src");
+      return src
+        ? `<img src="${esc(src)}" alt="${esc(el.getAttribute("alt") ?? "")}" style="max-width:100%;height:auto;border:0;">`
+        : "";
+    }
+    case "P":
+    case "DIV":
+    case "LI":
+      return inner.trim() ? `${inner}<br>` : "";
+    default:
+      return inner;
+  }
+}
 
-  // Simple empty <div>
-  out = out.replace(/<div\b[^>]*>(?:\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, "");
+/** Trim leading/trailing breaks and collapse <br> runs. */
+const tidy = (h: string) =>
+  h
+    .replace(/(?:<br>\s*){2,}/g, "<br>")
+    .replace(/^(?:\s|<br>)+/, "")
+    .replace(/(?:\s|<br>)+$/, "");
 
-  // <li><p>text</p></li> -> <li>text</li>
-  out = out.replace(
-    /(<li\b[^>]*>)\s*<p\b[^>]*>((?:(?!<\/p>)[\s\S])*)<\/p>\s*(<\/li>)/gi,
-    "$1$2$3"
-  );
+function paragraph(inner: string): string {
+  const h = tidy(inner);
+  return hasContent(h) ? `<p style="margin:0 0 8px 0;${RICH_BASE}">${h}</p>` : "";
+}
 
-  // Trailing <br> inside a paragraph / list item, then runs of <br>
-  out = out.replace(/(?:<br\s*\/?>\s*)+(<\/(?:p|li)>)/gi, "$1");
-  out = out.replace(/(?:<br\s*\/?>\s*){2,}/gi, "<br>");
+function listHtml(list: HTMLElement): string {
+  const tag = list.tagName.toLowerCase();
 
-  // Leading / trailing blank space
-  out = out
-    .replace(/^(?:\s|<br\s*\/?>)+/i, "")
-    .replace(/(?:\s|<br\s*\/?>)+$/i, "")
-    .trim();
+  const items = Array.from(list.children)
+    .filter((c) => c.tagName === "LI")
+    .map((li) => tidy(inlineChildren(li)))
+    .filter((h) => hasContent(h))
+    .map((h) => `<li style="margin:0 0 4px 0;${RICH_BASE}">${h}</li>`);
 
-  if (!out) return "";
+  return items.length
+    ? `<${tag} style="margin:0 0 8px 22px;padding:0;">${items.join("")}</${tag}>`
+    : "";
+}
 
-  out = addBaseStyle(out, "p", `margin:0 0 8px 0;${RICH_BASE}`);
-  out = addBaseStyle(out, "ul", "margin:0 0 8px 22px;padding:0;");
-  out = addBaseStyle(out, "ol", "margin:0 0 8px 22px;padding:0;");
-  out = addBaseStyle(out, "li", `margin:0 0 4px 0;${RICH_BASE}`);
+function blocksFrom(parent: Node): string {
+  let out = "";
+  let buffer = "";
 
+  const flush = () => {
+    out += paragraph(buffer);
+    buffer = "";
+  };
+
+  parent.childNodes.forEach((child) => {
+    if (child.nodeType === Node.ELEMENT_NODE) {
+      const el = child as HTMLElement;
+
+      if (el.tagName === "UL" || el.tagName === "OL") {
+        flush();
+        out += listHtml(el);
+        return;
+      }
+
+      if (BLOCK_TAGS.has(el.tagName)) {
+        flush();
+        const hasBlockChild = Array.from(el.children).some((c) => BLOCK_TAGS.has(c.tagName));
+        out += hasBlockChild ? blocksFrom(el) : paragraph(inlineChildren(el));
+        return;
+      }
+    }
+
+    buffer += inlineNode(child);
+  });
+
+  flush();
   return out;
+}
+
+/** Rebuilds editor HTML as clean, Outlook-safe paragraphs and lists. */
+function cleanRichHtml(html?: string): string {
+  if (!html || !hasContent(html)) return "";
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return blocksFrom(doc.body);
 }
 
 /* ------------------------------------------------------------------ */
@@ -564,7 +624,7 @@ function renderColumnsRow(columns: ColumnSpec[]) {
       return `
       <td class="col-cell${divided ? " col-divider" : ""}" width="${width}" valign="top" bgcolor="${bg}" style="padding:${padding};background-color:${bg};border-top:1px solid #e2e8f0;${divided ? "border-left:1px solid #e2e8f0;" : ""}">
         <p style="margin:0 0 8px 0;font-family:${FONT};font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;">${esc(label)}</p>
-        <div${field ? ` data-f="${field}"` : ""} style="font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">${body}</div>
+        <div${field ? ` data-f="${field}"` : ""} style="font-family:${FONT};font-size:13px;color:#374151;line-height:21px;mso-line-height-rule:exactly;">${body}</div>
       </td>`;
     })
     .join("");
@@ -577,7 +637,7 @@ function renderColumnsRow(columns: ColumnSpec[]) {
 }
 
 const callFor = (what: string) =>
-  `<p style="margin:0;font-family:${FONT};font-size:13px;color:#374151;line-height:1.65;">Call for ${what}.<br />Please reach out to <a href="mailto:${CONTACT_EMAIL}" style="color:#1b76bc;">${CONTACT_EMAIL}</a>.</p>`;
+  `<p style="margin:0;font-family:${FONT};font-size:13px;color:#374151;line-height:21px;mso-line-height-rule:exactly;">Call for ${what}.<br />Please reach out to <a href="mailto:${CONTACT_EMAIL}" style="color:#1b76bc;">${CONTACT_EMAIL}</a>.</p>`;
 
 /* ------------------------------------------------------------------ */
 /* Event block                                                         */
