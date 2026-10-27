@@ -45,17 +45,9 @@ function sortEventsByDate(event: UpcomingEvent[]) {
         return a.date.localeCompare(b.date);
     })
 }
-const copyItem = (item: any) => {
-  const copy = { ...item, id: uid() };
-
-  setUpcomingList((prev) => [...prev, copy]);
-};
 
 export default function UpcomingList({ upcomingList, setUpcomingList }: UpcomingListProps) {
     const sortedEv = sortEventsByDate(upcomingList);
-    // const registrationBadge =
-    // eventStatusOptions[upcomingList.eventStatus] ?? eventStatusOptions.Open;
-
     function handleAddEvent() {
         setUpcomingList((prev) => [
             ...prev,
@@ -78,9 +70,14 @@ event.id === id
 );
     }
 
-
+    const copyItem = (item: any) => {
+      const copy = { ...item, id: uid() };
+    
+      setUpcomingList((prev) => [...prev, copy]);
+    };
+    
     function handleDeleteEvent(id: string) {
-        setUpcomingList((prev) =>
+      setUpcomingList((prev) =>
         prev.filter((event) => event.id !== id)
         );
 
@@ -93,7 +90,9 @@ event.id === id
                 Upcoming Events List
               </h2>
             </div>
-  <p>events will be sorted by date in the final output.</p>
+          </div>
+          <div>
+          <p>events will be sorted by date in the final output.</p>
           </div>
     
           {sortedEv.length === 0 ? (
