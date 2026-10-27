@@ -215,27 +215,32 @@ function getRegistrationDeadline(event: EventItem): string {
 
 const sortKey = (date: string) => (date.length === 7 ? `${date}-01` : date);
 
-function sortByDate(
-  date: string,
-  dateMode?: string
-): string {
-  if (!date || dateMode === "tbc") return "9999-99";
-
-  if (dateMode === "quarter") {
-    const [year, quarter] = date.split("-");
-
-    const quarterStartMonths: Record<string, string> = {
-      Q1: "01",
-      Q2: "04",
-      Q3: "07",
-      Q4: "10",
-    };
-
-    return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
+function sortByDate(event: UpcomingEvent): string {
+    const { date, dateMode } = event;
+  
+    if (!date || dateMode === "tbc") return "9999-99";
+  
+    if (dateMode === "quarter") {
+      const [year, quarter] = date.split("-");
+      const quarterStartMonths: Record<string, string> = {
+        Q1: "01",
+        Q2: "04",
+        Q3: "07",
+        Q4: "10",
+      };
+  
+      return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
+    }
+  
+    // Exact date: 2027-05-15
+    // Month:      2027-05
+    return date;
   }
-
-  return date;
-}
+  function sortEventsByDate(event: UpcomingEvent[]) {
+    return [...event].sort((a, b) =>
+      getSortDate(a).localeCompare(getSortDate(b))
+    );
+  }
 /* ------------------------------------------------------------------ */
 /* Content checks                                                      */
 /* ------------------------------------------------------------------ */
@@ -703,7 +708,7 @@ function buildEmailHtml({
   greeting,
   issueRange,
 }: EmailData): string {
-  const eventsHtml = sortByDate(events).map(renderEvent).join("\n");
+  const eventsHtml = sortEventsByDate(events).map(renderEvent).join("\n");
   const upcomingHtml = renderUpcomingEvents(sortByDate(upcomingList));
 
   return `<!DOCTYPE html>
@@ -987,7 +992,7 @@ export default function EventsHome() {
   const [recordsView, setRecordsView] = useState<"list" | number | null>(null);
   const { confirmDelete, deleteModal } = useConfirmDelete();
 
-  const sortedEvents = useMemo(() => sortByDate(events), [events]);
+  const sortedEvents = useMemo(() => sortEventsByDate(events), [events]);
 
   const emailHtml = useMemo(
     () => buildEmailHtml({ events, upcomingList, greeting, issueRange }),
