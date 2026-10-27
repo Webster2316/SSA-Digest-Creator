@@ -215,15 +215,27 @@ function getRegistrationDeadline(event: EventItem): string {
 
 const sortKey = (date: string) => (date.length === 7 ? `${date}-01` : date);
 
-function sortByDate<T extends { date: string }>(items: T[]): T[] {
-  return [...items].sort((a, b) => {
-    if (!a.date && !b.date) return 0;
-    if (!a.date) return 1;
-    if (!b.date) return -1;
-    return sortKey(a.date).localeCompare(sortKey(b.date));
-  });
-}
+function getSortDate(
+  date: string,
+  dateMode?: string
+): string {
+  if (!date || dateMode === "tbc") return "9999-99";
 
+  if (dateMode === "quarter") {
+    const [year, quarter] = date.split("-");
+
+    const quarterStartMonths: Record<string, string> = {
+      Q1: "01",
+      Q2: "04",
+      Q3: "07",
+      Q4: "10",
+    };
+
+    return `${year}-${quarterStartMonths[quarter] ?? "99"}`;
+  }
+
+  return date;
+}
 /* ------------------------------------------------------------------ */
 /* Content checks                                                      */
 /* ------------------------------------------------------------------ */
