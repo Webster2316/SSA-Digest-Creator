@@ -78,6 +78,7 @@ event.id === id
         setUpcomingList((prev) =>
         prev.filter((event) => event.id !== id)
         );
+
     }
     return (
         <div className="space-y-4">
@@ -151,22 +152,135 @@ event.id === id
                           className="w-full rounded-md border px-3 py-2 text-sm"
                         />
                       </div>
-    
+
                       <div>
-                        <label className="mb-1 block text-sm font-medium">
-                          Date
-                        </label>
-                        <input
-                          type="date"
-                          value={event.date}
-                          onChange={(e) =>
-                            updateEvent(event.id, {
-                              date: e.target.value,
-                            })
-                          }
-                          className="w-full rounded-md border px-3 py-2 text-sm"
-                        />
-                      </div>
+  <label className="mb-2 block text-sm font-medium">
+    Date Display
+  </label>
+
+  <div className="flex flex-wrap gap-4">
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="dateMode"
+        value="exact"
+        checked={event.dateMode === "exact"}
+        onChange={() => updateEvent({ dateMode: "exact" })}
+      />
+      Exact Date
+    </label>
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="dateMode"
+        value="month"
+        checked={event.dateMode === "month"}
+        onChange={() => updateEvent({ dateMode: "month" })}
+      />
+      Month & Year
+    </label>
+
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="dateMode"
+        value="quarter"
+        checked={event.dateMode === "quarter"}
+        onChange={() => updateEvent({ dateMode: "quarter" })}
+      />
+      Quarter & Year
+    </label>
+    <label className="flex items-center gap-2">
+      <input
+        type="radio"
+        name="dateMode"
+        value="tbc"
+        checked={event.dateMode === "tbc"}
+        onChange={() => updateEvent({ dateMode: "tbc" })}
+      />
+     TBC
+    </label>
+  </div>
+</div>
+                      
+<div>
+  <label className="mb-1 block text-sm font-medium">
+    Date
+  </label>
+
+  {event.dateMode === "exact" && (
+    <input
+      type="date"
+      value={event.date}
+      onChange={(e) =>
+        updateEvent(event.id, {
+          date: e.target.value,
+        })
+      }
+      className="w-full rounded-md border px-3 py-2 text-sm"
+    />
+  )}
+
+  {event.dateMode === "month" && (
+    <input
+      type="month"
+      value={event.date}
+      onChange={(e) =>
+        updateEvent(event.id, {
+          date: e.target.value,
+        })
+      }
+      className="w-full rounded-md border px-3 py-2 text-sm"
+    />
+  )}
+
+  {event.dateMode === "quarter" && (
+    <div className="flex gap-2">
+      <select
+        value={event.date.split("-")[1] ?? ""}
+        onChange={(e) => {
+          const year = event.date.split("-")[0] || new Date().getFullYear().toString();
+
+          updateEvent(event.id, {
+            date: `${year}-${e.target.value}`,
+          });
+        }}
+        className="w-full rounded-md border px-3 py-2 text-sm"
+      >
+        <option value="">Select quarter</option>
+        <option value="Q1">Q1</option>
+        <option value="Q2">Q2</option>
+        <option value="Q3">Q3</option>
+        <option value="Q4">Q4</option>
+      </select>
+
+      <input
+        type="number"
+        min="2020"
+        max="2100"
+        placeholder="Year"
+        value={event.date.split("-")[0] ?? ""}
+        onChange={(e) => {
+          const quarter = event.date.split("-")[1] || "Q1";
+
+          updateEvent(event.id, {
+            date: e.target.value
+              ? `${e.target.value}-${quarter}`
+              : "",
+          });
+        }}
+        className="w-full rounded-md border px-3 py-2 text-sm"
+      />
+    </div>
+  )}
+
+  {event.dateMode === "tbc" && (
+    <p className="text-sm text-gray-500">
+      Date to be confirmed.
+    </p>
+  )}
+</div>
     
                       <div>
                         <label className="mb-1 block text-sm font-medium">

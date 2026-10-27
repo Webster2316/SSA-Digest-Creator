@@ -33,7 +33,7 @@ export type RegistrationStatus =
   | "ClosingSoon"
   | "Full";
 export type CompletionStatus = "InProgress" | "Completed";
-export type DateMode = "exact" | "month";
+export type DateMode = "exact" | "month" | "quarter" | "tbc";
 
 export interface EventDocument {
   label: string;
@@ -66,6 +66,7 @@ export interface UpcomingEvent {
   id: string;
   title: string;
   date: string;
+  dateMode: DateMode;
   eventStatus: EventStatus;
 }
 
@@ -164,6 +165,33 @@ function getDateParts(date: string) {
     day: day && !Number.isNaN(dayNumber) ? String(dayNumber) : "TBC",
     monthYear: [monthText, year].filter(Boolean).join(" "),
   };
+}
+
+function getUpcomingDateParts(date: string, dateMode: string) {
+  if (dateMode === "tbc" || !date) {
+    return { day: "TBC", monthYear: "" };
+  }
+
+  if (dateMode === "quarter") {
+    const [year, quarter] = date.split("-");
+
+    return {
+      day: quarter,
+      monthYear: year,
+    };
+  }
+
+  if (dateMode === "month") {
+    const [year, month] = date.split("-");
+    const monthText = MONTHS[Number(month) - 1] ?? "";
+
+    return {
+      day: "",
+      monthYear: `${monthText} ${year}`,
+    };
+  }
+
+  return getDateParts(date);
 }
 
 /** Defaults to 14 days before an exact event date, formatted DD/MM/YYYY. */
@@ -549,7 +577,7 @@ function renderEvent(event: EventItem) {
 /* ------------------------------------------------------------------ */
 
 function renderUpcomingRow(item: UpcomingEvent) {
-  const { day, monthYear } = getDateParts(item.date);
+  const { day, monthYear } =  getUpcomingDateParts(item.date, item.dateMode);
   const statusStyle = EVENT_STATUS_STYLES[item.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
 
   return `
