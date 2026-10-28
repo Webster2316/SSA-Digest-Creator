@@ -2,6 +2,7 @@ import {useState, useEffect} from "react";
 import {Plus, Trash2, Save, Loader2 } from "lucide-react"
 import NamePopUp from "../shared/NamePopUpModal";
 import useConfirmDelete from "../shared/useConfirmDelete";
+import Data from "./data";
 
 
 interface Buttons {
@@ -26,7 +27,7 @@ background-color:#ffffff; font-family:Arial,Helvetica,sans-serif;">
 
 <h2 style="margin:0 0 8px; color:#241e42; font-size:20px;
           line-height:28px;">
-Confirmation for ${event.title} Event
+Confirmation for ${event.title}
 </h2>
 
 <p style="margin:0 0 22px; color:#666; font-size:13px;
@@ -118,17 +119,25 @@ function ItemRow({
   button,
   onGetCode,
   onDelete,
+  onViewData,
 }: {
   button: Buttons;
   onGetCode: (button: Buttons) => void;
   onDelete: () => void;
+  onViewData: () => void;
 }) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
       <span className="text-sm font-semibold text-gray-800">
         {button.title || "Untitled Event"}
       </span>
-
+      <button
+  type="button"
+  onClick={onViewData}
+  className="rounded-md px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+>
+  View Data
+</button>
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -151,6 +160,7 @@ function ItemRow({
   );
 }
 
+
 export default function confirmationBtns() {
 const [btn, setBtn] = useState<Buttons[]>([]);
 const [loaded, setLoaded] = useState(false);
@@ -159,6 +169,7 @@ const [saveStatus, setSaveStatus] = useState("idle");
 const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 const [buttonHtml, setButtonHtml] = useState("");
 const [generating, setGenerating] = useState(false);
+const [viewingData, setViewingData] = useState<Buttons | null>(null);
 const { confirmDelete, deleteModal } = useConfirmDelete();
 
 const handleGetCode = async (button: Buttons) => {
@@ -239,6 +250,14 @@ useEffect(() => {
   return () => clearTimeout(timer);
 }, [loaded, btn]);
 
+if (viewingData) {
+  return (
+    <CData
+      button={viewingData}
+      onBack={() => setViewingData(null)}
+    />
+  );
+}
 
 const addBtn = async (title: string) => {
   setGenerating(true);
@@ -335,6 +354,7 @@ const deleteBtn = (button: Buttons) => {
     button={button}
     onGetCode={handleGetCode}
     onDelete={() => deleteBtn(button)}
+    onViewData={() => setViewingData(button)}
   />
 ))}
         <button

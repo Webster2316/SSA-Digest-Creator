@@ -107,20 +107,49 @@ try {
 
 async function viewResponses(req, res, sql) {
     const surveyId = Number(req.query.surveyId);
-
+  
     if (!Number.isSafeInteger(surveyId) || surveyId < 1) {
-        return res.status(400).send("Missing or invalid survey ID");
+      return res.status(400).json({ error: "Invalid survey ID" });
+    }
+  
+    try {
+      const [survey] = await sql`
+        SELECT id, title
+        FROM surveys
+        WHERE id = ${surveyId}
+      `;
+  
+      if (!survey) {
+        return res.status(404).json({ error: "Survey not found" });
       }
-
-      try {
-        await sql `
-        SELECT answer FROM survey_responses
+  
+      const responses = await sql`
+        SELECT answer
+        FROM survey_responses
         WHERE survey_id = ${surveyId}
-        `
-        
-        return res.status(200).send(`Success!`);
-      }catch(error) {
-        console.error("Could not retreive:", error);
-        return res.status(500).send("Could not retreive your response.");
-      }
-}
+        ORDER BY answer
+      `;
+  
+      const yesCount = responses.filter(
+        (response) => response.answer === "Yes"
+      ).length;
+  
+      const noCount = responses.filter(
+        (response) => response.answer === "No"
+      ).length;
+  
+      return res.status(200).json({
+        title: survey.title,
+        total: responses.length,
+        yesCount,
+        noCount,
+        responses,
+      });
+    } catch (error) {
+      console.error("Could not retrieve responses:", error);
+      return res.status(500).json({
+        error: "Could not retrieve responses",
+      });
+    }
+  }
+  
