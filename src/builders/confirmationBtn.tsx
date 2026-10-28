@@ -302,7 +302,7 @@ confirmDelete({
             alt="SSA Logo"
             className="h-8 w-auto"
           />
-          <h1 className="text-xl font-bold text-indigo-900">Button generator</h1>
+          <h1 className="text-xl font-bold text-indigo-900">Confirmation button generator</h1>
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             <SaveIndicator status={saveStatus} />
           </div>
@@ -313,7 +313,7 @@ confirmDelete({
     key={button.id}
     button={button}
     onGetCode={handleGetCode}
-    onDelete={() => deleteBtn(ev)}
+    onDelete={() => deleteBtn(button)}
   />
 ))}
         <button
