@@ -284,13 +284,34 @@ const addBtn = async (title: string) => {
   }
 };
 
-const deleteBtn = (button: Button) => {
-confirmDelete({
-  itemType:"button",
-  itemName: button.title,
-  action: () => setBtn((prev) => prev.filter((item) => item.id !== button.id)),
-})
-}
+
+const deleteBtn = (button: Buttons) => {
+  confirmDelete({
+    itemType: "button",
+    itemName: button.title,
+    action: async () => {
+      try {
+        const res = await fetch(
+          `/api/surveys?surveyId=${encodeURIComponent(button.id)}`,
+          { method: "DELETE" }
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to delete survey from database");
+        }
+
+        // Remove from the frontend only after database deletion succeeds
+        setBtn((prev) =>
+          prev.filter((item) => item.id !== button.id)
+        );
+      } catch (error) {
+        console.error("Failed to delete survey:", error);
+        alert("Could not delete this confirmation button. Please try again.");
+      }
+    },
+  });
+};
+
 
   return (
     <div className="min-h-screen bg-gray-100">
