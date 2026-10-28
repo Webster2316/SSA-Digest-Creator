@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 export default async function handler(req, res) {
   const sql = neon(process.env.DATABASE_URL);
 
-  if (req.method === "GET") return recordResponse(req, res, sql);
+  if (req.method === "GET") { return req.query.view === "responses" ? viewResponses(req, res, sql) : recordResponse(req, res, sql); }
   if (req.method === "POST") return createSurvey(req, res, sql);
   if (req.method === "DELETE") return deleteSurvey(req, res, sql); 
 
@@ -103,4 +103,24 @@ try {
     console.error("Could not save survey response:", error);
     return res.status(500).send("Could not save your response. Please try again.");
 }
+}
+
+async function viewResponses(req, res, sql) {
+    const surveyId = Number(req.query.surveyId);
+
+    if (!Number.isSafeInteger(surveyId) || surveyId < 1) {
+        return res.status(400).send("Missing or invalid survey ID");
+      }
+
+      try {
+        await sql `
+        SELECT answer FROM survey_responses
+        WHERE survey_id = ${surveyId}
+        `
+        
+        return res.status(200).send(`Success!`);
+      }catch(error) {
+        console.error("Could not retreive:", error);
+        return res.status(500).send("Could not retreive your response.");
+      }
 }
