@@ -494,78 +494,35 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
 const spacer = (height: number) =>
   `<div style="height:${height}px;line-height:${height}px;font-size:0;mso-line-height-rule:exactly;">&nbsp;</div>`;
 
-/** Pill used for status badges and committee tags (table + padded <td>, so Outlook renders it). */
 function renderBadge(
   style: TagStyle,
-  dataField?: string,
-  dataStatus?: string,
+  dataField: string,
+  dataStatus: string,
   align?: "left" | "center" | "right"
 ) {
-  const attrs = [
-    align ? ` align="${align}"` : "",
-    dataField ? ` data-f="${esc(dataField)}"` : "",
-    dataStatus ? ` data-status="${esc(dataStatus)}"` : "",
-  ].join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${align ? ` align="${align}"` : ""
+    } data-f="${esc(dataField)}" data-status="${esc(dataStatus)}"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
+}
 
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0"${attrs} style="border-collapse:separate;"><tr><td bgcolor="${style.bg}" align="center" style="padding:4px 9px;background-color:${style.bg};border:1px solid ${style.border};border-radius:3px;font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${style.color};white-space:nowrap;mso-line-height-rule:exactly;line-height:12px;"><span style="color:${style.color};">${esc(style.text)}</span></td></tr></table>`;
+function renderInlineTag(text: string, { bg, color, border }: Omit<TagStyle, "text">) {
+  // Word ignores padding on <span>, so the &nbsp;&nbsp; (MSO only) fakes the side padding.
+  return `<span style="display:inline-block;margin:0 0 4px 0;padding:5px 9px;border-radius:3px;background:${bg};background-color:${bg};border:1px solid ${border};font-family:${FONT};font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:${color};mso-line-height-rule:exactly;line-height:12px;"><!--[if mso]>&nbsp;&nbsp;<![endif]-->${esc(text)}<!--[if mso]>&nbsp;&nbsp;<![endif]--></span>`;
 }
 
 const CUSTOM_TAG_STYLE = { bg: "#f5f5f5", color: "#383838", border: "#383838" };
 
-/** Rough pill width (9px bold caps + letter-spacing + padding/border). Only used to decide where rows wrap. */
-const estimateTagWidth = (text: string) => Math.round(text.length * 7.5 + 20);
-
-/** Max combined width (incl. gaps) of one row of tags; kept conservative so mobile doesn't overflow. */
-const TAG_ROW_MAX = 290;
-
-/**
- * Committee tags use the same pill markup as the status badge (renderBadge).
- * Tables can't wrap by themselves, so tags are grouped into rows by estimated width.
- */
 function renderTags(event: EventItem) {
-  const tags: TagStyle[] = [
-    ...(event.committees ?? [])
-      .map((code) => COMMITTEE_STYLES[code])
-      .filter((style): style is TagStyle => Boolean(style)),
-    ...(event.customCommitteeTags ?? [])
-      .map((tag) => tag.trim())
-      .filter(Boolean)
-      .map((tag) => ({ text: tag, ...CUSTOM_TAG_STYLE })),
-  ];
+  const committeeTags = (event.committees ?? [])
+    .map((code) => COMMITTEE_STYLES[code])
+    .filter((style): style is TagStyle => Boolean(style))
+    .map((style) => renderInlineTag(style.text, style));
 
-  if (!tags.length) return "";
+  const customTags = (event.customCommitteeTags ?? [])
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .map((tag) => renderInlineTag(tag, CUSTOM_TAG_STYLE));
 
-  const rows: TagStyle[][] = [];
-  let current: TagStyle[] = [];
-  let rowWidth = 0;
-
-  for (const tag of tags) {
-    const width = estimateTagWidth(tag.text) + 6;
-
-    if (current.length && rowWidth + width > TAG_ROW_MAX) {
-      rows.push(current);
-      current = [];
-      rowWidth = 0;
-    }
-
-    current.push(tag);
-    rowWidth += width;
-  }
-  if (current.length) rows.push(current);
-
-  const rowsHtml = rows
-    .map(
-      (row) =>
-        `<tr>${row
-          .map(
-            (tag) =>
-              `<td valign="top" style="padding:0 6px 6px 0;">${renderBadge(tag)}</td>`
-          )
-          .join("")}</tr>`
-    )
-    .join("");
-
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${rowsHtml}</table>`;
+  return [...committeeTags, ...customTags].join(" ");
 }
 
 function renderDocuments(documents: EventDocument[]) {
