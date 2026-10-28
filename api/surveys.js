@@ -9,6 +9,7 @@ export default async function handler(req, res) {
   res.setHeader("Allow", "GET, POST");
   return res.status(405).send("Method not allowed");
 }
+const ALLOWED_ANSWERS = ["Yes", "No"];
 
 async function recordResponse(req, res, sql) {
   const surveyId = Number(req.query.surveyId);
@@ -18,16 +19,16 @@ async function recordResponse(req, res, sql) {
     return res.status(400).send("Invalid survey response");
   }
 
+  if (!ALLOWED_ANSWERS.includes(answer)) {
+    return res.status(400).send("Invalid answer");
+  }
+
   try {
     const [survey] = await sql`
-      SELECT title FROM surveys WHERE id = ${surveyId}
+      SELECT id FROM surveys WHERE id = ${surveyId}
     `;
 
     if (!survey) return res.status(404).send("Survey not found");
-
-    if (!Array.isArray(survey.title) || !survey.title.includes(answer)) {
-      return res.status(400).send("Invalid answer");
-    }
 
     await sql`
       INSERT INTO survey_responses (survey_id, answer)
