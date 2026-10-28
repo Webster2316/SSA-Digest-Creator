@@ -20,7 +20,7 @@ async function recordResponse(req, res, sql) {
 
   try {
     const [survey] = await sql`
-      SELECT choices FROM surveys WHERE id = ${surveyId}
+      SELECT title FROM surveys WHERE id = ${surveyId}
     `;
 
     if (!survey) return res.status(404).send("Survey not found");
