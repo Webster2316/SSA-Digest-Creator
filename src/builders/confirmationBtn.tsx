@@ -1,5 +1,6 @@
 import {useState, useEffect} from "react";
 import {Plus, Trash2, Save, Loader2 } from "lucide-react"
+import NamePopUp from "../../shared/NamePopUpModal";
 
 interface Buttons {
   id: string,
@@ -108,6 +109,9 @@ export default function confirmationBtns() {
 const [btn, setBtn] = useState<Buttons[]>([]);
 const [loaded, setLoaded] = useState(false);
 const [loadFailed, setLoadFailed] = useState(false);
+const [saveStatus, setSaveStatus] = useState("idle");
+const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+const [buttonHtml, setButtonHtml] = useState();
 
 
 /* ---------------- load ---------------- */
@@ -178,14 +182,49 @@ useEffect(() => {
 }, [loaded, btn]);
 
 
-const addBtn = (title: string) => {
-setBtn((prev) => [...prev, title])
+const addBtn = async (title: string) => {
+  setGenerating(true);
+
+  try {
+    // 1. Create survey in Neon
+    const res = await fetch("/api/surveys", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to create survey");
+    }
+
+    // 2. Build button configuration using the real database ID
+    const newBtn: Buttons = {
+      id: String(data.surveyId),
+      title: title.trim(),
+    };
+
+    setBtn((prev) => [...prev, newBtn]);
+
+  
+    setButtonHtml(buildBtns(newBtn));
+
+
+    setIsNameModalOpen(false);
+  } catch (error) {
+    console.error("Failed to generate buttons:", error);
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to generate buttons"
+    );
+  } finally {
+    setGenerating(false);
+  }
 };
-const deleteBtns = (event: Buttons) =>
-confirmDelete({
-  itemName: event.title,
-  action: () => setEvents((prev) => prev.filter((item) => item.id !== event.id)),
-});
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
@@ -201,6 +240,23 @@ confirmDelete({
             <SaveIndicator status={saveStatus} />
           </div>
         </div>
+        <button
+                  type="button"
+                  onClick={() => setIsNameModalOpen(true)}
+                  className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
+                >
+                  <Plus size={16} /> Create COnfirmation Btn
+                </button>
+                <NamePopUp
+                  isOpen={isNameModalOpen}
+                  onClose={() => setIsNameModalOpen(false)}
+                  onAdd={addBtns}
+                  heading="Create New Confirmation Button"
+                  fieldLabel="Event Name"
+                  placeholder="Ai Seminar"
+                  buttonText="generate Button"
+                />
+
       </div>
    </div>
 
