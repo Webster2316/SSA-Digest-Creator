@@ -1,10 +1,16 @@
 import {useState, useEffect} from "react";
 import {Plus, Trash2, Save, Loader2 } from "lucide-react"
 import NamePopUp from "../shared/NamePopUpModal";
+import useConfirmDelete from "../shared/useConfirmDelete";
+
 
 interface Buttons {
   id: string,
   title: string,
+}
+
+function viewData() {
+
 }
 
 function getTimeLabel() {
@@ -153,6 +159,7 @@ const [saveStatus, setSaveStatus] = useState("idle");
 const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 const [buttonHtml, setButtonHtml] = useState("");
 const [generating, setGenerating] = useState(false);
+const { confirmDelete, deleteModal } = useConfirmDelete();
 
 const handleGetCode = async (button: Buttons) => {
   const html = buildBtns(button);
@@ -277,6 +284,14 @@ const addBtn = async (title: string) => {
   }
 };
 
+const deleteBtn = (button: string) => {
+confirmDelete({
+  itemType:"button",
+  itemName: button.title,
+  action: () => setEvents((prev) => prev.filter((item) => item.id !== button.id)),
+})
+}
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
@@ -298,9 +313,7 @@ const addBtn = async (title: string) => {
     key={button.id}
     button={button}
     onGetCode={handleGetCode}
-    onDelete={() =>
-      setBtn((prev) => prev.filter((item) => item.id !== button.id))
-    }
+    onDelete={() => deleteBtn(ev)}
   />
 ))}
         <button
