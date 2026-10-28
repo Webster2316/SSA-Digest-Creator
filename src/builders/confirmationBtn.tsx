@@ -1,6 +1,6 @@
 import {useState, useEffect} from "react";
 import {Plus, Trash2, Save, Loader2 } from "lucide-react"
-import NamePopUp from "../../shared/NamePopUpModal";
+import NamePopUp from "../shared/NamePopUpModal";
 
 interface Buttons {
   id: string,
