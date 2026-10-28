@@ -7,6 +7,9 @@ interface Buttons {
   title: string,
 }
 
+function getTimeLabel() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 function buildBtns(event: Buttons) {
 return `
 <table role="presentation" cellpadding="0" cellspacing="0" border="0"
@@ -111,7 +114,8 @@ const [loaded, setLoaded] = useState(false);
 const [loadFailed, setLoadFailed] = useState(false);
 const [saveStatus, setSaveStatus] = useState("idle");
 const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-const [buttonHtml, setButtonHtml] = useState();
+const [buttonHtml, setButtonHtml] = useState("");
+const [generating, setGenerating] = useState(false);
 
 
 /* ---------------- load ---------------- */
@@ -245,7 +249,7 @@ const addBtn = async (title: string) => {
                   onClick={() => setIsNameModalOpen(true)}
                   className="mt-3 flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
                 >
-                  <Plus size={16} /> Create COnfirmation Btn
+                  <Plus size={16} /> Create Confirmation Btn
                 </button>
                 <NamePopUp
                   isOpen={isNameModalOpen}
@@ -253,7 +257,7 @@ const addBtn = async (title: string) => {
                   onAdd={addBtn}
                   heading="Create New Confirmation Button"
                   fieldLabel="Event Name"
-                  placeholder="Ai Seminar"
+                  placeholder="e.g Ai Seminar"
                   buttonText="generate Button"
                 />
 
