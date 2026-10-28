@@ -284,11 +284,11 @@ const addBtn = async (title: string) => {
   }
 };
 
-const deleteBtn = (button: string) => {
+const deleteBtn = (button: Button) => {
 confirmDelete({
   itemType:"button",
   itemName: button.title,
-  action: () => setEvents((prev) => prev.filter((item) => item.id !== button.id)),
+  action: () => setBtn((prev) => prev.filter((item) => item.id !== button.id)),
 })
 }
 
