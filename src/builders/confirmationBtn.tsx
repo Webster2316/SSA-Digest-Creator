@@ -108,6 +108,43 @@ function SaveIndicator({ status }: { status: string }) {
   if (status === "error") return <span className="text-red-600">Save failed</span>;
   return null;
 }
+function ItemRow({
+  button,
+  onGetCode,
+  onDelete,
+}: {
+  button: Buttons;
+  onGetCode: (button: Buttons) => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-center justify-between">
+      <span className="text-sm font-semibold text-gray-800">
+        {button.title || "Untitled Event"}
+      </span>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onGetCode(button)}
+          className="px-3 py-1.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 rounded-md"
+        >
+          Copy HTML
+        </button>
+
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+          title="Delete event"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function confirmationBtns() {
 const [btn, setBtn] = useState<Buttons[]>([]);
 const [loaded, setLoaded] = useState(false);
@@ -117,7 +154,17 @@ const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 const [buttonHtml, setButtonHtml] = useState("");
 const [generating, setGenerating] = useState(false);
 
+const handleGetCode = async (button: Buttons) => {
+  const html = buildBtns(button);
 
+  try {
+    await navigator.clipboard.writeText(html);
+    alert("HTML copied to clipboard!");
+  } catch (error) {
+    console.error("Failed to copy HTML:", error);
+    alert("Unable to copy HTML. Please try again.");
+  }
+};
 /* ---------------- load ---------------- */
 useEffect(() => {
   let cancelled = false;
@@ -229,6 +276,7 @@ const addBtn = async (title: string) => {
     setGenerating(false);
   }
 };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
@@ -244,6 +292,17 @@ const addBtn = async (title: string) => {
             <SaveIndicator status={saveStatus} />
           </div>
         </div>
+
+        {btn.map((button) => (
+  <ItemRow
+    key={button.id}
+    button={button}
+    onGetCode={handleGetCode}
+    onDelete={() =>
+      setBtn((prev) => prev.filter((item) => item.id !== button.id))
+    }
+  />
+))}
         <button
                   type="button"
                   onClick={() => setIsNameModalOpen(true)}
