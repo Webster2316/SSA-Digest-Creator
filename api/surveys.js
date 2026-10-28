@@ -25,7 +25,7 @@ async function recordResponse(req, res, sql) {
 
     if (!survey) return res.status(404).send("Survey not found");
 
-    if (!Array.isArray(survey.choices) || !survey.choices.includes(answer)) {
+    if (!Array.isArray(survey.title) || !survey.title.includes(answer)) {
       return res.status(400).send("Invalid answer");
     }
 
