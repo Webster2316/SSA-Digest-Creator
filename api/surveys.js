@@ -5,6 +5,7 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") return recordResponse(req, res, sql);
   if (req.method === "POST") return createSurvey(req, res, sql);
+  if (req.method === "DELETE") return deleteSurvey(req.res, sql); 
 
   res.setHeader("Allow", "GET, POST");
   return res.status(405).send("Method not allowed");
@@ -68,4 +69,38 @@ async function createSurvey(req, res, sql) {
     console.error("Could not create survey:", error);
     return res.status(500).json({ error: error.message });
   }
+}
+
+async function deleteSurvey(req,res,sql) {
+    const surveyId = Number(req.query.surveyId);
+
+    if (!Number.isSafeInteger(surveyId) || surveyId < 1) {
+        return res.status(400).send("Missing or invalid survey ID");
+      }
+    
+try {
+ await sql`
+      DELETE FROM survey_responses
+      WHERE survey_id = ${surveyId}
+    `;
+
+    // Then delete the survey
+    const result = await sql`
+      DELETE FROM surveys
+      WHERE id = ${surveyId}
+      RETURNING id
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).send("Survey not found");
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "Survey deleted successfully",
+      });
+} catch(error) {
+    console.error("Could not save survey response:", error);
+    return res.status(500).send("Could not save your response. Please try again.");
+}
 }
