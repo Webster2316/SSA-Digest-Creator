@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") return recordResponse(req, res, sql);
   if (req.method === "POST") return createSurvey(req, res, sql);
-  if (req.method === "DELETE") return deleteSurvey(req.res, sql); 
+  if (req.method === "DELETE") return deleteSurvey(req, res, sql); 
 
   res.setHeader("Allow", "GET, POST");
   return res.status(405).send("Method not allowed");
