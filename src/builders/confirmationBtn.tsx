@@ -252,7 +252,7 @@ useEffect(() => {
 
 if (viewingData) {
   return (
-    <CData
+    <Data
       button={viewingData}
       onBack={() => setViewingData(null)}
     />
