@@ -1,5 +1,5 @@
 import { useEffect,useState } from "react";
-import { CalendarDays, GraduationCap, BotMessageSquare, Martini, Settings, MessageSquareQuote, UserShield, ChartColumnIncreasing, StarCheck } from "lucide-react";
+import { CalendarDays, GraduationCap, BotMessageSquare, Martini,MessageCircleDashedCheck, Settings, MessageSquareQuote, UserShield, StarCheck } from "lucide-react";
 import WeeklyDigestBuilder from "./builders/WeeklyDigestBuilder";
 import TrainingBulletinBuilder from "./builders/TrainingBulletinBuilder";
 import AIBulletinBuilder from "./builders/AIBulletinBuilder";
@@ -9,8 +9,9 @@ import Socials from "./builders/postBuilder";
 import AdminBrief from "./builders/adminProgram/ProgramHome";
 import Surveys from "./builders/surveys/Surveys";
 import Sponsorships from "./builders/Sponsors";
+import Buttons from "./builders/confirmationBtn"; 
 
-type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief" | "sponsors" | "surveys";
+type BuilderKey = "weeklyDigest" | "trainingBulletin" | "AIBulletin" | "events" | "dataManagement" | "postBuilder" | "adminBrief" | "sponsors" | "buttons";
 const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "weeklyDigest", label: "Weekly Digest", icon: CalendarDays },
   { key: "trainingBulletin", label: "Training Calendar", icon: GraduationCap },
@@ -18,7 +19,7 @@ const builders: { key: BuilderKey; label: string; icon: any }[] = [
   { key: "events", label: "Events", icon: Martini},
   {key: "postBuilder", label: "Socials", icon: MessageSquareQuote},
   {key: "adminBrief", label: "Admin Brief", icon: UserShield},
-//  {key: "surveys", label: "Surveys & Polls", icon: ChartColumnIncreasing},
+{key: "buttons", label: "RSVP Btn", icon: MessageCircleDashedCheck},
   {key: "sponsors", label: "Sponsors", icon: StarCheck},
 ];
 
@@ -125,7 +126,7 @@ useEffect(() => {
         {builder === "dataManagement" && <DataManagement />}
         {builder === "postBuilder" && <Socials />} 
         {builder === "adminBrief" && <AdminBrief />}
-        {/* {builder === "surveys" && <Surveys />} */}
+        {builder === "buttons" && <Buttons />}
         {builder === "sponsors" && <Sponsorships />} 
      
       </div>
