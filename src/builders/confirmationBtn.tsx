@@ -250,7 +250,7 @@ const addBtn = async (title: string) => {
                 <NamePopUp
                   isOpen={isNameModalOpen}
                   onClose={() => setIsNameModalOpen(false)}
-                  onAdd={addBtns}
+                  onAdd={addBtn}
                   heading="Create New Confirmation Button"
                   fieldLabel="Event Name"
                   placeholder="Ai Seminar"
