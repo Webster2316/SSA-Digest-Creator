@@ -334,6 +334,7 @@ confirmDelete({
                 />
 
       </div>
+      {deleteModal}
    </div>
 
 
