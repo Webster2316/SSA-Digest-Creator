@@ -10,9 +10,6 @@ interface Buttons {
   title: string,
 }
 
-function viewData() {
-
-}
 
 function getTimeLabel() {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
