@@ -9,6 +9,7 @@ interface Buttons {
 
 interface ResponseData {
   answer: "Yes" | "No";
+  email: string;
 }
 
 interface TrackingData {
@@ -163,6 +164,9 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
                     >
                       <span className="text-sm text-gray-700">
                         Response {index + 1}
+                      </span>
+                      <span className="text-sm text-gray-700">
+                        {response.email}
                       </span>
 
                       <span
