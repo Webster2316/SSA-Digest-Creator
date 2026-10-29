@@ -24,10 +24,7 @@ interface ConfirmationDataProps {
   onBack: () => void;
 }
 
-export default function data({
-  button,
-  onBack,
-}: ConfirmationDataProps) {
+export default function data({ button, onBack}: ConfirmationDataProps) {
   const [data, setData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -85,7 +82,7 @@ export default function data({
           className="mb-4 flex items-center gap-2 text-sm font-medium text-indigo-700 hover:text-indigo-900"
         >
           <ArrowLeft size={16} />
-          Back to Confirmation Buttons
+          Back to generator
         </button>
 
         <div className="mb-6">
