@@ -1,6 +1,12 @@
-
-import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Users, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import {
+  ArrowLeft,
+  Loader2,
+  Users,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+} from "lucide-react";
 
 interface Buttons {
   id: string;
@@ -25,58 +31,48 @@ interface ConfirmationDataProps {
   onBack: () => void;
 }
 
-export default function data({ button, onBack}: ConfirmationDataProps) {
+export default function Data({
+  button,
+  onBack,
+}: ConfirmationDataProps) {
   const [data, setData] = useState<TrackingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadResponses = useCallback(async () => {
+    setLoading(true);
+    setError("");
 
-    async function loadResponses() {
-      setLoading(true);
-      setError("");
+    try {
+      const res = await fetch(
+        `/api/surveys?view=responses&surveyId=${encodeURIComponent(button.id)}`
+      );
 
-      try {
-        const res = await fetch(
-          `/api/surveys?view=responses&surveyId=${encodeURIComponent(button.id)}`
-        );
+      const result = await res.json();
 
-        const result = await res.json();
-
-        if (!res.ok) {
-          throw new Error(result.error || "Failed to load responses");
-        }
-
-        if (!cancelled) {
-          setData(result);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load responses"
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (!res.ok) {
+        throw new Error(result.error || "Failed to load responses");
       }
+
+      setData(result);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load responses"
+      );
+    } finally {
+      setLoading(false);
     }
-
-    loadResponses();
-
-    return () => {
-      cancelled = true;
-    };
   }, [button.id]);
+
+  useEffect(() => {
+    loadResponses();
+  }, [loadResponses]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="mx-auto max-w-4xl">
-
         <button
           type="button"
           onClick={onBack}
@@ -87,18 +83,27 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
         </button>
 
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-indigo-900">
-            Response Tracking
-          </h1>
-          <button
-  type="button"
-  onClick={() => window.location.reload()}
-  className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
-  title="Refresh page"
-  aria-label="Refresh page"
->
-  <RefreshCw size={18} />
-</button>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-indigo-900">
+              Response Tracking
+            </h1>
+
+            <button
+              type="button"
+              onClick={loadResponses}
+              disabled={loading}
+              className="flex items-center gap-2 rounded-md p-2 text-gray-500 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Refresh responses"
+              aria-label="Refresh responses"
+            >
+              <RefreshCw
+                size={18}
+                className={loading ? "animate-spin" : ""}
+              />
+              <span className="text-sm">Refresh</span>
+            </button>
+          </div>
+
           <p className="mt-1 text-sm text-gray-500">
             {button.title}
           </p>
@@ -113,14 +118,20 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
 
         {!loading && error && (
           <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={loadResponses}
+              className="mt-2 font-semibold underline"
+            >
+              Try again
+            </button>
           </div>
         )}
 
         {!loading && !error && data && (
           <>
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-
               <div className="rounded-lg border bg-white p-5">
                 <div className="mb-2 flex items-center gap-2 text-gray-500">
                   <Users size={18} />
@@ -150,7 +161,6 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
                   {data.noCount}
                 </p>
               </div>
-
             </div>
 
             <div className="overflow-hidden rounded-lg border bg-white">
@@ -169,12 +179,13 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
                   {data.responses.map((response, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between px-4 py-3"
+                      className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
                     >
                       <span className="text-sm text-gray-700">
                         Response {index + 1}
                       </span>
-                      <span className="text-sm text-gray-700">
+
+                      <span className="break-all text-sm text-gray-700">
                         {response.email}
                       </span>
 
