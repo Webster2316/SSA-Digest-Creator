@@ -69,11 +69,11 @@ async function recordResponse(req, res, sql) {
         <body style="font-family:Arial,sans-serif;padding:32px;max-width:480px;margin:auto">
 
         <div style="margin-bottom:24px;text-align:left;">
-          <img
-            src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
-            alt="SSA Logo"
-            style="display:block;width:auto;height:48px;max-width:180px;margin:0 auto 20px;"
-          />
+        <img
+        src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+        alt="SSA Logo"
+        style="display:block;height:32px;width:auto;max-width:180px;margin:0 0 20px 0;"
+      />
       
           <h2 style="margin:0 0 12px;color:#241e42;font-size:24px;">
             Confirm Your Attendance
