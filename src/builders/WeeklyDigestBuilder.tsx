@@ -27,17 +27,7 @@ const badgePresets = {
   Info: "#308acf",
 };
 
-const defaultEvents = [
-  {
-    id: uid(), day: "3", month: "Jul",
-    title: "ICS - Efficient and Quiet Technologies for Ships",
-    location: "Online", timeText: "12:00 – 13:00 BST | 13:00 – 14:00 CET",
-    tags: "All Members, Webinar",
-    venue: "Online",
-    regText: "Registration here", regLink: "https://register.gotowebinar.com/",
-    description: "Efficient and quiet technologies for ships are becoming increasingly important as the industry seeks to improve performance and reduce environmental impact. Join us for this insightful discussion highlighting the opportunities available to readily achieve reductions in underwater radiated noise as a co-benefit of efficiency improvements. The session will place particular emphasis on propeller design and operation, highlighting the care needed to improve efficiency while simultaneously reducing noise."
-  }
-];
+
 
 //NEVER CHANGE
 const defaultAction = [
@@ -60,41 +50,6 @@ const defaultNoting = [
     content: "<p><strong>Action Required:</strong> ACTION TO EDIT</p><p><strong>Background:</strong> Background details</p>"
   }
 ];
-
-function buildEventBlock(ev) {
-  return `
-  <tr data-block="event" data-id="${esc(ev.id)}">
-    <td style="border-bottom:1px solid #e8e3da;padding:0;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-        <tr>
-          <td class="pad-sides" style="padding:14px 28px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-              <tr>
-                <td class="event-date-cell" width="52" valign="top" style="background-color:#281e7e;text-align:center;padding:6px 4px;width:52px;">
-                  <span data-f="day" style="display:block;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:20px;font-weight:700;color:#ffffff;line-height:1;">${esc(ev.day)}</span>
-                  <span data-f="month" style="display:block;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;margin-top:3px;">${esc(ev.month)}</span>
-                </td>
-                <td class="event-spacer-cell" width="16">&nbsp;</td>
-                <td class="event-title-cell" valign="top">
-                  <p data-f="title" style="margin:0 0 3px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;font-weight:700;color:#281e7e;line-height:1.3;">${esc(ev.title)}</p>
-                  <p style="margin:0;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:12px;color:#000000;letter-spacing:0.5px;"><span data-f="location">${esc(ev.location)}</span> &nbsp;&#183;&nbsp; <span data-f="time">${esc(ev.timeText)}</span></p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <tr>
-          <td class="body-indented pad-sides" style="padding:0 28px 16px 96px;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14px;line-height:1.7;color:#000000;border-top:1px solid #e8e3da;word-wrap:break-word;word-break:break-word;">
-            <p data-f="tags" style="margin:10px 0 8px;">${tagPills(ev.tags)}</p>
-            <p style="margin:0 0 6px;${ev.venue ? "" : "display:none;"}"><strong>Venue:</strong> <span data-f="venue">${esc(ev.venue)}</span></p>
-            <p style="margin:0 0 6px;${ev.regLink ? "" : "display:none;"}">Registration: <a data-f="reg-link" href="${esc(ev.regLink)}" style="color:#81bce9;text-decoration:underline;">${esc(ev.regText || "Register here")}</a></p>
-            <p data-f="description" style="margin:0;${ev.description ? "" : "display:none;"}">${esc(ev.description)}</p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>`;
-}
 
 function buildActionBlock(it) {
   const docs = it.docs || [];
@@ -163,7 +118,7 @@ function buildNotingBlock(it) {
   </tr>`;
 }
 
-function buildFullHTML({ issueRange, events, actionItems, notingItems }) {
+function buildFullHTML({ issueRange, actionItems, notingItems }) {
   return `<!doctype html>
 <html lang="en" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -179,9 +134,6 @@ body{margin:0!important;padding:0!important;background-color:#f4f1ec;}
 @media only screen and (max-width:620px){
 .email-container{width:100%!important;max-width:100%!important;}
 .header-img{width:100%!important;height:auto!important;}
-.event-date-cell{display:block!important;width:100%!important;text-align:left!important;padding-bottom:8px!important;}
-.event-spacer-cell{display:none!important;}
-.event-title-cell{display:block!important;width:100%!important;}
 .body-indented{padding-left:28px!important;}
 .badge-cell{display:block!important;margin-bottom:6px!important;}
 .pad-sides{padding-left:16px!important;padding-right:16px!important;}
@@ -198,10 +150,6 @@ body{margin:0!important;padding:0!important;background-color:#f4f1ec;}
 </td></tr>
 <tr><td data-f="issue-range" style="background-color:#1b76bc;padding:12px 24px;text-align:right;font-family:'Yu Gothic UI',Arial,sans-serif;font-size:10pt;letter-spacing:2px;text-transform:uppercase;color:#ffffff;">${esc(issueRange)}</td></tr>
 
-<tr><td style="background-color:#281e7e;padding:14px 28px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Upcoming Events for the Next Three Months</td></tr></table>
-</td></tr>
-${events.map(buildEventBlock).join("")}
 
 <tr><td style="background-color:#281e7e;padding:14px 28px;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td align="center" style="font-family:'Yu Gothic UI',Arial,sans-serif;font-size:14pt;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#f9f6ff;">Papers, Circulars &amp; Surveys</td></tr></table>
@@ -248,24 +196,6 @@ function parseHtmlToState(htmlStr) {
   const issueRangeEl = doc.querySelector('[data-f="issue-range"]');
   const issueRange = issueRangeEl ? issueRangeEl.textContent.trim() : "";
 
-  const events = Array.from(doc.querySelectorAll('[data-block="event"]')).map((block) => {
-    const q = (f) => block.querySelector(`[data-f="${f}"]`);
-    const regA = q("reg-link");
-    return {
-      id: block.getAttribute("data-id") || uid(),
-      day: q("day")?.textContent.trim() || "",
-      month: q("month")?.textContent.trim() || "",
-      title: q("title")?.textContent.trim() || "",
-      location: q("location")?.textContent.trim() || "",
-      timeText: q("time")?.textContent.trim() || "",
-      tags: parseTagsContainer(q("tags")),
-      venue: q("venue")?.textContent.trim() || "",
-      regLink: regA ? (regA.getAttribute("href") || "") : "",
-      regText: regA ? regA.textContent.trim() : "",
-      description: q("description")?.textContent.trim() || "",
-    };
-  });
-
   const actionItems = Array.from(doc.querySelectorAll('[data-block="action"]')).map((block) => {
     const q = (f) => block.querySelector(`[data-f="${f}"]`);
     const badgeEl = q("badge");
@@ -306,7 +236,7 @@ function parseHtmlToState(htmlStr) {
     };
   });
 
-  return { issueRange, events, actionItems, notingItems };
+  return { issueRange, actionItems, notingItems };
 }
 function getDateTime() {
   return new Date().toLocaleTimeString([], {
@@ -358,9 +288,8 @@ function SortableCard({
 }
 
 export default function WeeklyDigestBuilder() {
-  const [tab, setTab] = useState("events");
+  const [tab, setTab] = useState("action");
   const [issueRange, setIssueRange] = useState("Issue: ");
-  const [events, setEvents] = useState(defaultEvents);
   const [actionItems, setActionItems] = useState(defaultAction);
   const [notingItems, setNotingItems] = useState(defaultNoting);
   const [loaded, setLoaded] = useState(false);
@@ -386,10 +315,7 @@ export default function WeeklyDigestBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueRange) setIssueRange(data.issueRange);
-            if (data.events) setEvents(data.events);
-            if (data.collapsedItem) {
-              setCollapsedItem(data.collapsedItem);
-            }
+           
             if (data.actionItems) {
               const migrated = data.actionItems.map((it) => {
                 if (it.docs) return { deadline: "", ...it };
@@ -420,7 +346,7 @@ export default function WeeklyDigestBuilder() {
         const res = await fetch("/api/save-digest?key=ssa-digest-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ issueRange, events, actionItems, notingItems, rawHtmlEdit, collapsedItem, builtHtml: html }),
+          body: JSON.stringify({ issueRange, actionItems, notingItems, rawHtmlEdit, collapsedItem, builtHtml: html }),
         });
         if (res.ok) {
   setSaveStatus(`Saved at ${getDateTime()}`);
@@ -433,7 +359,7 @@ export default function WeeklyDigestBuilder() {
       }
     }, 700);
     return () => clearTimeout(t);
-  }, [issueRange, events, actionItems, notingItems, rawHtmlEdit, collapsedItem, loaded]);
+  }, [issueRange,actionItems, notingItems, rawHtmlEdit, collapsedItem, loaded]);
 
   async function replaceRecentIssue() {
     if (!window.confirm(
@@ -493,7 +419,7 @@ export default function WeeklyDigestBuilder() {
   };
 
   //ADD HTML
-  const generatedHtml = buildFullHTML({ issueRange, events, actionItems, notingItems });
+  const generatedHtml = buildFullHTML({ issueRange,actionItems, notingItems });
   const isEdited = rawHtmlEdit !== null;
   const html = isEdited ? rawHtmlEdit : generatedHtml;
 
@@ -574,13 +500,13 @@ requestAnimationFrame(() => {
   const handleApplyHtmlToFields = () => {
     try {
       const parsed = parseHtmlToState(html);
-      const foundAnything = parsed.events.length || parsed.actionItems.length || parsed.notingItems.length || parsed.issueRange;
+      const foundAnything = parsed.actionItems.length || parsed.notingItems.length || parsed.issueRange;
       if (!foundAnything) {
         setSyncMessage({ type: "error", text: "Couldn't find any recognizable fields in that HTML — the data markers may have been removed or the structure changed too much." });
         return;
       }
       setIssueRange(parsed.issueRange || issueRange);
-      setEvents(parsed.events);
+  
       setActionItems(parsed.actionItems);
       setNotingItems(parsed.notingItems);
       setRawHtmlEdit(null);
@@ -647,7 +573,7 @@ requestAnimationFrame(() => {
   <>
     <div className="flex items-center justify-between border-b border-gray-200 bg-white rounded-t-lg px-2">
       <div className="flex">
-        {tabBtn("events", "Events", CalendarDays)}
+       
         {tabBtn("action", "For Action", FileText)}
         {tabBtn("noting", "For Noting", FileText)}
         {tabBtn("preview", "Preview & Export", Eye)}
@@ -661,282 +587,7 @@ requestAnimationFrame(() => {
     </div>
 
     <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 p-4">
-      {tab === "events" && (
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd(setEvents)}
-        >
-          <SortableContext
-            items={events.map((ev) => ev.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-4">
-              {events.map((ev, i) => (
-                <SortableCard key={ev.id} id={ev.id}>
-                  {(dragHandle) => (
-                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                      <div className="flex justify-between items-center mb-2 gap-2">
-                        <div className="flex items-center gap-1 min-w-0">
-                          {dragHandle}
-                          <span className="text-xs font-semibold text-indigo-700 truncate">
-                            Event {i + 1}: {ev.title}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => toggleCollapsed(ev.id)}
-                            className="px-2 py-1 text-xs rounded hover:bg-gray-100 text-gray-500"
-                          >
-                            {collapsedItem[ev.id] ? "Expand" : "Collapse"}
-                          </button>
-
-                          <MoveButtons
-                            index={i}
-                            length={events.length}
-                            onMove={move(events, setEvents)}
-                            onRemove={() =>
-                              confirmDelete({
-                                itemType: "event",
-                                itemName: ev.title,
-                                action: () =>
-                                  setEvents((prev) =>
-                                    prev.filter((e) => e.id !== ev.id)
-                                  ),
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {!collapsedItem[ev.id] && (
-                        <>
-                          <div className="grid grid-cols-2 gap-3">
-                            <Field label="Day">
-                              <input
-                                className={inputCls}
-                                value={ev.day}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, day: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                            <Field label="Month">
-                              <input
-                                className={inputCls}
-                                value={ev.month}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, month: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                          </div>
-
-                          <Field label="Title">
-                            <div className="flex items-center gap-2">
-                              <input
-                                ref={(el) => {
-                                  titleRefs.current[ev.id] = el;
-                                }}
-                                className={inputCls}
-                                value={ev.title}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, title: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-
-                              <button
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()}
-                                onClick={() =>
-                                  capitalizeTitleSelection(
-                                    ev.id,
-                                    ev.title,
-                                    (newTitle) =>
-                                      setEvents(
-                                        events.map((x) =>
-                                          x.id === ev.id
-                                            ? { ...x, title: newTitle }
-                                            : x
-                                        )
-                                      )
-                                  )
-                                }
-                                className="shrink-0 h-9 px-3 border border-gray-300 rounded bg-white text-sm font-semibold text-gray-600 hover:bg-gray-50 hover:text-indigo-700"
-                                title="Capitalise selected text"
-                              >
-                                Aa
-                              </button>
-                            </div>
-                          </Field>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <Field label="Location">
-                              <input
-                                className={inputCls}
-                                value={ev.location}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, location: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                            <Field label="Time">
-                              <input
-                                className={inputCls}
-                                value={ev.timeText}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, timeText: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                          </div>
-
-                          <Field label="Tags (comma separated)">
-                            <input
-                              className={inputCls}
-                              value={ev.tags}
-                              onChange={(e) =>
-                                setEvents(
-                                  events.map((x) =>
-                                    x.id === ev.id
-                                      ? { ...x, tags: e.target.value }
-                                      : x
-                                  )
-                                )
-                              }
-                            />
-                          </Field>
-
-                          <Field label="Venue">
-                            <input
-                              className={inputCls}
-                              value={ev.venue}
-                              onChange={(e) =>
-                                setEvents(
-                                  events.map((x) =>
-                                    x.id === ev.id
-                                      ? { ...x, venue: e.target.value }
-                                      : x
-                                  )
-                                )
-                              }
-                            />
-                          </Field>
-
-                          <div className="grid grid-cols-2 gap-3">
-                            <Field label="Registration Link Text">
-                              <input
-                                className={inputCls}
-                                value={ev.regText}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, regText: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                            <Field label="Registration Link URL">
-                              <input
-                                className={inputCls}
-                                value={ev.regLink}
-                                onChange={(e) =>
-                                  setEvents(
-                                    events.map((x) =>
-                                      x.id === ev.id
-                                        ? { ...x, regLink: e.target.value }
-                                        : x
-                                    )
-                                  )
-                                }
-                              />
-                            </Field>
-                          </div>
-
-                          <Field label="Description">
-                            <textarea
-                              className={inputCls}
-                              rows={3}
-                              value={ev.description}
-                              onChange={(e) =>
-                                setEvents(
-                                  events.map((x) =>
-                                    x.id === ev.id
-                                      ? { ...x, description: e.target.value }
-                                      : x
-                                  )
-                                )
-                              }
-                            />
-                          </Field>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </SortableCard>
-              ))}
-
-              <button
-                onClick={() =>
-                  setEvents([
-                    ...events,
-                    {
-                      id: uid(),
-                      day: "1",
-                      month: "Jan",
-                      title: "New Event",
-                      location: "",
-                      timeText: "",
-                      tags: "All Members",
-                      venue: "",
-                      regText: "",
-                      regLink: "",
-                      description: "",
-                    },
-                  ])
-                }
-                className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900"
-              >
-                <Plus size={16} /> Add Event
-              </button>
-            </div>
-          </SortableContext>
-        </DndContext>
-      )}
+   
 
       {tab === "action" && (
             <DndContext
@@ -1240,7 +891,7 @@ requestAnimationFrame(() => {
           </div>
           {isEdited && !syncMessage && (
             <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-3">
-              Showing your manual edits. The Events / For Action / For Noting tabs won't reflect this until you click <strong>Apply HTML changes to fields</strong> — text edits inside existing fields sync fine, but new blocks you hand-write from scratch won't be recognized.
+              Showing your manual edits. For Action / For Noting tabs won't reflect this until you click <strong>Apply HTML changes to fields</strong> — text edits inside existing fields sync fine, but new blocks you hand-write from scratch won't be recognized.
             </p>
           )}
           {syncMessage && (
