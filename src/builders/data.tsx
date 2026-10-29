@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2, Users, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Loader2, Users, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 
 interface Buttons {
   id: string;
@@ -90,6 +90,15 @@ export default function data({ button, onBack}: ConfirmationDataProps) {
           <h1 className="text-xl font-bold text-indigo-900">
             Response Tracking
           </h1>
+          <button
+  type="button"
+  onClick={() => window.location.reload()}
+  className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+  title="Refresh page"
+  aria-label="Refresh page"
+>
+  <RefreshCw size={18} />
+</button>
           <p className="mt-1 text-sm text-gray-500">
             {button.title}
           </p>
