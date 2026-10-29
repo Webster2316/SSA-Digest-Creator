@@ -76,6 +76,15 @@ async function recordResponse(req, res, sql) {
           <form method="POST" action="/api/surveys">
             <input type="hidden" name="surveyId" value="${surveyId}">
             <input type="hidden" name="answer" value="${answer}">
+            <div className="flex items-center gap-3 mb-4">  
+            <img
+              src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
+              alt="SSA Logo"
+              className="h-8 w-auto"
+            />
+            <h1 className="text-xl font-bold text-indigo-900">Confirmation form</h1>
+          </div>
+  
     
             <label for="email">Email address</label>
             <input
