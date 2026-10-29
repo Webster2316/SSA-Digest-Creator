@@ -64,11 +64,11 @@ async function recordResponse(req, res, sql) {
       <!doctype html>
       <html>
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1">c
+          <meta name="viewport" content="width=device-width, initial-scale=1">
         </head>
         <body style="font-family:Arial,sans-serif;padding:32px;max-width:480px;margin:auto">
 
-        <div style="margin-bottom:24px;text-align:center;">
+        <div style="margin-bottom:24px;text-align:right;">
           <img
             src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
             alt="SSA Logo"
