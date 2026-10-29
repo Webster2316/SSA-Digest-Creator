@@ -66,9 +66,9 @@ async function recordResponse(req, res, sql) {
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1">
         </head>
-        <body style="font-family:Arial,sans-serif;padding:32px;max-width:480px;margin:auto">
+        <body style="font-family:Arial,sans-serif;background-color:#ebebeb;padding:32px;max-width:480px;margin:auto">
 
-        <div style="margin-bottom:24px;text-align:left;">
+        <div style="margin-bottom:24px;background-color:#ffffff;text-align:left;">
         <img
         src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
         alt="SSA Logo"
@@ -107,7 +107,7 @@ async function recordResponse(req, res, sql) {
             type="submit"
             style="background:#167D66;color:white;padding:12px 24px;border:0;border-radius:6px;cursor:pointer;font-size:14px;font-weight:bold;width:100%;"
           >
-            Submit Response
+            Submit Confirmation
           </button>
       
         </form>
