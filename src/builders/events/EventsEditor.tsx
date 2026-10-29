@@ -276,7 +276,7 @@ export default function EventsEditor({
 </Field>
               <Field label="Registration Deadline">
                   <input
-                    type="date"
+                    type="text"
                     className={inputCls}
                     value={event.registrationDeadline ?? ""}
                     onChange={(e) =>
