@@ -68,7 +68,7 @@ async function recordResponse(req, res, sql) {
         </head>
         <body style="font-family:Arial,sans-serif;background-color:#ebebeb;padding:32px;max-width:480px;margin:auto">
 
-        <div style="margin-bottom:24px;background-color:#ffffff;text-align:left;">
+        <div style="margin-bottom:24px;text-align:left;">
         <img
         src="https://raw.githubusercontent.com/Webster2316/SSA-Digest-Creator/786c7c8a8272d594be20ad4a9e1a159363ce0002/Logo/SSA%20logo.png"
         alt="SSA Logo"
