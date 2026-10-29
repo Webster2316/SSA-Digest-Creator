@@ -133,7 +133,7 @@ async function submitResponse(req, res, sql) {
       INSERT INTO survey_responses (
         survey_id,
         answer,
-        respondent_email
+        email
       )
       VALUES (
         ${surveyId},
