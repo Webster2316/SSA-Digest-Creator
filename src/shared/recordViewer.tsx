@@ -22,7 +22,7 @@ export default function RecordViewer({ recordId, onBack }: RecordViewerProps) {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/get-record?id=${recordId}`);
+        const res = await fetch(`/api/recordsAndHistory?id=${recordId}`);
         if (res.ok) {
           const data = await res.json();
           setRecord(data);

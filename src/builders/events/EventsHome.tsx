@@ -1269,7 +1269,7 @@ export default function EventsHome() {
   /** Archive an event: save it to history, then remove it from the current list. */
   const completeEvent = async (event: EventItem) => {
     try {
-      const res = await fetch("/api/events-history", {
+      const res = await fetch("/api/recordsAndHistory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1301,7 +1301,7 @@ export default function EventsHome() {
   /** Move an archived event back into the current list (removes the archive entry). */
   const restoreEvent = async (archiveId: number, eventData: unknown) => {
     try {
-      const res = await fetch(`/api/events-history?id=${archiveId}`, { method: "DELETE" });
+      const res = await fetch(`/api/recordsAndHistory?id=${archiveId}`, { method: "DELETE" });
 
       if (!res.ok) {
         console.error("Failed to restore event:", res.status);

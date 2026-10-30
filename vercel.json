@@ -1,7 +1,7 @@
 {
   "crons": [
     {   "path": "/api/autoCleanup", "schedule": "0 16 2 * *" },
-    { "path": "/api/archive-digest?group=weekly", "schedule": "0 16 * * 5" },
-    { "path": "/api/archive-digest?group=monthly", "schedule": "0 16 3 * *" }
+    { "path": "/api/recordsAndHistory?group=weekly", "schedule": "0 16 * * 5" },
+    { "path": "/api/recordsAndHistory?group=monthly", "schedule": "0 16 3 * *" }
   ]
 }

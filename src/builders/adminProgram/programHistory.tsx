@@ -36,7 +36,7 @@ export default function ProgramHistory({
 
       try {
         const res = await fetch(
-          `/api/program-history?key=${encodeURIComponent(builderKey)}`
+          `/api/recordsAndHistory?key=${encodeURIComponent(builderKey)}`
         );
 
         if (res.ok) {
