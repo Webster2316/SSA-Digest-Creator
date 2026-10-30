@@ -41,7 +41,7 @@ async function saveDigest(req, res, sql) {
   if (!key) {
     return res.status(400).json({ error: "Missing key parameter" });
   }
-
+// to update sql 
   try {
     await sql`
       INSERT INTO digest_data (key, value, updated_at)
