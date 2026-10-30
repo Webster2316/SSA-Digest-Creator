@@ -315,7 +315,9 @@ export default function WeeklyDigestBuilder() {
           const data = await res.json();
           if (data) {
             if (data.issueRange) setIssueRange(data.issueRange);
-           
+            if (data.collapsedItem) {
+              setCollapsedItem(data.collapsedItem);
+            }
             if (data.actionItems) {
               const migrated = data.actionItems.map((it) => {
                 if (it.docs) return { deadline: "", ...it };
