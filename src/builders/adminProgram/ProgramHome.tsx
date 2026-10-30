@@ -459,7 +459,7 @@ export default function ProgramHome() {
   
   const handleRestoreEvent = async (archiveId: number, p: any) => {
     try {
-      const res = await fetch(`/api/recordsAndHistory?id=${archiveId}`,
+      const res = await fetch(`/api/recordsAndHistory?type=program&id=${archiveId}`,
       {
         method: "DELETE",
       });
@@ -486,7 +486,7 @@ export default function ProgramHome() {
   
   const completedProgram = async (p: AdminProgramme) => {
     try {
-      const res = await fetch("/api/recordsAndHistory", {
+      const res = await fetch("/api/recordsAndHistory?type=program", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

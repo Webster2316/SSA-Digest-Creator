@@ -22,7 +22,7 @@ export default function RecordsPanel({ builderKey, onSelect }: RecordsPanelProps
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/recordsAndHistorys?key=${builderKey}`);
+        const res = await fetch(`/api/recordsAndHistorys?type=list&key=${builderKey}`);
         if (res.ok) {
           const data = await res.json();
           setRecords(data);

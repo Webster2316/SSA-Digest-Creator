@@ -1,8 +1,8 @@
 //ensures archiving only saves at end of the week/ start of month
 {
   "crons": [
-    { "path": "/api/recordsAndHistory?group=weekly", "schedule": "0 16 * * 5" },
-    { "path": "/api/recordsAndHistory?group=monthly", "schedule": "0 16 3 * *" }
+     { "path": "/api/recordsAndHistory?type=archive&group=weekly", "schedule": "0 16 * * 5" },
+    { "path": "/api/recordsAndHistory?type=archive&group=monthly", "schedule": "0 16 3 * *" }
   ]
   }
 /*   Timing is in UTC */
