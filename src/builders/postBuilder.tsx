@@ -302,7 +302,7 @@ export default function PostBuilder() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/load-digest?key=posts-draft-data");
+        const res = await fetch("/api/digest?key=posts-draft-data");
 
         if (res.ok) {
           const data = await res.json();
@@ -338,7 +338,7 @@ export default function PostBuilder() {
           return;
         }
 
-        const res = await fetch("/api/save-digest?key=posts-draft-data", {
+        const res = await fetch("/api/digest?key=posts-draft-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body,

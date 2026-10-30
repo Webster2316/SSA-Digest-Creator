@@ -1183,7 +1183,7 @@ export default function EventsHome() {
 
     (async () => {
       try {
-        const res = await fetch(`/api/load-digest?key=${EVENTS_BUILDER_KEY}`);
+        const res = await fetch(`/api/digest?key=${EVENTS_BUILDER_KEY}`);
 
         // 404 = nothing saved yet, which is fine. Anything else is a real failure.
         if (!res.ok && res.status !== 404) {
@@ -1221,7 +1221,7 @@ export default function EventsHome() {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/save-digest?key=${EVENTS_BUILDER_KEY}`, {
+        const res = await fetch(`/api/digest?key=${EVENTS_BUILDER_KEY}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

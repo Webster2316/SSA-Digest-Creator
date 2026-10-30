@@ -356,7 +356,7 @@ export default function TrainingBulletinBuilder() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/load-digest?key=training-bulletin-data");
+        const res = await fetch("/api/digest?key=training-bulletin-data");
         if (res.ok) {
           const data = await res.json();
           if (data) {
@@ -386,7 +386,7 @@ export default function TrainingBulletinBuilder() {
     setSaveStatus("saving");
     const t = setTimeout(async () => {
       try {
-        const res = await fetch("/api/save-digest?key=training-bulletin-data", {
+        const res = await fetch("/api/digest?key=training-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ greeting, issueRange, courses, eobItems, collapsedItem, rawHtmlEdit, builtHtml: html }),

@@ -16,6 +16,7 @@ export default async function handler(req, res) {
   res.setHeader("Allow", "GET, POST");
   return res.status(405).send("Method not allowed");
 }
+
 const ALLOWED_ANSWERS = ["Yes", "No"];
 
 

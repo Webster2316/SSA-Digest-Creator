@@ -517,7 +517,7 @@ export default function ProgramHome() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`/api/load-digest?key=${PROGRAM_BUILDER_KEY}`);
+        const res = await fetch(`/api/digest?key=${PROGRAM_BUILDER_KEY}`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data?.programmes)) {
@@ -543,7 +543,7 @@ export default function ProgramHome() {
 
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/save-digest?key=${PROGRAM_BUILDER_KEY}`, {
+        const res = await fetch(`/api/digest?key=${PROGRAM_BUILDER_KEY}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ programmes }),

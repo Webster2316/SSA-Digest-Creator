@@ -771,7 +771,7 @@ export default function AIBulletinBuilder() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/load-digest?key=ai-bulletin-data");
+        const res = await fetch("/api/digest?key=ai-bulletin-data");
         if (res.ok) {
           const data = await res.json();
           if (data) {
@@ -847,7 +847,7 @@ export default function AIBulletinBuilder() {
   
     const t = setTimeout(async () => {
       try {
-        const res = await fetch("/api/save-digest?key=ai-bulletin-data", {
+        const res = await fetch("/api/digest?key=ai-bulletin-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

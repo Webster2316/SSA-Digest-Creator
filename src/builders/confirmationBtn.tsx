@@ -187,7 +187,7 @@ useEffect(() => {
   (async () => {
     try {
       const res = await fetch(
-        `/api/load-digest?key=button-generator`
+        `/api/digest?key=button-generator`
       );
 
       if (!res.ok) {
@@ -225,7 +225,7 @@ useEffect(() => {
   const timer = setTimeout(async () => {
     try {
       const res = await fetch(
-        `/api/save-digest?key=button-generator`,
+        `/api/digest?key=button-generator`,
         {
           method: "POST",
           headers: {
