@@ -353,7 +353,7 @@ const deleteBtn = (button: Buttons) => {
     onDelete={() => deleteBtn(button)}
     onViewData={() => setViewingData(button)}
   />
-))}
+))} 
         <button
                   type="button"
                   onClick={() => setIsNameModalOpen(true)}
