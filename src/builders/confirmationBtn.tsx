@@ -128,22 +128,22 @@ function ItemRow({
       <span className="text-sm font-semibold text-gray-800">
         {button.title || "Untitled Event"}
       </span>
-      <button
-  type="button"
-  onClick={onViewData}
-  className="rounded-md px-3 py-1.5 text-sm font-medium bg-indigo-500 text-indigo-950 hover:bg-indigo-900 text-gray-50"
->
-  View Data
-</button>
+
       <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => onGetCode(button)}
-          className="px-3 py-1.5 text-sm font-medium bg-indigo-500 text-indigo-950 hover:bg-indigo-900 text-gray-50 rounded-md"
+          className="px-3 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-950 hover:bg-indigo-900 hover:text-gray-50 rounded-md"
         >
           Copy HTML
         </button>
-
+        <button
+  type="button"
+  onClick={onViewData}
+  className="rounded-md px-3 py-1.5 text-sm font-medium bg-indigo-50 text-indigo-950 hover:bg-indigo-900 hover:text-gray-50"
+>
+  View Data
+</button>
         <button
           type="button"
           onClick={onDelete}
