@@ -500,7 +500,16 @@ export default function EventsEditor({
                   onChange={(html) => updateEvent({ programme: html })}
                 />
               </Field>
-
+              <Field label="Sponsors">
+  <RichTextEditor
+    value={event.sponsors ?? ""}
+    onChange={(html) =>
+      updateEvent({
+        sponsors: html,
+      })
+    }
+  />
+</Field>
               <Field label="Speakers">
   <RichTextEditor
     value={event.speakers ?? ""}
