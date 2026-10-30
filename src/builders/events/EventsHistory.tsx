@@ -32,7 +32,7 @@ export default function EventsHistory({
 
       try {
         const res = await fetch(
-          `/api/recordsAndHistory?key=${builderKey}`
+          `/api/recordsAndHistory?type=events&key=${builderKey}`
         );
 
         if (res.ok) {
