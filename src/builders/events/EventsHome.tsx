@@ -682,7 +682,21 @@ function renderEvent(event: EventItem) {
             <td class="event-title-cell" valign="middle" style="padding:14px 18px;border-top:1px solid #d4dde8;">
               <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
               ${tags
-      ? `<div data-f="committees">${spacer(14)}<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td style="border-top:1px solid #e2e8f0;padding:12px 0 0 0;">${tags}</td></tr></table></div>`
+      ? `<div data-f="committees">
+      ${spacer(14)}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td style="border-top:1px solid #e2e8f0;padding:10px 0 0 0;">
+            <div style="font-family:${FONT};font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:6px;">
+              Organising Committee(s)
+            </div>
+            <div>
+              ${tags}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>`
       : ""
     }
             </td>
