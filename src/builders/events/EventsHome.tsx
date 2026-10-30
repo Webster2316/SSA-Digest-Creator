@@ -55,6 +55,7 @@ export interface EventItem {
   programme: string;
   speakers: string;
   sponsors: string;
+  hideSponsors?: boolean;
   dressCode: string;
   registrationDeadline: string;
   remarks: string;
@@ -721,16 +722,23 @@ function renderEvent(event: EventItem) {
   // ROW 4: sponsors | speakers
   const sponsors = cleanRichHtml(event.sponsors);
   const speakers = cleanRichHtml(event.speakers);
-
+  
   const peopleRow = renderColumnsRow([
-    {
-      label: "Sponsors",
-      body: hasContent(sponsors) ? sponsors : callFor("Sponsors"),
-      field: "sponsors",
-    },
+    ...(!event.hideSponsors
+      ? [{
+          label: "Sponsors",
+          body: hasContent(sponsors)
+            ? sponsors
+            : callFor("Sponsors"),
+          field: "sponsors",
+        }]
+      : []),
+  
     {
       label: "Speakers",
-      body: hasContent(speakers) ? speakers : callFor("Speakers"),
+      body: hasContent(speakers)
+        ? speakers
+        : callFor("Speakers"),
       field: "speakers",
     },
   ]);

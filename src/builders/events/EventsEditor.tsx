@@ -500,14 +500,25 @@ export default function EventsEditor({
                   onChange={(html) => updateEvent({ programme: html })}
                 />
               </Field>
+
               <Field label="Sponsors">
+  <div className="flex items-center justify-between mb-2">
+    <span className="text-xs text-gray-500">
+      Show Sponsors in email HTML
+    </span>
+
+    <input
+      type="checkbox"
+      checked={!event.hideSponsors}
+      onChange={(e) =>
+        updateEvent({ hideSponsors: !e.target.checked })
+      }
+    />
+  </div>
+
   <RichTextEditor
     value={event.sponsors ?? ""}
-    onChange={(html) =>
-      updateEvent({
-        sponsors: html,
-      })
-    }
+    onChange={(html) => updateEvent({ sponsors: html })}
   />
 </Field>
               <Field label="Speakers">
@@ -520,6 +531,8 @@ export default function EventsEditor({
     }
   />
 </Field>
+
+
 <Field label="Remarks">
   <RichTextEditor
     value={event.remarks ?? ""}
