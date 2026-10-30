@@ -1,6 +1,6 @@
 {
   "crons": [
-    {   "path": "/api/autoCleanup", "schedule": "0 16 2 * *" },
+    {   "path": "/api/datamanagement?action=cleanup", "schedule": "0 16 2 * *" },
     { "path": "/api/recordsAndHistory?type=archive&group=weekly", "schedule": "0 16 * * 5" },
     { "path": "/api/recordsAndHistory?type=archive&group=monthly", "schedule": "0 16 3 * *" }
   ]
