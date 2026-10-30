@@ -1283,7 +1283,7 @@ export default function EventsHome() {
   /** Archive an event: save it to history, then remove it from the current list. */
   const completeEvent = async (event: EventItem) => {
     try {
-      const res = await fetch("/api/recordsAndHistorytype=events", {
+      const res = await fetch("/api/recordsAndHistory?type=events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
