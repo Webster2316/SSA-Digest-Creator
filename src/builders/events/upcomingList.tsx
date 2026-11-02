@@ -45,6 +45,9 @@ function sortEventsByDate(event: UpcomingEvent[]) {
         return a.date.localeCompare(b.date);
     })
 }
+function setMode(id: string, dateMode: UpcomingEvent["dateMode"]) {
+  updateEvent(id, { dateMode, date: "", endDate: "" });
+}
 
 export default function UpcomingList({ upcomingList, setUpcomingList }: UpcomingListProps) {
     const sortedEv = sortEventsByDate(upcomingList);
@@ -55,6 +58,8 @@ export default function UpcomingList({ upcomingList, setUpcomingList }: Upcoming
                 id:uid(),
                 title: "",
                 date: "",
+                endDate: "",
+                dateMode: "exact",
                 eventStatus: "Tentative",
             },
         ]);
@@ -173,7 +178,7 @@ event.id === id
         name="dateMode"
         value="exact"
         checked={event.dateMode === "exact"}
-        onChange={() => updateEvent(event.id, { dateMode: "exact" })}
+        onChange={() => setMode(event.id, "exact")}
       />
       Exact Date
     </label>
@@ -184,7 +189,7 @@ event.id === id
         name="dateMode"
         value="month"
         checked={event.dateMode === "month"}
-        onChange={() => updateEvent(event.id,{ dateMode: "month" })}
+        onChange={() => setMode(event.id, "month")}
       />
       Month & Year
     </label>
@@ -195,7 +200,7 @@ event.id === id
         name="dateMode"
         value="quarter"
         checked={event.dateMode === "quarter"}
-        onChange={() => updateEvent(event.id,{ dateMode: "quarter" })}
+        onChange={() => setMode(event.id, "quarter")}
       />
       Quarter & Year
     </label>
@@ -205,7 +210,7 @@ event.id === id
         name="dateMode"
         value="tbc"
         checked={event.dateMode === "tbc"}
-        onChange={() => updateEvent(event.id,{ dateMode: "tbc" })}
+        onChange={() => setMode(event.id, "tbc")}
       />
      TBC
     </label>
@@ -218,17 +223,36 @@ event.id === id
   </label>
 
   {event.dateMode === "exact" && (
+  <div className="space-y-2">
     <input
       type="date"
       value={event.date}
-      onChange={(e) =>
+      onChange={(e) => {
+        const value = e.target.value;
         updateEvent(event.id, {
-          date: e.target.value,
-        })
-      }
+          date: value,
+          // clear the end date if it would now be before the start
+          endDate: event.endDate && value > event.endDate ? "" : event.endDate,
+        });
+      }}
       className="w-full rounded-md border px-3 py-2 text-sm"
     />
-  )}
+
+    <div>
+      <label className="mb-1 block text-xs text-gray-500">
+        End date (optional)
+      </label>
+      <input
+        type="date"
+        value={event.endDate ?? ""}
+        min={event.date || undefined}
+        disabled={!event.date}
+        onChange={(e) => updateEvent(event.id, { endDate: e.target.value })}
+        className="w-full rounded-md border px-3 py-2 text-sm"
+      />
+    </div>
+  </div>
+)}
 
   {event.dateMode === "month" && (
     <input

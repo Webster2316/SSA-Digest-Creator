@@ -43,7 +43,8 @@ export interface EventDocument {
 export interface EventItem {
   id: string;
   title: string;
-  date: string; // "YYYY-MM-DD" (exact), "YYYY-MM" (month) or "YYYY-Q1".."YYYY-Q4" (quarter)
+  date: string; 
+  endDate?: string;
   dateMode: DateMode;
   registrationStatus: RegistrationStatus;
   eventStatus: EventStatus;
@@ -67,6 +68,7 @@ export interface UpcomingEvent {
   id: string;
   title: string;
   date: string;
+  endDate?: string;
   dateMode: DateMode;
   eventStatus: EventStatus;
 }
@@ -166,21 +168,42 @@ function parseQuarter(date: string): { year: string; quarter: string } | null {
 }
 
 /** "2026-11-05" -> { day: "5", monthYear: "NOV 2026" }; "2026-11" -> { day: "TBC", ... } */
-function getDateParts(date: string) {
+function getDateParts(date: string,  endDate?: string) {
   if (!date) return { day: "TBC", monthYear: "" };
 
   const [year, month, day] = date.split("-");
   const monthText = MONTHS[Number(month) - 1] ?? "";
   const dayNumber = Number(day);
+  const hasDay = Boolean(day) && !Number.isNaN(dayNumber);
 
-  return {
-    day: day && !Number.isNaN(dayNumber) ? String(dayNumber) : "TBC",
+  const single = {
+    day: hasDay ? String(dayNumber) : "TBC",
     monthYear: [monthText, year].filter(Boolean).join(" "),
+  };
+
+  // Only treat it as a range if there's a real end date after the start date
+  if (!hasDay || !endDate || endDate <= date) return single;
+
+  const [endYear, endMonth, endDay] = endDate.split("-");
+  if (!endDay || Number.isNaN(Number(endDay))) return single;
+
+  const endMonthText = MONTHS[Number(endMonth) - 1] ?? "";
+  const dayRange = `${dayNumber}–${Number(endDay)}`;
+
+  if (year === endYear && month === endMonth) {
+    return { day: dayRange, monthYear: `${monthText} ${year}` };
+  }
+  if (year === endYear) {
+    return { day: dayRange, monthYear: `${monthText}–${endMonthText} ${year}` };
+  }
+  return {
+    day: dayRange,
+    monthYear: `${monthText}–${endMonthText} ${year}/${endYear.slice(2)}`,
   };
 }
 
 /** Handles every date mode (used by the upcoming list and by quarter/TBC events). */
-function getUpcomingDateParts(date: string, dateMode: string) {
+function getUpcomingDateParts(date: string, dateMode: string, endDate?: string) {
   if (dateMode === "tbc" || !date) {
     return { day: "TBC", monthYear: "" };
   }
@@ -200,7 +223,7 @@ function getUpcomingDateParts(date: string, dateMode: string) {
     };
   }
 
-  return getDateParts(date);
+  return getDateParts(date, endDate);
 }
 
 /** Defaults to 14 days before an exact event date, formatted DD-MM-YYYY. */
@@ -432,8 +455,9 @@ function normaliseEvent(ev: any): EventItem {
     id: ev?.id ?? uid(),
     title: ev?.title ?? "",
     date: ev?.date ?? "",
+endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
     // Keep quarter / tbc as saved; older saves without a mode default to "month".
-    dateMode: DATE_MODES.includes(ev?.dateMode) ? ev.dateMode : "month",
+    dateMode: DATE_MODES.includes(ev?.dateMode) ? ev.dateMode : "exact",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     completionStatus:
@@ -468,6 +492,7 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
       id: typeof item?.id === "string" && item.id ? item.id : uid(),
       title: typeof item?.title === "string" ? item.title : "",
       date: typeof item?.date === "string" ? item.date : "",
+endDate: typeof item?.endDate === "string" ? item.endDate : "",
       dateMode,
       eventStatus:
         item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
@@ -647,8 +672,8 @@ const callFor = (what: string) =>
 function renderEvent(event: EventItem) {
   const { day, monthYear } =
     event.dateMode === "quarter" || event.dateMode === "tbc"
-      ? getUpcomingDateParts(event.date, event.dateMode)
-      : getDateParts(event.date);
+      ? getUpcomingDateParts(event.date, event.dateMode,  event.endDate)
+      : getDateParts(event.date, event.endDate);
   const tags = renderTags(event);
   const dressCode = event.dressCode?.trim();
   const deadline = getRegistrationDeadline(event);
@@ -782,7 +807,7 @@ function renderEvent(event: EventItem) {
 /* ------------------------------------------------------------------ */
 
 function renderUpcomingRow(item: UpcomingEvent) {
-  const { day, monthYear } = getUpcomingDateParts(item.date, item.dateMode);
+  const { day, monthYear } = getUpcomingDateParts(item.date, item.dateMode, item.endDate);
   const statusStyle = EVENT_STATUS_STYLES[item.eventStatus] ?? EVENT_STATUS_STYLES.Tentative;
 
   return `
