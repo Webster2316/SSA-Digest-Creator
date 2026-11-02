@@ -45,9 +45,6 @@ function sortEventsByDate(event: UpcomingEvent[]) {
         return a.date.localeCompare(b.date);
     })
 }
-function setMode(id: string, dateMode: UpcomingEvent["dateMode"]) {
-  updateEvent(id, { dateMode, date: "", endDate: "" });
-}
 
 export default function UpcomingList({ upcomingList, setUpcomingList }: UpcomingListProps) {
     const sortedEv = sortEventsByDate(upcomingList);
@@ -74,7 +71,10 @@ event.id === id
 )
 );
     }
-
+    function setMode(id: string, dateMode: UpcomingEvent["dateMode"]) {
+      updateEvent(id, { dateMode, date: "", endDate: "" });
+    }
+    
     const copyItem = (item: any) => {
       const copy = { ...item, id: uid() };
     
