@@ -1,3 +1,4 @@
+
 import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   Plus,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
-import { uid, inputCls } from "../../shared/utils";
+import { inputCls } from "../../shared/utils";
 import DocumentUploadModal from "../../shared/documentUploadModal";
 import type { EventItem, EventDocument } from "./EventsHome";
 
@@ -56,28 +57,24 @@ const registrationStatusOpt: Record<
     color: "#287333",
     border: "#76b77c",
   },
-
   LimitedSlots: {
     text: "Limited Seats",
     bg: "#fff5d8",
     color: "#8a6c00",
     border: "#d7b441",
   },
-
   ClosingSoon: {
     text: "Closing Soon",
     bg: "#fff0e7",
     color: "#9a4a16",
     border: "#efba98",
   },
-
   Waitlist: {
     text: "Waitlist",
     bg: "#f2eef8",
     color: "#5c3b7e",
     border: "#cfc0df",
   },
-
   Full: {
     text: "Full",
     bg: "#f3f0f5",
@@ -97,6 +94,67 @@ const committeeOptions: Record<string, TagStyle> = {
   YEG: { text: "YEG", bg: "#d498c1", color: "#7a0b57", border: "#7a0b57" },
 };
 
+/* ================================================================
+   DATE FORMATTING
+================================================================ */
+
+// Examples:
+// Exact:          15 Nov 2026
+// Same month:     15–18 Nov 2026
+// Different month: 29 Nov – 2 Dec 2026
+// Different year: 29 Dec 2026 – 2 Jan 2027
+
+function formatEventDate(event: EventItem): string {
+  const formatParts = (date: string) => {
+    const [year, month, day] = date.split("-").map(Number);
+
+    const parsedDate = new Date(year, month - 1, day);
+
+    return {
+      day: parsedDate.getDate(),
+      month: parsedDate.toLocaleDateString("en-GB", {
+        month: "short",
+      }),
+      year: parsedDate.getFullYear(),
+    };
+  };
+
+  if (!event.date) return "Date to be confirmed";
+
+  const start = formatParts(event.date);
+
+  if (event.dateMode !== "range" || !event.endDate) {
+    return `${start.day} ${start.month} ${start.year}`;
+  }
+
+  const end = formatParts(event.endDate);
+
+  // Same day
+  if (
+    start.day === end.day &&
+    start.month === end.month &&
+    start.year === end.year
+  ) {
+    return `${start.day} ${start.month} ${start.year}`;
+  }
+
+  // Same month and year: 15–18 Nov 2026
+  if (
+    start.month === end.month &&
+    start.year === end.year
+  ) {
+    return `${start.day}–${end.day} ${end.month} ${end.year}`;
+  }
+
+  // Different month, same year: 29 Nov – 2 Dec 2026
+  if (start.year === end.year) {
+    return `${start.day} ${start.month} – ${end.day} ${end.month} ${end.year}`;
+  }
+
+  // Different years: 29 Dec 2026 – 2 Jan 2027
+  return `${start.day} ${start.month} ${start.year} – ${end.day} ${end.month} ${end.year}`;
+}
+
 export default function EventsEditor({
   eventId,
   archivedEvent,
@@ -107,11 +165,12 @@ export default function EventsEditor({
   readOnly = false,
 }: EventsEditorProps) {
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-
   const [newCustomCommittee, setNewCustomCommittee] = useState("");
+
   const event =
-  archivedEvent ??
-  events.find((ev) => ev.id === eventId);
+    archivedEvent ??
+    events.find((ev) => ev.id === eventId);
+
   if (!event) {
     return <div className="p-6">Event not found.</div>;
   }
@@ -119,14 +178,18 @@ export default function EventsEditor({
   const committees = event.committees ?? [];
   const customCommitteeTags = event.customCommitteeTags ?? [];
   const documents = event.documents ?? [];
-  const eventBadge = eventStatusOptions[event.eventStatus] ?? eventStatusOptions.Tentative;
-  const registrationBadge =
-    registrationStatusOpt[event.registrationStatus] ?? registrationStatusOpt.Open;
 
-  
+  const eventBadge =
+    eventStatusOptions[event.eventStatus] ??
+    eventStatusOptions.Tentative;
+
+  const registrationBadge =
+    registrationStatusOpt[event.registrationStatus] ??
+    registrationStatusOpt.Open;
+
   const updateEvent = (updates: Partial<EventItem>) => {
     if (readOnly || !eventId) return;
-  
+
     setEvents((prev) =>
       prev.map((ev) =>
         ev.id === eventId ? { ...ev, ...updates } : ev
@@ -139,12 +202,11 @@ export default function EventsEditor({
       documents: [...documents, ...docs],
     });
   };
-  
 
   return (
-    
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-4xl mx-auto p-4">
+
         {/* HEADER */}
         <div className="flex items-center gap-3 mb-4">
           <img
@@ -153,20 +215,28 @@ export default function EventsEditor({
             className="h-8 w-auto"
           />
 
-          <h1 className="text-xl font-bold text-indigo-900">Upcoming Events</h1>
+          <h1 className="text-xl font-bold text-indigo-900">
+            Upcoming Events
+          </h1>
 
           <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
             {saveStatus === "saving" && (
               <>
-                <Loader2 size={13} className="animate-spin" /> Saving…
+                <Loader2 size={13} className="animate-spin" />
+                Saving…
               </>
             )}
+
             {saveStatus.startsWith("Saved at") && (
               <>
-                <Save size={13} /> {saveStatus}
+                <Save size={13} />
+                {saveStatus}
               </>
             )}
-            {saveStatus === "error" && <span className="text-red-600">Save failed</span>}
+
+            {saveStatus === "error" && (
+              <span className="text-red-600">Save failed</span>
+            )}
           </div>
         </div>
 
@@ -175,379 +245,512 @@ export default function EventsEditor({
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-indigo-700 font-medium hover:text-indigo-900 mb-5"
         >
-          <ArrowLeft size={16} /> Back to Events
+          <ArrowLeft size={16} />
+          Back to Events
         </button>
+
         {readOnly && (
-  <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-    Archived event — view only
-  </div>
-)}
-
-<fieldset disabled={readOnly}>
-  <div
-    className={`bg-white border border-gray-200 rounded-lg p-5 space-y-5 ${
-      readOnly ? "opacity-75" : ""
-    }`}
-  >
-          <Field label="Event Title">
-            <input
-              className={inputCls}
-              value={event.title ?? ""}
-              onChange={(e) => updateEvent({ title: e.target.value })}
-            />
-          </Field>
-
-          {/* Event Status remains controlled from EventsHome. */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-              Event Status
-            </label>
-            <span
-              className="inline-block px-2.5 py-1 rounded border text-xs font-semibold"
-              style={{
-                backgroundColor: eventBadge.bg,
-                color: eventBadge.color,
-                borderColor: eventBadge.border,
-              }}
-            >
-              {eventBadge.text}
-            </span>
+          <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            Archived event — view only
           </div>
+        )}
 
-          {/* =====================================================
-              CONFIRMED
-          ====================================================== */}
-         <>
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Event Date">
-                  <input
-                    type="date"
-                    className={inputCls}
-                    value={event.date ?? ""}
-                    onChange={(e) =>
-                      updateEvent({
-                        date: e.target.value,
-                        dateMode: "exact",
-                      })
-                    }
-                  />
-                </Field>
+        <fieldset disabled={readOnly}>
+          <div
+            className={`bg-white border border-gray-200 rounded-lg p-5 space-y-5 ${
+              readOnly ? "opacity-75" : ""
+            }`}
+          >
 
-                <Field label="Registration Status">
-                  <select
-                    className={inputCls}
-                    value={event.registrationStatus ?? "Open"}
-                    onChange={(e) =>
-                      updateEvent({
-                        registrationStatus: e.target
-                          .value as EventItem["registrationStatus"],
-                      })
-                    }
-                    style={{
-                      backgroundColor: registrationBadge.bg,
-                      color: registrationBadge.color,
-                      borderColor: registrationBadge.border,
-                    }}
-                  >
-                    <option value="Open">Open</option>
-                    <option value="LimitedSlots">Limited Seats</option>
-                    <option value="ClosingSoon">Closing Soon</option>
-                    <option value="Waitlist">Waitlist</option>
-                    <option value="Full">Full</option>
-                  </select>
-                </Field>
-              </div>
+            {/* EVENT TITLE */}
+            <Field label="Event Title">
+              <input
+                className={inputCls}
+                value={event.title ?? ""}
+                onChange={(e) =>
+                  updateEvent({ title: e.target.value })
+                }
+              />
+            </Field>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* EVENT STATUS */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                Event Status
+              </label>
 
-              <Field label="Dress Code">
-  <input
-    type="text"
-    className={inputCls}
-    value={event.dressCode ?? ""}
-    onChange={(e) =>
-      updateEvent({
-        dressCode: e.target.value,
-      })
-    }
-    placeholder="e.g. Business Attire"
-  />
-</Field>
-              <Field label="Registration Deadline">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={event.registrationDeadline ?? ""}
-                    onChange={(e) =>
-                      updateEvent({
-                        registrationDeadline: e.target.value,
-                      })
-                    }
-                  />
-                </Field>
+              <span
+                className="inline-block px-2.5 py-1 rounded border text-xs font-semibold"
+                style={{
+                  backgroundColor: eventBadge.bg,
+                  color: eventBadge.color,
+                  borderColor: eventBadge.border,
+                }}
+              >
+                {eventBadge.text}
+              </span>
+            </div>
 
-                </div>
+            {/* DATE AND REGISTRATION STATUS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-              {/* Registration link + doc*/}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-                <div>
-                  {event.registrationStatus !== "Full" ? (
-                    <Field label="Registration Link">
+              {/* EVENT DATE */}
+              <Field label="Event Date">
+                <div className="space-y-3">
+
+                  {/* DATE MODE */}
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2 text-sm">
                       <input
-                        className={inputCls}
-                        placeholder="https://..."
-                        value={event.registrationLink ?? ""}
-                        onChange={(e) =>
-                          updateEvent({ registrationLink: e.target.value })
-                        }
-                      />
-                    </Field>
-                  ) : (
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                        Registration Link
-                      </label>
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
-                        <p className="text-xs text-gray-500 leading-5">
-                          Email Secretariat if interested.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-gray-600">
-                      Documents / Links
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsDocModalOpen(true)}
-                      className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
-                    >
-                      <FilePlus2 size={14} /> Add Document
-                    </button>
-                  </div>
-
-                  {documents.length === 0 ? (
-                    <div className="border border-dashed border-gray-300 rounded-md px-3 py-3 text-xs text-gray-400">
-                      No documents added.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {documents.map((doc, index) => (
-                        <div
-                          key={`${doc.url}-${index}`}
-                          className="flex items-center gap-2 border border-gray-200 bg-gray-50 rounded-md px-3 py-2"
-                        >
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="min-w-0 flex-1 flex items-center gap-1.5 text-xs font-medium text-indigo-700 hover:underline"
-                          >
-                            <ExternalLink size={12} className="shrink-0" />
-                            <span className="truncate">{doc.label || "Document"}</span>
-                          </a>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateEvent({
-                                documents: documents.filter((_, i) => i !== index),
-                              })
-                            }
-                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                            title="Remove document"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-2">
-                  Committee(s) <span className="font-normal text-gray-400">(optional)</span>
-                </label>
-
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(committeeOptions).map(([key, option]) => {
-                    const selected = committees.includes(key);
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() =>
+                        type="radio"
+                        name={`event-date-${event.id}`}
+                        checked={(event.dateMode ?? "exact") === "exact"}
+                        onChange={() =>
                           updateEvent({
-                            committees: selected
-                              ? committees.filter((item) => item !== key)
-                              : [...committees, key],
+                            dateMode: "exact",
+                            date: "",
+                            endDate: "",
                           })
                         }
-                        className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
-                          selected
-                            ? "ring-2 ring-indigo-300 opacity-100"
-                            : "opacity-55 hover:opacity-100"
-                        }`}
-                        style={{
-                          backgroundColor: option.bg,
-                          color: option.color,
-                          borderColor: option.border,
-                        }}
-                      >
-                        {option.text}
-                      </button>
-                    );
-                  })}
+                      />
+                      Exact Date
+                    </label>
+
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name={`event-date-${event.id}`}
+                        checked={event.dateMode === "range"}
+                        onChange={() =>
+                          updateEvent({
+                            dateMode: "range",
+                            date: "",
+                            endDate: "",
+                          })
+                        }
+                      />
+                      Date Range
+                    </label>
+                  </div>
+
+                  {/* EXACT DATE */}
+                  {(event.dateMode ?? "exact") === "exact" && (
+                    <input
+                      type="date"
+                      className={inputCls}
+                      value={event.date ?? ""}
+                      onChange={(e) =>
+                        updateEvent({ date: e.target.value })
+                      }
+                    />
+                  )}
+
+                  {/* DATE RANGE */}
+                  {event.dateMode === "range" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">
+                          Start Date
+                        </label>
+
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={event.date ?? ""}
+                          onChange={(e) => {
+                            const startDate = e.target.value;
+
+                            updateEvent({
+                              date: startDate,
+                              endDate:
+                                event.endDate &&
+                                event.endDate < startDate
+                                  ? ""
+                                  : event.endDate,
+                            });
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">
+                          End Date
+                        </label>
+
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={event.endDate ?? ""}
+                          min={event.date || undefined}
+                          disabled={!event.date}
+                          onChange={(e) =>
+                            updateEvent({
+                              endDate: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* DATE PREVIEW */}
+                  {event.date && (
+                    <p className="text-xs text-gray-500">
+                      Display: <span className="font-medium text-gray-700">
+                        {formatEventDate(event)}
+                      </span>
+                    </p>
+                  )}
+
                 </div>
+              </Field>
 
-                <div className="mt-3">
-  <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-    Custom Committee
-  </label>
+              {/* REGISTRATION STATUS */}
+              <Field label="Registration Status">
+                <select
+                  className={inputCls}
+                  value={event.registrationStatus ?? "Open"}
+                  onChange={(e) =>
+                    updateEvent({
+                      registrationStatus: e.target
+                        .value as EventItem["registrationStatus"],
+                    })
+                  }
+                  style={{
+                    backgroundColor: registrationBadge.bg,
+                    color: registrationBadge.color,
+                    borderColor: registrationBadge.border,
+                  }}
+                >
+                  <option value="Open">Open</option>
+                  <option value="LimitedSlots">Limited Seats</option>
+                  <option value="ClosingSoon">Closing Soon</option>
+                  <option value="Waitlist">Waitlist</option>
+                  <option value="Full">Full</option>
+                </select>
+              </Field>
+            </div>
 
-  <div className="flex gap-2">
-    <input
-      className={inputCls}
-      placeholder="Type committee name..."
-      value={newCustomCommittee}
-      onChange={(e) => setNewCustomCommittee(e.target.value)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
+            {/* DRESS CODE AND REGISTRATION DEADLINE */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Dress Code">
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={event.dressCode ?? ""}
+                  onChange={(e) =>
+                    updateEvent({ dressCode: e.target.value })
+                  }
+                  placeholder="e.g. Business Attire"
+                />
+              </Field>
 
-          const value = newCustomCommittee.trim();
+              <Field label="Registration Deadline">
+                <input
+                  type="text"
+                  className={inputCls}
+                  value={event.registrationDeadline ?? ""}
+                  onChange={(e) =>
+                    updateEvent({
+                      registrationDeadline: e.target.value,
+                    })
+                  }
+                />
+              </Field>
+            </div>
 
-          if (!value) return;
+            {/* REGISTRATION LINK AND DOCUMENTS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
-          updateEvent({
-            customCommitteeTags: [...customCommitteeTags, value],
-          });
+              <div>
+                {event.registrationStatus !== "Full" ? (
+                  <Field label="Registration Link">
+                    <input
+                      className={inputCls}
+                      placeholder="https://..."
+                      value={event.registrationLink ?? ""}
+                      onChange={(e) =>
+                        updateEvent({
+                          registrationLink: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                      Registration Link
+                    </label>
 
-          setNewCustomCommittee("");
-        }
-      }}
-    />
-
-    <button
-      type="button"
-      onClick={() => {
-        const value = newCustomCommittee.trim();
-
-        if (!value) return;
-
-        updateEvent({
-          customCommitteeTags: [...customCommitteeTags, value],
-        });
-
-        setNewCustomCommittee("");
-      }}
-      className="flex items-center gap-1 px-2 py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-black-800 shrink-0"
-    >
-      <Plus size={14} />
-      Add
-    </button>
-  </div>
-
-  {customCommitteeTags.length > 0 && (
-    <div className="flex flex-wrap gap-2 mt-2">
-      {customCommitteeTags.map((tag, index) => (
-        <div
-          key={`${tag}-${index}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-600 bg-gray-50 text-gray-700 text-xs font-medium"
-        >
-          <span>{tag}</span>
-
-          <button
-            type="button"
-            onClick={() =>
-              updateEvent({
-                customCommitteeTags: customCommitteeTags.filter(
-                  (_, i) => i !== index
-                ),
-              })
-            }
-            className="text-gray-400 hover:text-red-600"
-            title="Remove custom committee"
-          >
-            <Trash2 size={12} />
-          </button>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                      <p className="text-xs text-gray-500 leading-5">
+                        Email Secretariat if interested.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <Field label="Event Details">
-                <RichTextEditor
-                  value={event.details ?? ""}
-                  onChange={(html) => updateEvent({ details: html })}
+              {/* DOCUMENTS */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-semibold text-gray-600">
+                    Documents / Links
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsDocModalOpen(true)}
+                    className="flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                  >
+                    <FilePlus2 size={14} />
+                    Add Document
+                  </button>
+                </div>
+
+                {documents.length === 0 ? (
+                  <div className="border border-dashed border-gray-300 rounded-md px-3 py-3 text-xs text-gray-400">
+                    No documents added.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc, index) => (
+                      <div
+                        key={`${doc.url}-${index}`}
+                        className="flex items-center gap-2 border border-gray-200 bg-gray-50 rounded-md px-3 py-2"
+                      >
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="min-w-0 flex-1 flex items-center gap-1.5 text-xs font-medium text-indigo-700 hover:underline"
+                        >
+                          <ExternalLink size={12} className="shrink-0" />
+                          <span className="truncate">
+                            {doc.label || "Document"}
+                          </span>
+                        </a>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateEvent({
+                              documents: documents.filter(
+                                (_, i) => i !== index
+                              ),
+                            })
+                          }
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          title="Remove document"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* COMMITTEES */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-2">
+                Committee(s){" "}
+                <span className="font-normal text-gray-400">
+                  (optional)
+                </span>
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(committeeOptions).map(([key, option]) => {
+                  const selected = committees.includes(key);
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() =>
+                        updateEvent({
+                          committees: selected
+                            ? committees.filter((item) => item !== key)
+                            : [...committees, key],
+                        })
+                      }
+                      className={`px-3 py-1.5 rounded border text-xs font-medium transition ${
+                        selected
+                          ? "ring-2 ring-indigo-300 opacity-100"
+                          : "opacity-55 hover:opacity-100"
+                      }`}
+                      style={{
+                        backgroundColor: option.bg,
+                        color: option.color,
+                        borderColor: option.border,
+                      }}
+                    >
+                      {option.text}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* CUSTOM COMMITTEE */}
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Custom Committee
+                </label>
+
+                <div className="flex gap-2">
+                  <input
+                    className={inputCls}
+                    placeholder="Type committee name..."
+                    value={newCustomCommittee}
+                    onChange={(e) =>
+                      setNewCustomCommittee(e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+
+                        const value = newCustomCommittee.trim();
+
+                        if (!value) return;
+
+                        updateEvent({
+                          customCommitteeTags: [
+                            ...customCommitteeTags,
+                            value,
+                          ],
+                        });
+
+                        setNewCustomCommittee("");
+                      }
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const value = newCustomCommittee.trim();
+
+                      if (!value) return;
+
+                      updateEvent({
+                        customCommitteeTags: [
+                          ...customCommitteeTags,
+                          value,
+                        ],
+                      });
+
+                      setNewCustomCommittee("");
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-gray-800 shrink-0"
+                  >
+                    <Plus size={14} />
+                    Add
+                  </button>
+                </div>
+
+                {customCommitteeTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {customCommitteeTags.map((tag, index) => (
+                      <div
+                        key={`${tag}-${index}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-gray-600 bg-gray-50 text-gray-700 text-xs font-medium"
+                      >
+                        <span>{tag}</span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateEvent({
+                              customCommitteeTags:
+                                customCommitteeTags.filter(
+                                  (_, i) => i !== index
+                                ),
+                            })
+                          }
+                          className="text-gray-400 hover:text-red-600"
+                          title="Remove custom committee"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* EVENT DETAILS */}
+            <Field label="Event Details">
+              <RichTextEditor
+                value={event.details ?? ""}
+                onChange={(html) =>
+                  updateEvent({ details: html })
+                }
+              />
+            </Field>
+
+            {/* PROGRAMME TOPICS */}
+            <Field label="Programme Topics">
+              <RichTextEditor
+                value={event.programme ?? ""}
+                onChange={(html) =>
+                  updateEvent({ programme: html })
+                }
+              />
+            </Field>
+
+            {/* SPONSORS */}
+            <Field label="Sponsors">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-gray-500">
+                  Show Sponsors in email HTML
+                </span>
+
+                <input
+                  type="checkbox"
+                  checked={!event.hideSponsors}
+                  onChange={(e) =>
+                    updateEvent({
+                      hideSponsors: !e.target.checked,
+                    })
+                  }
                 />
-              </Field>
+              </div>
 
-              <Field label="Programme Topics">
-                <RichTextEditor
-                  value={event.programme ?? ""}
-                  onChange={(html) => updateEvent({ programme: html })}
-                />
-              </Field>
+              <RichTextEditor
+                value={event.sponsors ?? ""}
+                onChange={(html) =>
+                  updateEvent({ sponsors: html })
+                }
+              />
+            </Field>
 
-              <Field label="Sponsors">
-  <div className="flex items-center justify-between mb-2">
-    <span className="text-xs text-gray-500">
-      Show Sponsors in email HTML
-    </span>
+            {/* SPEAKERS */}
+            <Field label="Speakers">
+              <RichTextEditor
+                value={event.speakers ?? ""}
+                onChange={(html) =>
+                  updateEvent({ speakers: html })
+                }
+              />
+            </Field>
 
-    <input
-      type="checkbox"
-      checked={!event.hideSponsors}
-      onChange={(e) =>
-        updateEvent({ hideSponsors: !e.target.checked })
-      }
-    />
-  </div>
+            {/* REMARKS */}
+            <Field label="Remarks">
+              <RichTextEditor
+                value={event.remarks ?? ""}
+                onChange={(html) =>
+                  updateEvent({ remarks: html })
+                }
+              />
+            </Field>
 
-  <RichTextEditor
-    value={event.sponsors ?? ""}
-    onChange={(html) => updateEvent({ sponsors: html })}
-  />
-</Field>
-              <Field label="Speakers">
-  <RichTextEditor
-    value={event.speakers ?? ""}
-    onChange={(html) =>
-      updateEvent({
-        speakers: html,
-      })
-    }
-  />
-</Field>
-
-
-<Field label="Remarks">
-  <RichTextEditor
-    value={event.remarks ?? ""}
-    onChange={(html) =>
-      updateEvent({
-        remarks: html,
-      })
-    }
-  />
-</Field>
-
-            </>
-       </>
-   </div>
-      </fieldset>
+          </div>
+        </fieldset>
       </div>
 
       <DocumentUploadModal

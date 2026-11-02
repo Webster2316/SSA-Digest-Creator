@@ -265,7 +265,7 @@ const sortKey = (event: { date: string; dateMode: DateMode }): string => {
     return `${q.year}-${quarterStartMonths[q.quarter]}-01`;
   }
 
-  // YYYY-MM-DD and YYYY-MM formats sort chronologically as strings.
+  // Exact dates and date ranges are sorted by their start date.
   return date;
 };
 
@@ -425,7 +425,7 @@ const REGISTRATION_STATUSES: RegistrationStatus[] = [
   "Full",
 ];
 
-const DATE_MODES: DateMode[] = ["exact", "month", "quarter", "tbc"];
+const DATE_MODES: DateMode[] = ["exact", "range", "month", "quarter", "tbc"];
 
 // `any` on purpose: this receives untrusted/legacy saved data.
 function normaliseEvent(ev: any): EventItem {
@@ -455,7 +455,7 @@ function normaliseEvent(ev: any): EventItem {
     id: ev?.id ?? uid(),
     title: ev?.title ?? "",
     date: ev?.date ?? "",
-endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
+   endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
     // Keep quarter / tbc as saved; older saves without a mode default to "month".
     dateMode: DATE_MODES.includes(ev?.dateMode) ? ev.dateMode : "exact",
     registrationStatus,
@@ -471,6 +471,7 @@ endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
     programme: ev?.programme ?? "",
     speakers,
     sponsors: ev?.sponsors ?? "",
+    hideSponsors: ev?.hideSponsors === true,
     dressCode: ev?.dressCode ?? "",
     registrationDeadline: ev?.registrationDeadline ?? "",
     remarks: ev?.remarks ?? "",
@@ -492,7 +493,7 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
       id: typeof item?.id === "string" && item.id ? item.id : uid(),
       title: typeof item?.title === "string" ? item.title : "",
       date: typeof item?.date === "string" ? item.date : "",
-endDate: typeof item?.endDate === "string" ? item.endDate : "",
+      endDate: typeof item?.endDate === "string" ? item.endDate : "",
       dateMode,
       eventStatus:
         item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
@@ -670,10 +671,11 @@ const callFor = (what: string) =>
 /* ------------------------------------------------------------------ */
 
 function renderEvent(event: EventItem) {
-  const { day, monthYear } =
-    event.dateMode === "quarter" || event.dateMode === "tbc"
-      ? getUpcomingDateParts(event.date, event.dateMode,  event.endDate)
-      : getDateParts(event.date, event.endDate);
+  const { day, monthYear } = getUpcomingDateParts(
+    event.date,
+    event.dateMode,
+    event.endDate
+  );
   const tags = renderTags(event);
   const dressCode = event.dressCode?.trim();
   const deadline = getRegistrationDeadline(event);

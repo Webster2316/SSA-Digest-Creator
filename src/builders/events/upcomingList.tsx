@@ -420,7 +420,14 @@ export default function UpcomingList({
                           <input
                             type="date"
                             value={event.endDate ?? ""}
-                            min={event.date || undefined}
+                            min={
+                              event.date
+                                ? new Date(
+                                    new Date(event.date + "T12:00:00").getTime() +
+                                    86400000
+                                  ).toISOString().slice(0, 10)
+                                : undefined
+                            }
                             disabled={!event.date}
                             onChange={(e) =>
                               updateEvent(event.id, {
