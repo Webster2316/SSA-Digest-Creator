@@ -1,4 +1,3 @@
-
 import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   Plus,
@@ -13,7 +12,7 @@ import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
 import { inputCls } from "../../shared/utils";
 import DocumentUploadModal from "../../shared/documentUploadModal";
-import type { EventItem, EventDocument } from "./EventsHome";
+import type { EventItem, EventDocument, EventOrganiser } from "./EventsHome";
 
 interface EventsEditorProps {
   eventId?: string;
@@ -46,6 +45,13 @@ const eventStatusOptions: Record<EventItem["eventStatus"], TagStyle> = {
     border: "#700710",
   },
 };
+
+/* Toggle options shown beside Event Status.
+   The email header text lives in EventsHome.tsx (ORGANISER_HEADERS). */
+const organiserOptions: { value: EventOrganiser; label: string }[] = [
+  { value: "Organising", label: "SSA Committee" },
+  { value: "Partner", label: "Partner Event" },
+];
 
 const registrationStatusOpt: Record<
   EventItem["registrationStatus"],
@@ -187,6 +193,8 @@ export default function EventsEditor({
     registrationStatusOpt[event.registrationStatus] ??
     registrationStatusOpt.Open;
 
+  const organiserType: EventOrganiser = event.organiserType ?? "Organising";
+
   const updateEvent = (updates: Partial<EventItem>) => {
     if (readOnly || !eventId) return;
 
@@ -273,22 +281,53 @@ export default function EventsEditor({
               />
             </Field>
 
-            {/* EVENT STATUS */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                Event Status
-              </label>
+            {/* EVENT STATUS + ORGANISER TYPE */}
+            <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Event Status
+                </label>
 
-              <span
-                className="inline-block px-2.5 py-1 rounded border text-xs font-semibold"
-                style={{
-                  backgroundColor: eventBadge.bg,
-                  color: eventBadge.color,
-                  borderColor: eventBadge.border,
-                }}
-              >
-                {eventBadge.text}
-              </span>
+                <span
+                  className="inline-block px-2.5 py-1 rounded border text-xs font-semibold"
+                  style={{
+                    backgroundColor: eventBadge.bg,
+                    color: eventBadge.color,
+                    borderColor: eventBadge.border,
+                  }}
+                >
+                  {eventBadge.text}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Organiser Type
+                </label>
+
+                <div className="inline-flex rounded border border-gray-300 overflow-hidden">
+                  {organiserOptions.map((option) => {
+                    const active = organiserType === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          updateEvent({ organiserType: option.value })
+                        }
+                        className={`px-3 py-1 text-xs font-semibold transition ${
+                          active
+                            ? "bg-indigo-700 text-white"
+                            : "bg-white text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* DATE AND REGISTRATION STATUS */}
