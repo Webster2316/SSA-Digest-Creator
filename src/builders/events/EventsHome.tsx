@@ -26,6 +26,7 @@ import UpcomingList from "./upcomingList";
 /* ================================================================== */
 
 export type EventStatus = "Tentative" | "Confirmed";
+export type EventOrganiser = "Organising" | "Partner";
 export type RegistrationStatus =
   | "Open"
   | "LimitedSlots"
@@ -43,11 +44,12 @@ export interface EventDocument {
 export interface EventItem {
   id: string;
   title: string;
-  date: string; 
+  date: string;
   endDate?: string;
   dateMode: DateMode;
   registrationStatus: RegistrationStatus;
   eventStatus: EventStatus;
+  organiserType: EventOrganiser;
   completionStatus: CompletionStatus;
   registrationLink: string;
   committees: string[];
@@ -115,6 +117,12 @@ We encourage you to register your interest and join us at these upcoming session
 
 We look forward to bringing our members together and strengthening our collective engagement across the association.`;
 
+/** Header text shown above the committee tags in the email, per organiser type. */
+const ORGANISER_HEADERS: Record<EventOrganiser, string> = {
+  Organising: "Organising Committee(s)",
+  Partner: "Partner Event",
+};
+
 const EVENT_STATUS_STYLES: Record<EventStatus, TagStyle> = {
   Confirmed: { text: "Confirmed", bg: "#e1ffba", color: "#416e07", border: "#416e07" },
   Tentative: { text: "Tentative", bg: "#f2bbbf", color: "#700710", border: "#700710" },
@@ -168,7 +176,7 @@ function parseQuarter(date: string): { year: string; quarter: string } | null {
 }
 
 /** "2026-11-05" -> { day: "5", monthYear: "NOV 2026" }; "2026-11" -> { day: "TBC", ... } */
-function getDateParts(date: string,  endDate?: string) {
+function getDateParts(date: string, endDate?: string) {
   if (!date) return { day: "TBC", monthYear: "" };
 
   const [year, month, day] = date.split("-");
@@ -455,11 +463,13 @@ function normaliseEvent(ev: any): EventItem {
     id: ev?.id ?? uid(),
     title: ev?.title ?? "",
     date: ev?.date ?? "",
-   endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
-    // Keep quarter / tbc as saved; older saves without a mode default to "month".
+    endDate: typeof ev?.endDate === "string" ? ev.endDate : "",
+    // Keep quarter / tbc as saved; older saves without a mode default to "exact".
     dateMode: DATE_MODES.includes(ev?.dateMode) ? ev.dateMode : "exact",
     registrationStatus,
     eventStatus: ev?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
+    // Older saves have no organiserType, so they default to "Organising".
+    organiserType: ev?.organiserType === "Partner" ? "Partner" : "Organising",
     completionStatus:
       ev?.completionStatus === "Completed" ? "Completed" : "InProgress",
     registrationLink: ev?.registrationLink ?? "",
@@ -550,6 +560,34 @@ function renderTags(event: EventItem) {
     .map((tag) => renderInlineTag(tag, CUSTOM_TAG_STYLE));
 
   return [...committeeTags, ...customTags].join(" ");
+}
+
+/**
+ * Header + committee tags block under the event title.
+ * - Organising event: shown only when there are tags.
+ * - Partner event: the "Partner Event" header always shows, even with no tags.
+ */
+function renderOrganiserBlock(event: EventItem, tags: string) {
+  const organiserType: EventOrganiser = event.organiserType ?? "Organising";
+  const header = ORGANISER_HEADERS[organiserType];
+
+  if (!tags && organiserType !== "Partner") return "";
+
+  return `<div data-f="committees" data-organiser="${esc(organiserType)}">
+      ${spacer(14)}
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td style="border-top:1px solid #e2e8f0;padding:10px 0 0 0;">
+            <div style="font-family:${FONT};font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:${tags ? "6px" : "0"};">
+              ${esc(header)}
+            </div>
+            ${tags ? `<div>
+              ${tags}
+            </div>` : ""}
+          </td>
+        </tr>
+      </table>
+    </div>`;
 }
 
 function renderDocuments(documents: EventDocument[]) {
@@ -694,7 +732,7 @@ function renderEvent(event: EventItem) {
       )
       : "";
 
-  // ROW 1: date | title + committee tags | status (+ register button)
+  // ROW 1: date | title + organiser header & committee tags | status (+ register button)
   const headerRow = `
         <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#ffffff" style="background-color:#ffffff;">
           <tr>
@@ -708,24 +746,7 @@ function renderEvent(event: EventItem) {
 
             <td class="event-title-cell" valign="middle" style="padding:14px 18px;border-top:1px solid #d4dde8;">
               <span data-f="title" style="font-family:${FONT};font-size:16px;font-weight:700;color:#281e7e;line-height:1.4;">${esc(event.title || "Untitled Event")}</span>
-              ${tags
-      ? `<div data-f="committees">
-      ${spacer(14)}
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-        <tr>
-          <td style="border-top:1px solid #e2e8f0;padding:10px 0 0 0;">
-            <div style="font-family:${FONT};font-size:10px;font-weight:600;color:#64748b;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:6px;">
-              Organising Committee(s)
-            </div>
-            <div>
-              ${tags}
-            </div>
-          </td>
-        </tr>
-      </table>
-    </div>`
-      : ""
-    }
+              ${renderOrganiserBlock(event, tags)}
             </td>
 
             <td class="event-status-cell" width="150" valign="middle" align="center" style="padding:14px 18px 14px 8px;text-align:center;border-top:1px solid #d4dde8;">
@@ -763,7 +784,7 @@ function renderEvent(event: EventItem) {
   // ROW 4: sponsors | speakers
   const sponsors = cleanRichHtml(event.sponsors);
   const speakers = cleanRichHtml(event.speakers);
-  
+
   const peopleRow = renderColumnsRow([
     ...(!event.hideSponsors
       ? [{
@@ -774,7 +795,7 @@ function renderEvent(event: EventItem) {
           field: "sponsors",
         }]
       : []),
-  
+
     {
       label: "Speakers",
       body: hasContent(speakers)
