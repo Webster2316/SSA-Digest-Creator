@@ -73,6 +73,7 @@ export interface UpcomingEvent {
   endDate?: string;
   dateMode: DateMode;
   eventStatus: EventStatus;
+  mainSSAEvent: boolean;
 }
 
 export type TagStyle = {
@@ -505,6 +506,7 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
       date: typeof item?.date === "string" ? item.date : "",
       endDate: typeof item?.endDate === "string" ? item.endDate : "",
       dateMode,
+      mainSSAEvent: item?.mainSSAEvent === true,
       eventStatus:
         item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     };
@@ -650,6 +652,16 @@ function renderSectionBar(text: string, align: "left" | "center" = "left") {
         </tr>`;
 }
 
+function renderMainSSAEvBar(text: string, align: "left" | "center" = "left") {
+  return `
+        <tr>
+          <td bgcolor="${NAVY}" align="${align}" style="background-color:${NAVY};padding:14px 24px;text-align:${align};">
+            <span style="font-family:${FONT};font-size:12pt;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:#ffffff;">${esc(text)}</span>
+          </td>
+        </tr>`;
+}
+
+
 function renderGreeting(text: string) {
   const safe = esc(text ?? "").trim();
   if (!safe) return "";
@@ -763,13 +775,13 @@ function renderEvent(event: EventItem) {
   const detailsRow = renderColumnsRow([
     {
       label: "Event Details",
-      body: cleanRichHtml(event.details) || "&nbsp;",
+      body: `${renderDocuments(event.documents ?? [])}${cleanRichHtml(event.details) || "&nbsp;"}`,
       field: "event-details",
       padding: "20px 22px",
     },
     {
       label: "Programme Synopsis",
-      body: `${cleanRichHtml(event.programme) || "&nbsp;"}${renderDocuments(event.documents ?? [])}`,
+      body: `${cleanRichHtml(event.programme) || "&nbsp;"}`,
       field: "programme",
       padding: "20px 22px",
     },
@@ -788,12 +800,12 @@ function renderEvent(event: EventItem) {
   const peopleRow = renderColumnsRow([
     ...(!event.hideSponsors
       ? [{
-          label: "Sponsors",
-          body: hasContent(sponsors)
-            ? sponsors
-            : callFor("Sponsors"),
-          field: "sponsors",
-        }]
+        label: "Sponsors",
+        body: hasContent(sponsors)
+          ? sponsors
+          : callFor("Sponsors"),
+        field: "sponsors",
+      }]
       : []),
 
     {
@@ -859,19 +871,40 @@ function renderUpcomingRow(item: UpcomingEvent) {
 /** Heading + list. Returns "" when there's nothing to show, so no empty heading. */
 function renderUpcomingEvents(items: UpcomingEvent[]) {
   if (!items.length) return "";
-
+  const regularEvents = items.filter((item) => !item.mainSSAEvent); // !item.mainSSAEvent == false
+  const mainSSAEvents = items.filter((item) => item.mainSSAEvent);
   return `
+  ${regularEvents.length
+      ? `
         ${renderSectionBar("Upcoming Events", "center")}
         <!-- UPCOMING EVENT LIST -->
         <tr data-block="upcomingList">
           <td style="padding:0;">
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
-${items.map(renderUpcomingRow).join("\n")}
+${regularEvents.map(renderUpcomingRow).join("\n")}
             </table>
           </td>
         </tr>
-        <!-- END UPCOMING EVENT LIST -->`;
+        <!-- END UPCOMING EVENT LIST -->
+        `
+      : ""
+    }
+      ${mainSSAEvents.length
+      ? `
+            ${renderMainSSAEvBar("SSA Main Networking Events", "center")}
+            <tr data-block="upcomingListMain">
+              <td style="padding:0;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+                  ${mainSSAEvents.map(renderUpcomingRow).join("\n")}
+                </table>
+              </td>
+            </tr>
+          `
+      : ""
+    }
+    `;
 }
+
 
 /* ------------------------------------------------------------------ */
 /* Page shell                                                          */
