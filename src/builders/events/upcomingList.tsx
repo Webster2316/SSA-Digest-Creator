@@ -92,7 +92,7 @@ export default function UpcomingList({
 }: UpcomingListProps) {
 
   const sortedEv = sortEventsByDate(upcomingList);
-  const organiserType: EventOrganiser = event.organiserType ?? "Industry";
+
   /* ---------------- ADD EVENT ---------------- */
 
   function handleAddEvent() {
@@ -203,7 +203,7 @@ export default function UpcomingList({
 
             const statusStyle =
               eventStatusOptions[event.eventStatus];
-
+              const organiserType: EventOrganiser = event.organiserType ?? "Industry";
             return (
 
               <div
@@ -574,7 +574,9 @@ export default function UpcomingList({
                         key={option.value}
                         type="button"
                         onClick={() =>
-                          updateEvent({ organiserType: option.value })
+                          updateEvent(event.id, {
+                            organiserType: option.value,
+                          })
                         }
                         className={`px-3 py-1 text-xs font-semibold transition ${
                           active
