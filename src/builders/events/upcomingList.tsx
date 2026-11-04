@@ -575,7 +575,7 @@ export default function UpcomingList({
                         type="button"
                         onClick={() =>
                           updateEvent(event.id, {
-                            mainSSAEvent: option.value,
+                            organiserType: option.value,
                           })
                         }
                         className={`px-3 py-1 text-xs font-semibold transition ${
