@@ -575,7 +575,7 @@ export default function UpcomingList({
     />
 
     <span className="text-sm font-medium text-gray-700">
-     industry/SSA event?
+    SSA event?
     </span>
   </label>
 </div>
