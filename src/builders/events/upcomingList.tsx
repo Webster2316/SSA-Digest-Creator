@@ -1,5 +1,5 @@
 import { Plus, Trash2, Copy } from "lucide-react";
-import { UpcomingEvent } from "./EventsHome";
+import type { UpcomingEvent } from "./EventsHome";
 import { uid } from "../../shared/utils";
 
 type UpcomingListProps = {
@@ -15,10 +15,7 @@ type TagStyle = {
   color: string;
   border: string;
 };
-const organiserOptions: { value: EventOrganiser; label: string }[] = [
-  { value: "Organising", label: "SSA" },
-  { value: "Industry", label: "External" },
-];
+
 const eventStatusOptions: Record<
   UpcomingEvent["eventStatus"],
   TagStyle
@@ -105,6 +102,7 @@ export default function UpcomingList({
         endDate: "",
         dateMode: "exact",
         eventStatus: "Tentative",
+        mainSSAEvent: false,
       },
     ]);
   }
@@ -203,7 +201,7 @@ export default function UpcomingList({
 
             const statusStyle =
               eventStatusOptions[event.eventStatus];
-              const organiserType: EventOrganiser = event.organiserType ?? "Industry";
+         
             return (
 
               <div
@@ -560,36 +558,27 @@ export default function UpcomingList({
                     </select>
 
                   </div>
-                  <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  Organiser Type
-                </label>
 
-                <div className="inline-flex rounded border border-gray-300 overflow-hidden">
-                  {organiserOptions.map((option) => {
-                    const active = organiserType === option.value;
+              {/* SSA MAIN NETWORKING EVENT */}
 
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() =>
-                          updateEvent(event.id, {
-                            organiserType: option.value,
-                          })
-                        }
-                        className={`px-3 py-1 text-xs font-semibold transition ${
-                          active
-                            ? "bg-indigo-700 text-white"
-                            : "bg-white text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+<div className="flex items-center">
+  <label className="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      checked={event.mainSSAEvent ?? false}
+      onChange={(e) =>
+        updateEvent(event.id, {
+          mainSSAEvent: e.target.checked,
+        })
+      }
+      className="h-4 w-4 rounded border-gray-300 text-indigo-700 focus:ring-indigo-600"
+    />
+
+    <span className="text-sm font-medium text-gray-700">
+     industry/SSA event?
+    </span>
+  </label>
+</div>
                 </div>
 
               </div>
