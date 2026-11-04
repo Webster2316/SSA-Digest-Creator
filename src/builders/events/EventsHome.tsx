@@ -73,7 +73,7 @@ export interface UpcomingEvent {
   endDate?: string;
   dateMode: DateMode;
   eventStatus: EventStatus;
-  mainSSAEvent: boolean;
+  organiserType: boolean;
 }
 
 export type TagStyle = {
