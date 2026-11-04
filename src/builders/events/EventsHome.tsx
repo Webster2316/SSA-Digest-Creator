@@ -506,7 +506,7 @@ function normaliseUpcomingList(raw: unknown): UpcomingEvent[] {
       date: typeof item?.date === "string" ? item.date : "",
       endDate: typeof item?.endDate === "string" ? item.endDate : "",
       dateMode,
-      mainSSAEvent: item?.mainSSAEvent === true,
+      organiserType: item?.organiserType === true,
       eventStatus:
         item?.eventStatus === "Confirmed" ? "Confirmed" : "Tentative",
     };
@@ -871,8 +871,8 @@ function renderUpcomingRow(item: UpcomingEvent) {
 /** Heading + list. Returns "" when there's nothing to show, so no empty heading. */
 function renderUpcomingEvents(items: UpcomingEvent[]) {
   if (!items.length) return "";
-  const regularEvents = items.filter((item) => !item.mainSSAEvent); // !item.mainSSAEvent == false
-  const mainSSAEvents = items.filter((item) => item.mainSSAEvent);
+  const regularEvents = items.filter((item) => !item.organiserType); // !item.mainSSAEvent == false
+  const mainSSAEvents = items.filter((item) => item.organiserType);
   return `
   ${regularEvents.length
       ? `
