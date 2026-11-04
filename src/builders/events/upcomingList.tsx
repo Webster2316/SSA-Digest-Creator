@@ -92,7 +92,7 @@ export default function UpcomingList({
 }: UpcomingListProps) {
 
   const sortedEv = sortEventsByDate(upcomingList);
-  const organiserType: EventOrganiser = event.organiserType ?? "Organising";
+  const organiserType: EventOrganiser = event.organiserType ?? "Industry";
   /* ---------------- ADD EVENT ---------------- */
 
   function handleAddEvent() {
