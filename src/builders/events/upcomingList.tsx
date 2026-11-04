@@ -15,7 +15,10 @@ type TagStyle = {
   color: string;
   border: string;
 };
-
+const organiserOptions: { value: EventOrganiser; label: string }[] = [
+  { value: "Organising", label: "SSA" },
+  { value: "Industry", label: "External" },
+];
 const eventStatusOptions: Record<
   UpcomingEvent["eventStatus"],
   TagStyle
@@ -557,7 +560,34 @@ export default function UpcomingList({
                     </select>
 
                   </div>
+                  <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Organiser Type
+                </label>
 
+                <div className="inline-flex rounded border border-gray-300 overflow-hidden">
+                  {organiserOptions.map((option) => {
+                    const active = organiserType === option.value;
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          updateEvent({ organiserType: option.value })
+                        }
+                        className={`px-3 py-1 text-xs font-semibold transition ${
+                          active
+                            ? "bg-indigo-700 text-white"
+                            : "bg-white text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
                 </div>
 
               </div>
