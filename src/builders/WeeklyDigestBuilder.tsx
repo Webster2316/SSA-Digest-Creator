@@ -370,7 +370,7 @@ export default function WeeklyDigestBuilder() {
   
     setReplacingIssue(true);
     try {
-      const response = await fetch("/api/replace-issue?key=ssa-digest-data", {
+      const response = await fetch("/api/digest?key=ssa-digest-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ builderKey: "ssa-digest-data" }),
