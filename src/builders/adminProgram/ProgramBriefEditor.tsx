@@ -780,33 +780,19 @@ export default function ProgramBriefEditor({
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <RichTextEditor label="Technical & Programme Checks">
-                        <textarea
-                          className={inputCls}
-                          rows={3}
-                          value={r.checks}
-                          readOnly={readOnly}
-                          onChange={(e) =>
-                            patchRow(r.id, {
-                              checks: e.target.value,
-                            })
-                          }
-                        />
-                      </RichTextEditor>
+                    <Field label="Technical & Programme Checks">
+  <RichTextEditor
+    value={r.checks}
+    onChange={(v) => patchRow(r.id, { checks: v })}
+  />
+</Field>
 
-                      <RichTextEditor label="Speaker">
-                        <textarea
-                          className={inputCls}
-                          rows={3}
-                          value={r.owner}
-                          readOnly={readOnly}
-                          onChange={(e) =>
-                            patchRow(r.id, {
-                              owner: e.target.value,
-                            })
-                          }
-                        />
-                      </RichTextEditor>
+<Field label="Speaker">
+  <RichTextEditor
+    value={r.owner}
+    onChange={(v) => patchRow(r.id, { owner: v })}
+  />
+</Field>
                     </div>
                   </div>
                 ))}
