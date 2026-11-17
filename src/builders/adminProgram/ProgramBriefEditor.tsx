@@ -48,21 +48,21 @@ const infoFields: {
   label: string;
   multiline?: boolean;
 }[] = [
-  { key: "date", label: "Date" },
-  { key: "time", label: "Time" },
-  { key: "venue", label: "Venue", multiline: true },
-  { key: "dressCode", label: "Dress code" },
-  { key: "audienceSize", label: "Audience size", multiline: true },
-  { key: "catering", label: "Catering arrangement", multiline: true },
-];
+    { key: "date", label: "Date" },
+    { key: "time", label: "Time" },
+    { key: "venue", label: "Venue", multiline: true },
+    { key: "dressCode", label: "Dress code" },
+    { key: "audienceSize", label: "Audience size", multiline: true },
+    { key: "catering", label: "Catering arrangement", multiline: true },
+  ];
 
 const roleFields: {
   key: "role" | "assignedTo";
   label: string;
 }[] = [
-  { key: "role", label: "Role" },
-  { key: "assignedTo", label: "Assigned to" },
-];
+    { key: "role", label: "Role" },
+    { key: "assignedTo", label: "Assigned to" },
+  ];
 
 const addBtn =
   "flex items-center gap-1 text-sm font-medium text-indigo-700 hover:text-indigo-900 disabled:cursor-not-allowed disabled:opacity-50";
@@ -344,11 +344,10 @@ export default function ProgramBriefEditor({
     <button
       type="button"
       onClick={() => setTab(key)}
-      className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium ${
-        tab === key
-          ? "border-indigo-700 text-indigo-800"
-          : "border-transparent text-gray-500 hover:text-gray-700"
-      }`}
+      className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium ${tab === key
+        ? "border-indigo-700 text-indigo-800"
+        : "border-transparent text-gray-500 hover:text-gray-700"
+        }`}
     >
       <Icon size={15} />
       {label}
@@ -780,19 +779,25 @@ export default function ProgramBriefEditor({
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Technical & Programme Checks">
-  <RichTextEditor
-    value={r.checks}
-    onChange={(v) => patchRow(r.id, { checks: v })}
-  />
-</Field>
+                      <div>
+                        <label className="text-sm font-medium">Technical & Programme Checks</label>
+                        <RichTextEditor
+                          value={r.checks}
+                          onChange={(value) =>
+                            patchRow(r.id, { checks: value })
+                          }
+                        />
+                      </div>
 
-<Field label="Speaker">
-  <RichTextEditor
-    value={r.owner}
-    onChange={(v) => patchRow(r.id, { owner: v })}
-  />
-</Field>
+                      <div>
+                        <label className="text-sm font-medium">Speaker</label>
+                        <RichTextEditor
+                          value={r.owner}
+                          onChange={(value) =>
+                            patchRow(r.id, { owner: value })
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
