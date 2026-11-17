@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Archive, Trash2, SquareArrowOutUpRight,   CircleCheck, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
+import DOMPurify from "dompurify";
+import { Archive, Trash2, SquareArrowOutUpRight, CircleCheck, Plus, Loader2, Save, Eye, Copy, Check } from "lucide-react";
 import useConfirmDelete from "../../shared/useConfirmDelete";
 import { uid, esc } from "../../shared/utils";
 import NamePopUp from "../../shared/NamePopUpModal";
@@ -23,9 +24,9 @@ export type ProgrammeRow = { id: string; time: string; activity: string; checks:
 export type Guest = { id: string; name: string; row: "" | "first" | "second" };
 export type GuestList = { id: string; name: string; guests: Guest[] };
 export type PackingItem = { id: string; text: string };
-export type SetupBullet = { id: string; label: string; text: string};
-export type CheckListItem = { id: string; text: string};
-export type SetupTask = { id: string; title: string; bullets: SetupBullet[]; checklistTitle: string; checklist: CheckListItem[];};
+export type SetupBullet = { id: string; label: string; text: string };
+export type CheckListItem = { id: string; text: string };
+export type SetupTask = { id: string; title: string; bullets: SetupBullet[]; checklistTitle: string; checklist: CheckListItem[]; };
 export type SetupSection = { time: string; intro: string; tasks: SetupTask[] };
 
 
@@ -80,16 +81,16 @@ export function normaliseProgramme(raw: any): AdminProgramme {
   const guestLists: GuestList[] =
     Array.isArray(raw?.guestLists) && raw.guestLists.length
       ? raw.guestLists.map((l: any) => ({
-          id: l?.id ?? uid(),
-          name: str(l?.name),
-          guests: Array.isArray(l?.guests)
-            ? l.guests.map((g: any) => ({
-                id: g?.id ?? uid(),
-                name: str(g?.name),
-                row: g?.row === "first" || g?.row === "second" ? g.row : "",
-              }))
-            : [],
-        }))
+        id: l?.id ?? uid(),
+        name: str(l?.name),
+        guests: Array.isArray(l?.guests)
+          ? l.guests.map((g: any) => ({
+            id: g?.id ?? uid(),
+            name: str(g?.name),
+            row: g?.row === "first" || g?.row === "second" ? g.row : "",
+          }))
+          : [],
+      }))
       : [{ id: uid(), name: "Guest List 1", guests: [] }];
 
   return {
@@ -106,31 +107,31 @@ export function normaliseProgramme(raw: any): AdminProgramme {
     roles: Array.isArray(raw?.roles)
       ? raw.roles.map((r: any) => ({ id: r?.id ?? uid(), role: str(r?.role), assignedTo: str(r?.assignedTo) }))
       : [],
-      setup: {
-        time: str(raw?.setup?.time),
-        intro: str(raw?.setup?.intro),
-        tasks: Array.isArray(raw?.setup?.tasks)
-          ? raw.setup.tasks.map((t: any) => ({
-              id: t?.id ?? uid(),
-              title: str(t?.title),
-              bullets: Array.isArray(t?.bullets)
-                ? t.bullets.map((b: any) => ({ id: b?.id ?? uid(), label: str(b?.label), text: str(b?.text) }))
-                : [],
-              checklistTitle: str(t?.checklistTitle),
-              checklist: Array.isArray(t?.checklist)
-                ? t.checklist.map((c: any) => ({ id: c?.id ?? uid(), text: str(c?.text) }))
-                : [],
-            }))
-          : [],
-      },
+    setup: {
+      time: str(raw?.setup?.time),
+      intro: str(raw?.setup?.intro),
+      tasks: Array.isArray(raw?.setup?.tasks)
+        ? raw.setup.tasks.map((t: any) => ({
+          id: t?.id ?? uid(),
+          title: str(t?.title),
+          bullets: Array.isArray(t?.bullets)
+            ? t.bullets.map((b: any) => ({ id: b?.id ?? uid(), label: str(b?.label), text: str(b?.text) }))
+            : [],
+          checklistTitle: str(t?.checklistTitle),
+          checklist: Array.isArray(t?.checklist)
+            ? t.checklist.map((c: any) => ({ id: c?.id ?? uid(), text: str(c?.text) }))
+            : [],
+        }))
+        : [],
+    },
     programme: Array.isArray(raw?.programme)
       ? raw.programme.map((r: any) => ({
-          id: r?.id ?? uid(),
-          time: str(r?.time),
-          activity: str(r?.activity),
-          checks: str(r?.checks),
-          owner: str(r?.owner),
-        }))
+        id: r?.id ?? uid(),
+        time: str(r?.time),
+        activity: str(r?.activity),
+        checks: str(r?.checks),
+        owner: str(r?.owner),
+      }))
       : [],
     guestLists,
     selectedGuestListId: guestLists.some((l) => l.id === raw?.selectedGuestListId)
@@ -147,7 +148,13 @@ export function normaliseProgramme(raw: any): AdminProgramme {
 const FONT = "'Yu Gothic UI','Yu Gothic','Meiryo','Segoe UI',Arial,sans-serif";
 
 const nl2br = (s: string) => esc(s).replace(/\r?\n/g, "<br>");
-
+const richHtml = (s: string) => DOMPurify.sanitize(s || "", {
+  ALLOWED_TAGS: [
+    "strong", "b", "em", "i", "u",
+    "span", "p", "br", "ul", "ol", "li"
+  ],
+  ALLOWED_ATTR: ["style"],
+});
 const LABEL = `font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8492a6;`;
 const NOTE = `margin:10px 0 0;font-family:${FONT};font-size:11.5px;color:#8492a6;font-style:italic;`;
 
@@ -185,11 +192,11 @@ const checklistTable = (title: string, items: string[], margin: string) => `
             <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;border:1px solid #d4dde8;${margin}">
               <tr><td style="background:#f7f8fc;border:1px solid #d4dde8;padding:7px 12px;font-family:${FONT};font-size:11px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;color:#8492a6;">${esc(title)}</td></tr>
               ${items
-                .map(
-                  (i) =>
-                    `<tr><td style="border:1px solid #d4dde8;padding:7px 12px;font-family:${FONT};font-size:12.5px;color:#374151;">${esc(i)}</td></tr>`
-                )
-                .join("\n              ")}
+    .map(
+      (i) =>
+        `<tr><td style="border:1px solid #d4dde8;padding:7px 12px;font-family:${FONT};font-size:12.5px;color:#374151;">${esc(i)}</td></tr>`
+    )
+    .join("\n              ")}
             </table>`;
 
 export function buildFullHtml(p: AdminProgramme) {
@@ -233,16 +240,16 @@ export function buildFullHtml(p: AdminProgramme) {
   ${heading(`Set-Up &amp; Briefing${p.setup.time.trim() ? ` — ${esc(p.setup.time)}` : ""}`)}
   ${p.setup.intro.trim() ? `<p style="margin:0 0 16px;font-family:${FONT};font-size:13px;color:#374151;">${nl2br(p.setup.intro)}</p>` : ""}
 ${p.setup.tasks
-.map((t, i) => {
-const last = i === p.setup.tasks.length - 1;
-return `
+      .map((t, i) => {
+        const last = i === p.setup.tasks.length - 1;
+        return `
   <p style="margin:0 0 8px;font-family:${FONT};font-size:13px;font-weight:700;color:#281e7e;">${esc(t.title)}</p>
   ${t.bullets.length ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 14px;">
     ${bulletRows(t.bullets.map((b): [string, string] => [b.label, b.text]))}
   </table>` : ""}
   ${t.checklist.length ? checklistTable(t.checklistTitle, t.checklist.map((c) => c.text), last ? "" : "margin:0 0 20px;") : ""}`;
-})
-.join("\n")}`);
+      })
+      .join("\n")}`);
 
   /* PROGRAMME */
   const progRows = p.programme
@@ -250,7 +257,12 @@ return `
       const bg = i % 2 ? "#fafbfd" : "#ffffff";
       const cell = (extra: string, v: string) =>
         `<td style="background:${bg};border:1px solid #d4dde8;padding:9px 12px;font-family:${FONT};${extra}">${v}</td>`;
-      return `<tr>${cell("font-size:12.5px;font-weight:700;color:#281e7e;white-space:nowrap;", esc(r.time))}${cell("font-size:12.5px;color:#374151;", nl2br(r.activity))}${cell("font-size:12px;color:#6b7280;", nl2br(r.checks))}${cell("font-size:12.5px;color:#374151;", nl2br(r.owner) || "–")}</tr>`;
+      return `<tr>
+        ${cell("font-size:12.5px;font-weight:700;color:#281e7e;white-space:nowrap;", esc(r.time))}
+        ${cell("font-size:12.5px;color:#374151;", nl2br(r.activity))}
+        ${cell("font-size:12px;color:#6b7280;", richHtml(r.checks))}
+        ${cell("font-size:12.5px;color:#374151;", richHtml(r.owner) || "–")}
+      </tr>`;
     })
     .join("\n                ");
 
@@ -448,23 +460,23 @@ export default function ProgramHome() {
       ...p,
       id: uid(),
     });
-  
+
     setProgrammes((prev) => [
       ...prev,
       copy,
     ]);
-  
+
     setTab("programmes");
   };
-  
+
   const handleRestoreEvent = async (archiveId: number, p: any) => {
     try {
       const res = await fetch(`/api/recordsAndHistory?type=program&id=${archiveId}`,
-      {
-        method: "DELETE",
-      });
-  
-      if(!res.ok) {
+        {
+          method: "DELETE",
+        });
+
+      if (!res.ok) {
         console.error("Failed to restore event");
         return;
       }
@@ -472,18 +484,18 @@ export default function ProgramHome() {
         ...p,
 
       });
-  
+
       setProgrammes((prev) => [
         ...prev,
         p,
       ]);
-  
+
       setTab("programmes");
     } catch (e) {
-  console.error("Failed to restore event:", e)
+      console.error("Failed to restore event:", e)
     }
   };
-  
+
   const completedProgram = async (p: AdminProgramme) => {
     try {
       const res = await fetch("/api/recordsAndHistory?type=program", {
@@ -498,15 +510,15 @@ export default function ProgramHome() {
           },
         }),
       });
- 
+
       if (res.ok) {
         setProgrammes((prev) => prev.filter((item) => item.id !== p.id));
-      } else if (!res.ok){
+      } else if (!res.ok) {
         const errorText = await res.text();
         console.error("Failed to move brief into archive:", res.status, errorText);
         return;
-        } 
- 
+      }
+
     } catch (e) {
       console.error("Failed to move to archive", e);
     }
@@ -609,10 +621,9 @@ export default function ProgramHome() {
     );
   }
   const tabCls = (active: boolean) =>
-    `flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${
-      active
-        ? "border-indigo-700 text-indigo-700"
-        : "border-transparent text-gray-500 hover:text-gray-700"
+    `flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 ${active
+      ? "border-indigo-700 text-indigo-700"
+      : "border-transparent text-gray-500 hover:text-gray-700"
     }`;
 
   return (
@@ -643,25 +654,25 @@ export default function ProgramHome() {
         </div>
 
         {/* TABS */}
-       {/* TABS */}
-<div className="mb-5 flex gap-1 border-b border-gray-200">
-  <button
-    type="button"
-    onClick={() => setTab("programmes")}
-    className={tabCls(tab === "programmes")}
-  >
-    Programmes
-  </button>
+        {/* TABS */}
+        <div className="mb-5 flex gap-1 border-b border-gray-200">
+          <button
+            type="button"
+            onClick={() => setTab("programmes")}
+            className={tabCls(tab === "programmes")}
+          >
+            Programmes
+          </button>
 
-  <button
-    type="button"
-    onClick={() => setTab("history")}
-    className={tabCls(tab === "history")}
-  >
-    <Archive size={15} />
-    History
-  </button>
-</div>
+          <button
+            type="button"
+            onClick={() => setTab("history")}
+            className={tabCls(tab === "history")}
+          >
+            <Archive size={15} />
+            History
+          </button>
+        </div>
 
         {/* PROGRAMME LIST */}
         {tab === "programmes" && (
@@ -691,12 +702,12 @@ export default function ProgramHome() {
                         <SquareArrowOutUpRight size={16} />
                       </button>
                       <button
-    type="button"
-    onClick={() => completedProgram(p)}
-    className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
-  >
-    <CircleCheck size={16} />
-  </button>
+                        type="button"
+                        onClick={() => completedProgram(p)}
+                        className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded"
+                      >
+                        <CircleCheck size={16} />
+                      </button>
                       <button
                         type="button"
                         onClick={() => duplicateProgramme(p)}
@@ -745,14 +756,14 @@ export default function ProgramHome() {
             />
           </>
         )}
-{tab === "history" && (
-  <ProgramHistory
-    builderKey={PROGRAM_BUILDER_KEY}
-    viewPastEventDetails={setSelectedArchivedBrief}
-    onCopyToCurrent={handleMovetoCurrent}
-    onRestoreEvent={handleRestoreEvent}
-  />
-)}
+        {tab === "history" && (
+          <ProgramHistory
+            builderKey={PROGRAM_BUILDER_KEY}
+            viewPastEventDetails={setSelectedArchivedBrief}
+            onCopyToCurrent={handleMovetoCurrent}
+            onRestoreEvent={handleRestoreEvent}
+          />
+        )}
         {deleteModal}
       </div>
     </div>
