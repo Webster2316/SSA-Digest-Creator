@@ -261,7 +261,7 @@ ${p.setup.tasks
         ${cell("font-size:12.5px;font-weight:700;color:#281e7e;white-space:nowrap;", esc(r.time))}
         ${cell("font-size:12.5px;color:#374151;", nl2br(r.activity))}
         ${cell("font-size:12px;color:#6b7280;", richHtml(r.checks))}
-        ${cell("font-size:12.5px;color:#374151;", richHtml(r.owner) || "–")}
+        ${cell("font-size:12.5px;color:#374151;", richHtml(r.owner))}
       </tr>`;
     })
     .join("\n                ");
