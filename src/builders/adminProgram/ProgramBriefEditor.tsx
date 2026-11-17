@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -25,6 +26,7 @@ import type {
   SetupSection,
   SetupTask,
   ProgrammeRow,
+  PackingItem,
   Guest,
   GuestList,
 } from "./ProgramHome";
@@ -778,40 +780,19 @@ export default function ProgramBriefEditor({
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Field label="Technical & Programme Checks">
-                        {/* RichTextEditor has no readOnly prop, so block input via CSS */}
-                        <div
-                          className={
-                            readOnly
-                              ? "pointer-events-none opacity-70"
-                              : ""
-                          }
-                        >
-                          <RichTextEditor
-                            value={r.checks}
-                            onChange={(v: string) =>
-                              patchRow(r.id, { checks: v })
-                            }
-                          />
-                        </div>
-                      </Field>
+                    <Field label="Technical & Programme Checks">
+  <RichTextEditor
+    value={r.checks}
+    onChange={(v) => patchRow(r.id, { checks: v })}
+  />
+</Field>
 
-                      <Field label="Speaker">
-                        <div
-                          className={
-                            readOnly
-                              ? "pointer-events-none opacity-70"
-                              : ""
-                          }
-                        >
-                          <RichTextEditor
-                            value={r.owner}
-                            onChange={(v: string) =>
-                              patchRow(r.id, { owner: v })
-                            }
-                          />
-                        </div>
-                      </Field>
+<Field label="Speaker">
+  <RichTextEditor
+    value={r.owner}
+    onChange={(v) => patchRow(r.id, { owner: v })}
+  />
+</Field>
                     </div>
                   </div>
                 ))}
