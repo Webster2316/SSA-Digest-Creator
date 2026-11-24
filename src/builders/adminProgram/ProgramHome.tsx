@@ -180,11 +180,11 @@ const thDark = (label: string) =>
 // Set-Up & Briefing is fixed text for now (edit here)
 
 
-const bulletRows = (items: [string, string][]) =>
+const bulletRows = (items: [string][]) =>
   items
     .map(
-      ([b, t]) =>
-        `<tr><td width="6" valign="top" style="padding:4px 8px 4px 0;color:#8492a6;">•</td><td style="padding:4px 0;font-family:${FONT};font-size:12.5px;color:#374151;"><strong>${esc(b)}</strong> – ${esc(t)}</td></tr>`
+      ([b]) =>
+        `<tr><td width="6" valign="top" style="padding:4px 8px 4px 0;color:#8492a6;">•</td><td style="padding:4px 0;font-family:${FONT};font-size:12.5px;color:#374151;"><strong>${esc(b)}</strong></td></tr>`
     )
     .join("");
 
@@ -245,7 +245,7 @@ ${p.setup.tasks
         return `
   <p style="margin:0 0 8px;font-family:${FONT};font-size:13px;font-weight:700;color:#281e7e;">${esc(t.title)}</p>
   ${t.bullets.length ? `<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 14px;">
-    ${bulletRows(t.bullets.map((b): [string, string] => [b.label, b.text]))}
+    ${bulletRows(t.bullets.map((b): [string] => [b.label]))}
   </table>` : ""}
   ${t.checklist.length ? checklistTable(t.checklistTitle, t.checklist.map((c) => c.text), last ? "" : "margin:0 0 20px;") : ""}`;
       })
