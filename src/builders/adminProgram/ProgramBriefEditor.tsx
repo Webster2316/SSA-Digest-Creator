@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Plus,
@@ -13,12 +12,21 @@ import {
   Eye,
   Copy,
   Check,
+  GripVertical
 } from "lucide-react";
 
 import Field from "../../shared/field";
 import RichTextEditor from "../../shared/richTextEditor";
 import { inputCls, uid } from "../../shared/utils";
 import { buildFullHtml } from "./ProgramHome";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 import type {
   AdminProgramme,
@@ -69,6 +77,53 @@ const addBtn =
 
 const delBtn =
   "rounded p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40";
+
+// Wraps a card so it can be dragged. The drag handle is passed to the
+// children so you can place it wherever you want inside the card.
+function SortableCard({
+  id,
+  disabled = false,
+  children,
+}: {
+  id: string;
+  disabled?: boolean;
+  children: (dragHandle: ReactNode) => ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+  };
+
+  const dragHandle = disabled ? null : (
+    <button
+      type="button"
+      {...attributes}
+      {...listeners}
+      className="cursor-grab touch-none rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-700 active:cursor-grabbing"
+      title="Drag to rearrange"
+      aria-label="Drag to rearrange"
+    >
+      <GripVertical size={16} />
+    </button>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(dragHandle)}
+    </div>
+  );
+}
 
 export default function ProgramBriefEditor({
   programmeId,
@@ -215,6 +270,33 @@ export default function ProgramBriefEditor({
     updateProgramme((p) => ({
       ...p,
       programme: p.programme.filter((r) => r.id !== id),
+    }));
+
+  // Drag & drop reordering (Programme tab)
+  const reorder = <T extends { id: string }>(
+    list: T[],
+    event: DragEndEvent
+  ): T[] => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return list;
+
+    const oldIndex = list.findIndex((i) => i.id === active.id);
+    const newIndex = list.findIndex((i) => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return list;
+
+    return arrayMove(list, oldIndex, newIndex);
+  };
+
+  const handleTaskDragEnd = (event: DragEndEvent) =>
+    updateSetup((s) => ({
+      ...s,
+      tasks: reorder(s.tasks, event),
+    }));
+
+  const handleRowDragEnd = (event: DragEndEvent) =>
+    updateProgramme((p) => ({
+      ...p,
+      programme: reorder(p.programme, event),
     }));
 
   // Packing list
@@ -532,182 +614,206 @@ export default function ProgramBriefEditor({
                   </div>
                 </div>
 
-                {programme.setup.tasks.map((t) => (
-                  <div
-                    key={t.id}
-                    className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
+                {/* DRAGGABLE TASKS */}
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleTaskDragEnd}
+                >
+                  <SortableContext
+                    items={programme.setup.tasks.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <Field label="Task header">
-                          <input
-                            className={inputCls}
-                            value={t.title}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchTask(t.id, {
-                                title: e.target.value,
-                              })
-                            }
-                          />
-                        </Field>
-                      </div>
-
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          className={delBtn}
-                          title="Delete task"
-                          onClick={() => removeTask(t.id)}
+                    <div className="space-y-4">
+                      {programme.setup.tasks.map((t) => (
+                        <SortableCard
+                          key={t.id}
+                          id={t.id}
+                          disabled={readOnly}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
+                          {(dragHandle) => (
+                            <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <div className="flex items-end gap-2">
+                                {dragHandle && (
+                                  <div className="mb-1.5">
+                                    {dragHandle}
+                                  </div>
+                                )}
 
-                    {/* BULLETS */}
-                    <div className="space-y-2">
-                      {t.bullets.map((b) => (
-                        <div key={b.id} className="flex gap-2">
-                          <input
-                            className={`${inputCls} w-1/3`}
-                            placeholder="Bold label"
-                            value={b.label}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchTask(t.id, {
-                                bullets: t.bullets.map((x) =>
-                                  x.id === b.id
-                                    ? { ...x, label: e.target.value }
-                                    : x
-                                ),
-                              })
-                            }
-                          />
+                                <div className="flex-1">
+                                  <Field label="Task header">
+                                    <input
+                                      className={inputCls}
+                                      value={t.title}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchTask(t.id, {
+                                          title: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </Field>
+                                </div>
 
-                          <input
-                            className={`${inputCls} flex-1`}
-                            placeholder="Description"
-                            value={b.text}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchTask(t.id, {
-                                bullets: t.bullets.map((x) =>
-                                  x.id === b.id
-                                    ? { ...x, text: e.target.value }
-                                    : x
-                                ),
-                              })
-                            }
-                          />
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    className={delBtn}
+                                    title="Delete task"
+                                    onClick={() => removeTask(t.id)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
 
-                          {!readOnly && (
-                            <button
-                              type="button"
-                              className={delBtn}
-                              onClick={() =>
-                                patchTask(t.id, {
-                                  bullets: t.bullets.filter(
-                                    (x) => x.id !== b.id
-                                  ),
-                                })
-                              }
-                            >
-                              <Trash2 size={15} />
-                            </button>
+                              {/* BULLETS */}
+                              <div className="space-y-2">
+                                {t.bullets.map((b) => (
+                                  <div key={b.id} className="flex gap-2">
+                                    <input
+                                      className={`${inputCls} w-1/3`}
+                                      placeholder="Bold label"
+                                      value={b.label}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchTask(t.id, {
+                                          bullets: t.bullets.map((x) =>
+                                            x.id === b.id
+                                              ? { ...x, label: e.target.value }
+                                              : x
+                                          ),
+                                        })
+                                      }
+                                    />
+
+                                    <input
+                                      className={`${inputCls} flex-1`}
+                                      placeholder="Description"
+                                      value={b.text}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchTask(t.id, {
+                                          bullets: t.bullets.map((x) =>
+                                            x.id === b.id
+                                              ? { ...x, text: e.target.value }
+                                              : x
+                                          ),
+                                        })
+                                      }
+                                    />
+
+                                    {!readOnly && (
+                                      <button
+                                        type="button"
+                                        className={delBtn}
+                                        onClick={() =>
+                                          patchTask(t.id, {
+                                            bullets: t.bullets.filter(
+                                              (x) => x.id !== b.id
+                                            ),
+                                          })
+                                        }
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    className={addBtn}
+                                    onClick={() =>
+                                      patchTask(t.id, {
+                                        bullets: [
+                                          ...t.bullets,
+                                          { id: uid(), label: "", text: "" },
+                                        ],
+                                      })
+                                    }
+                                  >
+                                    <Plus size={15} />
+                                    Add bullet
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* CHECKLIST */}
+                              <div className="space-y-2 border-t border-gray-200 pt-3">
+                                <Field label="Checklist title">
+                                  <input
+                                    className={inputCls}
+                                    value={t.checklistTitle}
+                                    readOnly={readOnly}
+                                    onChange={(e) =>
+                                      patchTask(t.id, {
+                                        checklistTitle: e.target.value,
+                                      })
+                                    }
+                                  />
+                                </Field>
+
+                                {t.checklist.map((c) => (
+                                  <div key={c.id} className="flex gap-2">
+                                    <input
+                                      className={`${inputCls} flex-1`}
+                                      value={c.text}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchTask(t.id, {
+                                          checklist: t.checklist.map((x) =>
+                                            x.id === c.id
+                                              ? { ...x, text: e.target.value }
+                                              : x
+                                          ),
+                                        })
+                                      }
+                                    />
+
+                                    {!readOnly && (
+                                      <button
+                                        type="button"
+                                        className={delBtn}
+                                        onClick={() =>
+                                          patchTask(t.id, {
+                                            checklist: t.checklist.filter(
+                                              (x) => x.id !== c.id
+                                            ),
+                                          })
+                                        }
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    className={addBtn}
+                                    onClick={() =>
+                                      patchTask(t.id, {
+                                        checklist: [
+                                          ...t.checklist,
+                                          { id: uid(), text: "" },
+                                        ],
+                                      })
+                                    }
+                                  >
+                                    <Plus size={15} />
+                                    Add checklist item
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           )}
-                        </div>
+                        </SortableCard>
                       ))}
-
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          className={addBtn}
-                          onClick={() =>
-                            patchTask(t.id, {
-                              bullets: [
-                                ...t.bullets,
-                                { id: uid(), label: "", text: "" },
-                              ],
-                            })
-                          }
-                        >
-                          <Plus size={15} />
-                          Add bullet
-                        </button>
-                      )}
                     </div>
-
-                    {/* CHECKLIST */}
-                    <div className="space-y-2 border-t border-gray-200 pt-3">
-                      <Field label="Checklist title">
-                        <input
-                          className={inputCls}
-                          value={t.checklistTitle}
-                          readOnly={readOnly}
-                          onChange={(e) =>
-                            patchTask(t.id, {
-                              checklistTitle: e.target.value,
-                            })
-                          }
-                        />
-                      </Field>
-
-                      {t.checklist.map((c) => (
-                        <div key={c.id} className="flex gap-2">
-                          <input
-                            className={`${inputCls} flex-1`}
-                            value={c.text}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchTask(t.id, {
-                                checklist: t.checklist.map((x) =>
-                                  x.id === c.id
-                                    ? { ...x, text: e.target.value }
-                                    : x
-                                ),
-                              })
-                            }
-                          />
-
-                          {!readOnly && (
-                            <button
-                              type="button"
-                              className={delBtn}
-                              onClick={() =>
-                                patchTask(t.id, {
-                                  checklist: t.checklist.filter(
-                                    (x) => x.id !== c.id
-                                  ),
-                                })
-                              }
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          className={addBtn}
-                          onClick={() =>
-                            patchTask(t.id, {
-                              checklist: [
-                                ...t.checklist,
-                                { id: uid(), text: "" },
-                              ],
-                            })
-                          }
-                        >
-                          <Plus size={15} />
-                          Add checklist item
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  </SortableContext>
+                </DndContext>
 
                 {!readOnly && (
                   <button
@@ -729,78 +835,106 @@ export default function ProgramBriefEditor({
               </summary>
 
               <div className="space-y-3 border-t border-gray-200 p-3">
-                {programme.programme.map((r) => (
-                  <div
-                    key={r.id}
-                    className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3"
+                {/* DRAGGABLE ROWS */}
+                <DndContext
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleRowDragEnd}
+                >
+                  <SortableContext
+                    items={programme.programme.map((r) => r.id)}
+                    strategy={verticalListSortingStrategy}
                   >
-                    <div className="flex items-end gap-2">
-                      <div className="w-48">
-                        <Field label="Time">
-                          <input
-                            className={inputCls}
-                            placeholder="9.00am – 9.15am"
-                            value={r.time}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchRow(r.id, {
-                                time: e.target.value,
-                              })
-                            }
-                          />
-                        </Field>
-                      </div>
-
-                      <div className="flex-1">
-                        <Field label="Activity">
-                          <input
-                            className={inputCls}
-                            value={r.activity}
-                            readOnly={readOnly}
-                            onChange={(e) =>
-                              patchRow(r.id, {
-                                activity: e.target.value,
-                              })
-                            }
-                          />
-                        </Field>
-                      </div>
-
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          className={delBtn}
-                          title="Delete row"
-                          onClick={() => removeRow(r.id)}
+                    <div className="space-y-3">
+                      {programme.programme.map((r) => (
+                        <SortableCard
+                          key={r.id}
+                          id={r.id}
+                          disabled={readOnly}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
+                          {(dragHandle) => (
+                            <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <div className="flex items-end gap-2">
+                                {dragHandle && (
+                                  <div className="mb-1.5">
+                                    {dragHandle}
+                                  </div>
+                                )}
 
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <label className="text-sm font-medium">Technical & Programme Checks</label>
-                        <RichTextEditor
-                          value={r.checks}
-                          onChange={(value) =>
-                            patchRow(r.id, { checks: value })
-                          }
-                        />
-                      </div>
+                                <div className="w-48">
+                                  <Field label="Time">
+                                    <input
+                                      className={inputCls}
+                                      placeholder="9.00am – 9.15am"
+                                      value={r.time}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchRow(r.id, {
+                                          time: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </Field>
+                                </div>
 
-                      <div>
-                        <label className="text-sm font-medium">Speaker</label>
-                        <RichTextEditor
-                          value={r.owner}
-                          onChange={(value) =>
-                            patchRow(r.id, { owner: value })
-                          }
-                        />
-                      </div>
+                                <div className="flex-1">
+                                  <Field label="Activity">
+                                    <input
+                                      className={inputCls}
+                                      value={r.activity}
+                                      readOnly={readOnly}
+                                      onChange={(e) =>
+                                        patchRow(r.id, {
+                                          activity: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  </Field>
+                                </div>
+
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    className={delBtn}
+                                    title="Delete row"
+                                    onClick={() => removeRow(r.id)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                              </div>
+
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    Technical & Programme Checks
+                                  </label>
+                                  <RichTextEditor
+                                    value={r.checks}
+                                    onChange={(value) =>
+                                      patchRow(r.id, { checks: value })
+                                    }
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    Speaker
+                                  </label>
+                                  <RichTextEditor
+                                    value={r.owner}
+                                    onChange={(value) =>
+                                      patchRow(r.id, { owner: value })
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </SortableCard>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  </SortableContext>
+                </DndContext>
 
                 {!readOnly && (
                   <button
