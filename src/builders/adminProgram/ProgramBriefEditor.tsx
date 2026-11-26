@@ -918,7 +918,7 @@ export default function ProgramBriefEditor({
 
                                 <div>
                                   <label className="text-sm font-medium">
-                                    Speaker
+                                    PIC
                                   </label>
                                   <RichTextEditor
                                     value={r.owner}
