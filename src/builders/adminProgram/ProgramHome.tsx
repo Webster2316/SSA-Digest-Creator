@@ -272,7 +272,7 @@ ${p.setup.tasks
             ${heading(`Program Summary${p.info.time.trim() ? ` — ${esc(p.info.time)}` : ""}`)}
             <div class="table-scroll">
               <table class="wide-table" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;border:1px solid #d4dde8;">
-                <tr>${thDark("Time")}${thDark("Activity")}${thDark("Technical &amp; Programme Checks")}${thDark("PIC")}</tr>
+                <tr>${thDark("Time")}${thDark("Activity")}${thDark("Technical &amp; Programme Checks")}${thDark("PIC")}${thDark("Responsibilities")}</tr>
                 ${progRows}
               </table>
             </div>`);
