@@ -20,7 +20,7 @@ export type InfoFields = {
   catering: string;
 };
 export type RoleRow = { id: string; role: string; assignedTo: string };
-export type ProgrammeRow = { id: string; time: string; activity: string; checks: string; owner: string };
+export type ProgrammeRow = { id: string; time: string; activity: string; checks: string; owner: string; ownerRes: string; };
 export type Guest = { id: string; name: string; row: "" | "first" | "second" };
 export type GuestList = { id: string; name: string; guests: Guest[] };
 export type PackingItem = { id: string; text: string };
@@ -131,6 +131,7 @@ export function normaliseProgramme(raw: any): AdminProgramme {
         activity: str(r?.activity),
         checks: str(r?.checks),
         owner: str(r?.owner),
+        ownerRes: str(r.ownerRes),
       }))
       : [],
     guestLists,
@@ -262,6 +263,7 @@ ${p.setup.tasks
         ${cell("font-size:12.5px;color:#374151;", nl2br(r.activity))}
         ${cell("font-size:12px;color:#6b7280;", richHtml(r.checks))}
         ${cell("font-size:12.5px;color:#374151;", richHtml(r.owner))}
+        ${cell("font-size:12px;color:#6b7280;", richHtml(r.ownerRes))}
       </tr>`;
     })
     .join("\n                ");

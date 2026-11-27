@@ -902,8 +902,7 @@ export default function ProgramBriefEditor({
                                   </button>
                                 )}
                               </div>
-
-                              <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
                                 <div>
                                   <label className="text-sm font-medium">
                                     Technical & Programme Checks
@@ -915,8 +914,9 @@ export default function ProgramBriefEditor({
                                     }
                                   />
                                 </div>
-
-                                <div>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                              <div>
                                   <label className="text-sm font-medium">
                                     PIC
                                   </label>
@@ -924,6 +924,17 @@ export default function ProgramBriefEditor({
                                     value={r.owner}
                                     onChange={(value) =>
                                       patchRow(r.id, { owner: value })
+                                    }
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium">
+                                    Responsibilities
+                                  </label>
+                                  <RichTextEditor
+                                    value={r.ownerRes}
+                                    onChange={(value) =>
+                                      patchRow(r.id, { ownerRes: value })
                                     }
                                   />
                                 </div>
